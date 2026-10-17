@@ -733,4 +733,4 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", js=custom_js) as d
         )
 
 if __name__ == "__main__":
-    demo.launch(ssr_mode=False, css=custom_css, favicon_path="favicon.png")
+    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, favicon_path="favicon.png")

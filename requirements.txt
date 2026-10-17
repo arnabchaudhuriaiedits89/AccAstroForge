@@ -1,0 +1,6 @@
+gradio
+google-generativeai
+openai
+requests
+reportlab
+razorpay

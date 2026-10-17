@@ -242,7 +242,7 @@ def admin_login_and_view(password):
     return summary_md
 
 
-# Master Clean CSS
+# Master Clean CSS with direct GitHub raw URL for background
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -250,7 +250,7 @@ html, body, .gradio-container, gradio-app {
     background-color: #030014 !important;
     background-image: 
         linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)),
-        url("https://huggingface.co/spaces/Arnab1989/AccAstroForge/resolve/main/bg.jpg") !important;
+        url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg") !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
     background-size: cover !important;
@@ -409,7 +409,7 @@ function() {
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/png';
     link.rel = 'icon';
-    link.href = 'https://huggingface.co/spaces/Arnab1989/AccAstroForge/resolve/main/favicon.png';
+    link.href = 'https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/favicon.png';
     document.getElementsByTagName('head')[0].appendChild(link);
     
     setTimeout(() => {
@@ -423,13 +423,6 @@ function() {
             });
         }
     }, 1000);
-
-    setInterval(() => {
-        const hfBadge = document.querySelector('div.pe-2, a[href*="huggingface.co/spaces"]');
-        if (hfBadge && hfBadge.parentNode) {
-            hfBadge.parentNode.style.display = 'none';
-        }
-    }, 100);
 }
 """
 

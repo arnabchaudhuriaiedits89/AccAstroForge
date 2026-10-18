@@ -5,6 +5,7 @@ import os
 import requests
 import gradio as gr
 import google.generativeai as genai
+from google.oauth2 import service_account
 
 # Import Hugging Face spaces for ZeroGPU support
 try:
@@ -39,10 +40,19 @@ def save_log(user_data):
         print(f"Error saving log: {e}")
 
 
-# Initialize Gemini API Key (Hardcoded to bypass Render env variable issues)
-GEMINI_API_KEY = "AIzaSyBpLh54UVFoanlyPbso-asa-N0RKC7KmHQ"
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY.strip().strip('"').strip("'"))
+# Initialize Gemini API using Environment Variables / Service Account Credentials
+# (Hardcoded key completely removed to fix authentication and expiration errors)
+google_creds_env = os.getenv("GOOGLE_CREDENTIALS")
+if google_creds_env:
+    try:
+        creds_dict = json.loads(google_creds_env)
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        genai.configure(credentials=credentials)
+    except Exception as e:
+        print(f"Error loading GOOGLE_CREDENTIALS: {e}")
 
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -87,13 +97,9 @@ def gpu_decorator(func):
 
 @gpu_decorator
 def generate_ai_prediction(system_role, prompt_text):
-    if not GEMINI_API_KEY:
-        return "⚠️ Error: GEMINI_API_KEY is missing!"
-
     full_prompt = f"{system_role}\n\n{prompt_text}"
     
     try:
-        # Using official google-generativeai SDK for robust and direct connection
         model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(full_prompt)
         if response and response.text:

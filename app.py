@@ -85,51 +85,33 @@ def gpu_decorator(func):
 @gpu_decorator
 def generate_ai_prediction(system_role, prompt_text):
     if not GEMINI_API_KEY:
-        return "⚠️ Error: GEMINI_API_KEY environment variable is missing!"
+        return "⚠️ Error: GEMINI_API_KEY environment variable is missing in Render!"
 
-    clean_key = GEMINI_API_KEY.strip()
+    # Clean the API Key (remove any extra spaces, quotes, or trailing characters)
+    clean_key = GEMINI_API_KEY.strip().strip('"').strip("'")
     full_prompt = f"{system_role}\n\n{prompt_text}"
     
-    # Updated models list with gemini-1.5-flash as primary for stability with standard keys
-    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-pro"]
+    model_name = "gemini-1.5-flash"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={clean_key}"
     
-    if clean_key.startswith("AQ."):
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {clean_key}"
-        }
-        endpoints = [
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-            for model in models_to_try
-        ]
-    else:
-        headers = {"Content-Type": "application/json"}
-        endpoints = [
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={clean_key}"
-            for model in models_to_try
-        ]
-    
+    headers = {"Content-Type": "application/json"}
     data = {
         "contents": [{
             "parts": [{"text": full_prompt}]
         }]
     }
     
-    last_err = ""
-    for url in endpoints:
-        try:
-            response = requests.post(url, headers=headers, json=data, timeout=25)
-            if response.status_code == 200:
-                res_json = response.json()
-                if "candidates" in res_json and len(res_json["candidates"]) > 0:
-                    return res_json["candidates"][0]["content"]["parts"][0]["text"]
-            else:
-                last_err = f"HTTP {response.status_code}: {response.text}"
-        except Exception as e:
-            last_err = str(e)
-            continue
-
-    return f"⚠️ Chat API Error: {last_err}"
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=25)
+        if response.status_code == 200:
+            res_json = response.json()
+            if "candidates" in res_json and len(res_json["candidates"]) > 0:
+                return res_json["candidates"][0]["content"]["parts"][0]["text"]
+            return "⚠️ No response generated from Gemini API."
+        else:
+            return f"⚠️ API Error ({response.status_code}): {response.text}"
+    except Exception as e:
+        return f"⚠️ Request Failed: {str(e)}"
 
 
 def get_paywall_html(service_name, price, user_name="User"):

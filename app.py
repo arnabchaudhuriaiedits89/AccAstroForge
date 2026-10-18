@@ -71,8 +71,8 @@ def generate_ai_prediction(system_role, prompt_text):
     if not api_key:
         return "⚠️ Gemini API Error: GEMINI_API_KEY is missing in environment variables."
     
-    # Using clean stable v1 endpoint with gemini-1.5-flash
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+    # Using 'v1beta' endpoint with gemini-1.5-flash
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
     
     payload = {
@@ -92,7 +92,7 @@ def generate_ai_prediction(system_role, prompt_text):
             return res_json["candidates"][0]["content"]["parts"][0]["text"]
         else:
             # Fallback to gemini-pro if flash fails
-            url_fallback = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={api_key}"
+            url_fallback = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
             res_fb = requests.post(url_fallback, headers=headers, json=payload, timeout=30)
             if res_fb.status_code == 200:
                 return res_fb.json()["candidates"][0]["content"]["parts"][0]["text"]

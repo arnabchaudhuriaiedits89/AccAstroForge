@@ -6,13 +6,6 @@ import requests
 import gradio as gr
 import google.generativeai as genai
 
-# Import Hugging Face spaces for ZeroGPU support
-try:
-    import spaces
-    HAS_SPACES = True
-except ImportError:
-    HAS_SPACES = False
-
 # ---------------------------------------------------------
 # 1. ADMIN LOGGING & DATABASE SETUP (JSON FILE SYSTEM)
 # ---------------------------------------------------------
@@ -39,20 +32,19 @@ def save_log(user_data):
         print(f"Error saving log: {e}")
 
 
-# Initialize Gemini API using Service Account JSON from Environment Variables
+# Initialize Gemini API using GCP Service Account JSON from Environment Variables
 google_creds_env = os.getenv("GOOGLE_CREDENTIALS")
 if google_creds_env:
     try:
-        # Write the env JSON string to a temporary credentials file for SDK auto-detection
         creds_path = "/tmp/service_account.json"
         with open(creds_path, "w", encoding="utf-8") as f:
             f.write(google_creds_env)
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
-        
-        # Configure gemini using default transport with service account credentials
         genai.configure()
     except Exception as e:
         print(f"Error setting up Google Credentials: {e}")
+else:
+    print("⚠️ Warning: GOOGLE_CREDENTIALS is not set in environment variables.")
 
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -89,24 +81,23 @@ else:
     """
 
 
-def gpu_decorator(func):
-    if HAS_SPACES and hasattr(spaces, "GPU"):
-        return spaces.GPU(func)
-    return func
-
-
-@gpu_decorator
 def generate_ai_prediction(system_role, prompt_text):
     full_prompt = f"{system_role}\n\n{prompt_text}"
     
-    try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(full_prompt)
-        if response and response.text:
-            return response.text
-        return "⚠️ No response generated from Gemini API."
-    except Exception as e:
-        return f"⚠️ Gemini API Error: {str(e)}"
+    # Fallback mechanism for models using Service Account credentials
+    model_candidates = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+    
+    for m_name in model_candidates:
+        try:
+            model = genai.GenerativeModel(m_name)
+            response = model.generate_content(full_prompt)
+            if response and response.text:
+                return response.text
+        except Exception as e:
+            print(f"Model {m_name} failed: {e}")
+            continue
+            
+    return "⚠️ Gemini API Error: All model candidates failed using GOOGLE_CREDENTIALS."
 
 
 def get_paywall_html(service_name, price, user_name="User"):

@@ -2,7 +2,7 @@ import base64
 import datetime
 import json
 import os
-import google.generativeai as genai
+from groq import Groq
 import gradio as gr
 import razorpay
 
@@ -68,22 +68,25 @@ else:
 
 
 def generate_ai_prediction(system_role, prompt_text):
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
     if not api_key:
-        return "⚠️ Gemini API Error: GEMINI_API_KEY is missing in environment variables."
+        return "⚠️ Groq API Error: GROQ_API_KEY is missing in environment variables."
     
     try:
-        genai.configure(api_key=api_key)
-        full_prompt = f"{system_role}\n\n{prompt_text}"
-        
-        # Using the stable gemini-1.5-flash model directly
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(full_prompt)
-        
-        if response and response.text:
-            return response.text
+        client = Groq(api_key=api_key)
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_role},
+                {"role": "user", "content": prompt_text}
+            ],
+            temperature=0.7,
+            max_tokens=1500,
+        )
+        if completion.choices and completion.choices[0].message.content:
+            return completion.choices[0].message.content
         else:
-            return "⚠️ Warning: Empty response received from Gemini AI."
+            return "⚠️ Warning: Empty response received from Groq AI."
             
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"

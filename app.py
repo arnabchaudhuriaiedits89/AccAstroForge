@@ -85,14 +85,14 @@ def gpu_decorator(func):
 @gpu_decorator
 def generate_ai_prediction(system_role, prompt_text):
     if not GEMINI_API_KEY:
-        return "⚠️ Error: GEMINI_API_KEY environment variable is missing in Render!"
+        return "⚠️ Error: GEMINI_API_KEY environment variable is missing!"
 
     clean_key = GEMINI_API_KEY.strip()
     full_prompt = f"{system_role}\n\n{prompt_text}"
     
-    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    # Updated models list with gemini-1.5-flash as primary for stability with standard keys
+    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-pro"]
     
-    # Check if the key is an AQ OAuth token or standard AIza key
     if clean_key.startswith("AQ."):
         headers = {
             "Content-Type": "application/json",

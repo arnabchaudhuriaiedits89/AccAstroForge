@@ -76,22 +76,15 @@ def generate_ai_prediction(system_role, prompt_text):
         genai.configure(api_key=api_key)
         full_prompt = f"{system_role}\n\n{prompt_text}"
         
-        # Try gemini-1.5-flash first
-        try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(full_prompt)
-            if response and response.text:
-                return response.text
-        except Exception:
-            pass
+        # Using the stable gemini-1.5-flash model directly
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(full_prompt)
+        
+        if response and response.text:
+            return response.text
+        else:
+            return "⚠️ Warning: Empty response received from Gemini AI."
             
-        # Fallback to gemini-pro if flash fails
-        model_fb = genai.GenerativeModel('gemini-pro')
-        response_fb = model_fb.generate_content(full_prompt)
-        if response_fb and response_fb.text:
-            return response_fb.text
-            
-        return "⚠️ Warning: Could not generate response from Gemini AI."
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 

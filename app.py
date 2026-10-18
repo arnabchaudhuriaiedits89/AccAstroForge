@@ -92,7 +92,8 @@ def generate_ai_prediction(system_role, prompt_text):
     full_prompt = f"{system_role}\n\n{prompt_text}"
     errors = []
 
-    for model_name in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-pro"]:
+    # Using the standard reliable Gemini 1.5 models
+    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro"]:
         try:
             m = genai.GenerativeModel(model_name)
             res = m.generate_content(full_prompt)
@@ -250,7 +251,7 @@ def astro_chat_response(message, history):
     )
     errors = []
 
-    for model_name in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-pro"]:
+    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro"]:
         try:
             m = genai.GenerativeModel(model_name)
             res = m.generate_content(prompt)

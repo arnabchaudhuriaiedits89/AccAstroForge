@@ -2,10 +2,8 @@ import base64
 import datetime
 import json
 import os
-import random
 import google.generativeai as genai
 import gradio as gr
-import requests
 
 # Import Hugging Face spaces for ZeroGPU support
 try:
@@ -48,9 +46,6 @@ if GEMINI_API_KEY:
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
-# Fallback models list for robust dynamic response
-SUPPORTED_MODELS = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]
-
 logo_path = "logo.png" if os.path.exists("logo.png") else None
 
 
@@ -92,22 +87,21 @@ def gpu_decorator(func):
 @gpu_decorator
 def generate_ai_prediction(system_role, prompt_text):
     if not GEMINI_API_KEY:
-        return "✨ *Cosmic Alignment in Progress... Please set GEMINI_API_KEY.*"
-    
+        return "✨ *Cosmic Alignment in Progress... Please ensure GEMINI_API_KEY is properly configured.*"
+
     full_prompt = f"{system_role}\n\n{prompt_text}"
-    
-    # Try multiple Gemini model fallbacks to ensure dynamic generation works
-    for model_name in SUPPORTED_MODELS:
+
+    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
         try:
             m = genai.GenerativeModel(model_name)
-            response = m.generate_content(full_prompt)
-            if response and response.text:
-                return response.text
-        except Exception as err:
-            print(f"Error with model {model_name}: {err}")
+            res = m.generate_content(full_prompt)
+            if res and res.text:
+                return res.text
+        except Exception as e:
+            print(f"Error trying {model_name}: {e}")
             continue
 
-    return "✨ *Cosmic Insights Preview:* Your chart reflects high potential and favorable planetary alignments in the coming period."
+    return "✨ *Cosmic Insights Preview:* Planetary energy shows strong growth and unexpected auspicious opportunities heading your way."
 
 
 def get_paywall_html(service_name, price, user_name="User"):
@@ -249,27 +243,19 @@ def astro_chat_response(message, history):
     if not GEMINI_API_KEY:
         return "The planets are aligning. Please ensure your Gemini API key is active."
 
-    chat_history = []
-    for human, assistant in history:
-        chat_history.append({"role": "user", "parts": [human]})
-        chat_history.append({"role": "model", "parts": [assistant]})
-
-    system_instruction = (
+    prompt = (
         "You are 'AccAstroForge AI Assistant', a wise, empathetic, and expert "
-        "Vedic Jyotish master. Answer users' astrological questions with deep "
-        "wisdom, remedies, and a welcoming tone."
+        f"Vedic Jyotish master. Answer this question warmly: {message}"
     )
-    full_message = f"{system_instruction}\n\nUser Question: {message}"
 
-    for model_name in SUPPORTED_MODELS:
+    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
         try:
             m = genai.GenerativeModel(model_name)
-            chat = m.start_chat(history=chat_history)
-            response = chat.send_message(full_message)
-            if response and response.text:
-                return response.text
-        except Exception as err:
-            print(f"Chat error with {model_name}: {err}")
+            res = m.generate_content(prompt)
+            if res and res.text:
+                return res.text
+        except Exception as e:
+            print(f"Chat error with {model_name}: {e}")
             continue
 
     return "✨ *Cosmic Guidance:* Your energy shows high potential. Focus on spiritual grounding."
@@ -298,7 +284,7 @@ def admin_login_and_view(password):
     return summary_md
 
 
-# Master Clean CSS with direct GitHub raw URL for background
+# Master Clean CSS
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
 

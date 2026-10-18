@@ -10,7 +10,6 @@ import requests
 # Import Hugging Face spaces for ZeroGPU support
 try:
     import spaces
-
     HAS_SPACES = True
 except ImportError:
     HAS_SPACES = False
@@ -46,7 +45,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-# Updated Admin Password to Meher's & Arnab's special birth year 1989
+# Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
 model = None
@@ -103,49 +102,12 @@ def generate_ai_prediction(system_role, prompt_text):
         return "✨ *Cosmic Insights Preview:* Your chart reflects high potential and favorable planetary alignments in the coming period."
 
 
-def run_daily_horoscope(sign):
-    prompt = f"Provide a detailed daily Vedic horoscope for Zodiac Sign: {sign}. Cover Career, Love, Health, and Lucky Astro Tips for today."
-    return generate_ai_prediction("An expert Vedic Astrologer.", prompt)
-
-
-def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
-    prompt = f"Perform a detailed Vedic Kundali Gun Milan matching analysis between Boy ({boy_name}, DOB: {boy_dob}) and Girl ({girl_name}, DOB: {girl_dob}). Calculate approximate Guna score out of 36, discuss Ashtakoot compatibility, Manglik dosha, and final marriage harmony verdict."
-    return generate_ai_prediction("An expert Vedic Match-making Astrologer.", prompt)
-
-
-def run_life_predictions(
-    name, dob, tob, pob, focus_area, question, phone, email, address
-):
-    user_entry = {
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": name,
-        "dob": dob,
-        "tob": tob,
-        "pob": pob,
-        "focus_area": focus_area,
-        "question": question,
-        "phone": phone,
-        "email": email,
-        "address": address,
-        "payment_status": "Pending / Teased",
-    }
-    save_log(user_entry)
-
-    teaser_prompt = (
-        f"Provide a short 2-line basic astrological sun-sign/lagna teaser for"
-        f" Name: {name}, DOB: {dob}."
-    )
-    teaser = generate_ai_prediction(
-        "An expert Vedic Astrologer providing brief free teasers.", teaser_prompt
-    )
-
-    teaser_text = f"### 🌟 Free Astrological Teaser for {name}\n{teaser}"
-
-    paywall_html = f"""
+def get_paywall_html(service_name, price, user_name="User"):
+    return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
-        <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 AccAstroForge Premium Lock (₹299 Only)</h3>
-        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <b>{name}</b>, to reveal your <b>Complete Deep Life Forecast, Planetary Transits, Timeline & Downloadable PDF Report</b>, please complete secure payment below via any UPI app or Card.</p>
-        <p style="color: #4ade80; font-size: 1.2rem; font-weight: bold; margin-bottom: 18px;">Unlock Price: ₹299 (Lifetime PDF Access)</p>
+        <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 Unlock {service_name} (₹{price} Only)</h3>
+        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <b>{user_name}</b>, to unlock your complete report & instantly receive detailed astrological breakdown, please complete payment below.</p>
+        <p style="color: #4ade80; font-size: 1.25rem; font-weight: bold; margin-bottom: 18px;">Unlock Price: ₹{price}</p>
         
         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
             <span style="background: #5f259f; color: white; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">🟣 PhonePe</span>
@@ -154,34 +116,119 @@ def run_life_predictions(
             <span style="background: #000; color: #fff; border: 1px solid #f472b6; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">💳 UPI / Cards</span>
         </div>
 
-        <a href="https://rzp.io/l/accastroforge" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">🚀 Pay ₹299 & Instantly Download PDF Report</a>
+        <a href="https://rzp.io/l/accastroforge" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">🚀 Pay ₹{price} & Access Report</a>
     </div>
     """
+
+
+def run_daily_horoscope(sign):
+    prompt = f"Provide a detailed daily Vedic horoscope for Zodiac Sign: {sign}. Cover Career, Love, Health, and Lucky Astro Tips for today."
+    return generate_ai_prediction("An expert Vedic Astrologer.", prompt)
+
+
+def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
+    user_entry = {
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": f"{boy_name} & {girl_name}",
+        "service": "Kundali Matching",
+        "details": f"Boy DOB: {boy_dob} | Girl DOB: {girl_dob}",
+        "payment_status": "Pending / Teased (₹399)",
+    }
+    save_log(user_entry)
+
+    teaser_prompt = f"Perform a brief 2-line Vedic Kundali compatibility teaser between {boy_name} and {girl_name}."
+    teaser = generate_ai_prediction("An expert Vedic Match-maker.", teaser_prompt)
+    teaser_text = f"### ❤️ Kundali Compatibility Teaser for {boy_name} & {girl_name}\n{teaser}"
+    paywall_html = get_paywall_html("Complete Kundali Matching Report", 399, f"{boy_name} & {girl_name}")
+    return teaser_text, paywall_html
+
+
+def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email, address):
+    user_entry = {
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": name,
+        "service": "Complete Life Prediction",
+        "dob": dob, "tob": tob, "pob": pob,
+        "focus_area": focus_area, "question": question,
+        "phone": phone, "email": email, "address": address,
+        "payment_status": "Pending / Teased (₹499)",
+    }
+    save_log(user_entry)
+
+    teaser_prompt = f"Provide a short 2-line basic astrological teaser for Name: {name}, DOB: {dob}."
+    teaser = generate_ai_prediction("An expert Vedic Astrologer.", teaser_prompt)
+    teaser_text = f"### 🌟 Free Astrological Teaser for {name}\n{teaser}"
+    paywall_html = get_paywall_html("Complete Deep Life Forecast & PDF", 499, name)
     return teaser_text, paywall_html
 
 
 def run_gemstone_remedy(dob, zodiac):
-    prompt = f"Suggest the most suitable Vedic Gemstone, Rudraksha, and Mantra remedies based on DOB: {dob} and Zodiac/Ascendant: {zodiac}. Explain how to wear it and benefits."
-    return generate_ai_prediction(
-        "An expert Gemstone and Vedic Remedy Astrologer.", prompt
-    )
+    user_entry = {
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": "User",
+        "service": "Gemstone Remedy",
+        "details": f"DOB: {dob} | Zodiac: {zodiac}",
+        "payment_status": "Pending / Teased (₹299)",
+    }
+    save_log(user_entry)
+
+    teaser_prompt = f"Provide a short 1-line teaser about planetary remedies for Zodiac: {zodiac}."
+    teaser = generate_ai_prediction("An expert Gemstone Astrologer.", teaser_prompt)
+    teaser_text = f"### 💎 Gemstone Guidance Teaser\n{teaser}"
+    paywall_html = get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
+    return teaser_text, paywall_html
 
 
 def run_kundali_pdf(name, dob, tob, pob):
-    prompt = f"Generate a comprehensive Vedic Janam Kundali layout description, planetary positions (Bhavas), Dasha periods, and PDF report summary for Name: {name}, DOB: {dob}, Time: {tob}, Place: {pob}."
-    return generate_ai_prediction(
-        "An expert Vedic Astrologer and Chart Maker.", prompt
-    )
+    user_entry = {
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": name,
+        "service": "Janam Kundali PDF",
+        "details": f"DOB: {dob} | TOB: {tob} | POB: {pob}",
+        "payment_status": "Pending / Teased (₹299)",
+    }
+    save_log(user_entry)
+
+    teaser_prompt = f"Provide a 2-line basic Lagna chart summary teaser for {name} born on {dob}."
+    teaser = generate_ai_prediction("An expert Vedic Chart Maker.", teaser_prompt)
+    teaser_text = f"### 📜 Janam Kundali Teaser for {name}\n{teaser}"
+    paywall_html = get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
+    return teaser_text, paywall_html
 
 
 def run_numerology(name, dob):
-    prompt = f"Perform a detailed Vedic Numerology analysis. Calculate Psychic Number (Mulank), Destiny Number (Bhagyank), Name Number (Chaldean/Pythagorean), and Name Compatibility for Name: {name}, DOB: {dob}."
-    return generate_ai_prediction("An expert Numerologist.", prompt)
+    user_entry = {
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": name,
+        "service": "Numerology Analysis",
+        "details": f"DOB: {dob}",
+        "payment_status": "Pending / Teased (₹249)",
+    }
+    save_log(user_entry)
+
+    teaser_prompt = f"Calculate Psychic/Destiny number teaser for Name: {name}, DOB: {dob}."
+    teaser = generate_ai_prediction("An expert Numerologist.", teaser_prompt)
+    teaser_text = f"### 🔢 Numerology Preview for {name}\n{teaser}"
+    paywall_html = get_paywall_html("Detailed Numerology & Name Correction Report", 249, name)
+    return teaser_text, paywall_html
 
 
-def run_panchang(date_str, city):
+def run_panchang(date_str, city, mode="free"):
     prompt = f"Provide a complete Vedic Panchang for Date: {date_str} at Location: {city}. Include Tithi, Nakshatra, Yoga, Karana, Rahu Kalam, and auspicious Shubh Muhurat timings."
-    return generate_ai_prediction("An expert Vedic Panchang Astrologer.", prompt)
+    teaser = generate_ai_prediction("An expert Vedic Panchang Astrologer.", prompt)
+    if mode == "detailed":
+        user_entry = {
+            "timestamp": str(datetime.datetime.now()),
+            "full_name": "Panchang User",
+            "service": "Detailed Panchang & Muhurat",
+            "details": f"Date: {date_str} | City: {city}",
+            "payment_status": "Pending / Teased (₹99)",
+        }
+        save_log(user_entry)
+        paywall_html = get_paywall_html("Detailed Shubh Muhurat & Planetary Hours Report", 99, "User")
+        return f"### 📅 Detailed Shubh Muhurat Report\n{teaser}", paywall_html
+    else:
+        return f"### 📅 Free Daily Panchang for {city} ({date_str})\n{teaser}", ""
 
 
 def astro_chat_response(message, history):
@@ -204,10 +251,7 @@ def astro_chat_response(message, history):
         response = chat.send_message(full_message)
         return response.text
     except Exception:
-        return (
-            "✨ *Cosmic Guidance:* Your energy shows high potential. Focus on"
-            " spiritual grounding and structured steps."
-        )
+        return "✨ *Cosmic Guidance:* Your energy shows high potential. Focus on spiritual grounding."
 
 
 def admin_login_and_view(password):
@@ -220,24 +264,15 @@ def admin_login_and_view(password):
 
     summary_md = f"### 🛡️ AccAstroForge Admin Dashboard\n"
     summary_md += f"**Total User Entries:** {len(logs)}\n\n"
-    summary_md += (
-        "| Timestamp | Name | Contact (Phone/Email) | Address | Focus & Question"
-        " | Status |\n"
-    )
-    summary_md += "|---|---|---|---|---|---|\n"
+    summary_md += "| Timestamp | Name/Service | Contact/Details | Status |\n"
+    summary_md += "|---|---|---|---|\n"
 
     for log in reversed(logs):
         t = log.get("timestamp", "")[:19]
-        name = log.get("full_name", "")
-        contact = f"{log.get('phone', '')} / {log.get('email', '')}"
-        addr = log.get("address", "")
-        details = (
-            f"Focus: {log.get('focus_area', '')} | Q: {log.get('question', '')}"
-        )
+        name = f"{log.get('full_name', '')} ({log.get('service', 'General')})"
+        contact = f"Phone: {log.get('phone', 'N/A')} | Email: {log.get('email', 'N/A')} | {log.get('details', '')}"
         status = log.get("payment_status", "Pending")
-        summary_md += (
-            f"| {t} | {name} | {contact} | {addr} | {details} | {status} |\n"
-        )
+        summary_md += f"| {t} | {name} | {contact} | {status} |\n"
 
     return summary_md
 
@@ -393,7 +428,6 @@ button.primary, .gr-button-primary {
     color: #f3e8ff !important;
 }
 
-/* HIDE THE REAL TRIGGER BUTTON BUT KEEP IT RENDERED */
 #real-hidden-btn {
     position: absolute !important;
     opacity: 0 !important;
@@ -417,9 +451,7 @@ function() {
         if (dot) {
             dot.addEventListener('click', () => {
                 const btn = document.querySelector('#real-hidden-btn button');
-                if (btn) {
-                    btn.click();
-                }
+                if (btn) { btn.click(); }
             });
         }
     }, 1000);
@@ -428,7 +460,6 @@ function() {
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", js=custom_js) as demo:
     with gr.Column():
-        # Top header with logo and embedded dot
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
                 gr.HTML(f"<div>{logo_element}</div>")
@@ -443,233 +474,126 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", js=custom_js) as d
                 """)
 
         with gr.Tabs():
-            # TAB 1: COMPLETE LIFE PREDICTION
+            # TAB 1: COMPLETE LIFE PREDICTION (₹499)
             with gr.TabItem("🌟 COMPLETE LIFE PREDICTION"):
                 gr.Markdown("### 🌌 AI-Powered Vedic Astrology & Deep Life Forecast")
                 with gr.Row():
-                    name_input = gr.Textbox(
-                        label="Full Name", placeholder="e.g. Rajesh Sharma"
-                    )
-                    dob_input = gr.Textbox(
-                        label="Date of Birth", placeholder="YYYY-MM-DD"
-                    )
+                    name_input = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                    dob_input = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
                 with gr.Row():
                     tob_input = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
-                    pob_input = gr.Textbox(
-                        label="Place of Birth", placeholder="City, Country"
-                    )
-
+                    pob_input = gr.Textbox(label="Place of Birth", placeholder="City, Country")
                 with gr.Row():
-                    phone_input = gr.Textbox(
-                        label="Phone Number", placeholder="e.g. 9876543210"
-                    )
-                    email_input = gr.Textbox(
-                        label="Email Address", placeholder="e.g. user@gmail.com"
-                    )
+                    phone_input = gr.Textbox(label="Phone Number", placeholder="e.g. 9876543210")
+                    email_input = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
 
-                address_input = gr.Textbox(
-                    label="Postal Address", placeholder="Enter your full address"
-                )
-
+                address_input = gr.Textbox(label="Postal Address", placeholder="Enter your full address")
                 focus_dropdown = gr.Dropdown(
-                    choices=[
-                        "General Life & Destiny",
-                        "Career & Wealth Growth",
-                        "Love, Marriage & Harmony",
-                        "Health & Spiritual Growth",
-                    ],
-                    value="General Life & Destiny",
-                    label="Primary Focus Area",
+                    choices=["General Life & Destiny", "Career & Wealth Growth", "Love, Marriage & Harmony", "Health & Spiritual Growth"],
+                    value="General Life & Destiny", label="Primary Focus Area"
                 )
+                question_input = gr.Textbox(label="Specific Question or Concern", lines=2, placeholder="e.g. When will my financial situation improve?")
+                submit_life = gr.Button("✨ Reveal Detailed Life Insights (₹499)", variant="primary")
 
-                question_input = gr.Textbox(
-                    label="Specific Question or Concern",
-                    lines=2,
-                    placeholder="e.g. When will my financial situation improve?",
-                )
-                submit_life = gr.Button(
-                    "✨ Reveal Detailed Life Insights (Free Teaser)",
-                    variant="primary",
-                )
-
-                output_life_teaser = gr.Markdown(
-                    label="Astrological Guidance Report"
-                )
+                output_life_teaser = gr.Markdown(label="Astrological Guidance Report")
                 output_life_paywall = gr.HTML(label="Payment Card")
 
                 submit_life.click(
                     fn=run_life_predictions,
-                    inputs=[
-                        name_input,
-                        dob_input,
-                        tob_input,
-                        pob_input,
-                        focus_dropdown,
-                        question_input,
-                        phone_input,
-                        email_input,
-                        address_input,
-                    ],
-                    outputs=[output_life_teaser, output_life_paywall],
+                    inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input],
+                    outputs=[output_life_teaser, output_life_paywall]
                 )
 
-            # TAB 2: DAILY HOROSCOPE
+            # TAB 2: DAILY HOROSCOPE (Free)
             with gr.TabItem("☀️ DAILY HOROSCOPE"):
-                gr.Markdown("### 🔮 Daily Zodiac Predictions & Planetary Guidance")
+                gr.Markdown("### 🔮 Daily Zodiac Predictions & Planetary Guidance (Free)")
                 zodiac_sign = gr.Dropdown(
-                    choices=[
-                        "Aries",
-                        "Taurus",
-                        "Gemini",
-                        "Cancer",
-                        "Leo",
-                        "Virgo",
-                        "Libra",
-                        "Scorpio",
-                        "Sagittarius",
-                        "Capricorn",
-                        "Aquarius",
-                        "Pisces",
-                    ],
-                    value="Aries",
-                    label="Select Your Zodiac Sign (Rashi)",
+                    choices=["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"],
+                    value="Aries", label="Select Your Zodiac Sign (Rashi)"
                 )
-                submit_horoscope = gr.Button(
-                    "🔮 Get Today's Horoscope", variant="primary"
-                )
+                submit_horoscope = gr.Button("🔮 Get Free Today's Horoscope", variant="primary")
                 output_horoscope = gr.Markdown(label="Daily Horoscope Reading")
+                submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-                submit_horoscope.click(
-                    fn=run_daily_horoscope,
-                    inputs=[zodiac_sign],
-                    outputs=output_horoscope,
-                )
-
-            # TAB 3: KUNDALI MATCHING
+            # TAB 3: KUNDALI MATCHING (₹399)
             with gr.TabItem("❤️ KUNDALI MATCHING"):
                 gr.Markdown("### 💍 Vedic Compatibility & Guna Milan Analysis")
                 with gr.Row():
-                    boy_name = gr.Textbox(
-                        label="Boy's Name", placeholder="e.g. Rohan"
-                    )
-                    boy_dob = gr.Textbox(
-                        label="Boy's Date of Birth", placeholder="YYYY-MM-DD"
-                    )
+                    boy_name = gr.Textbox(label="Boy's Name", placeholder="e.g. Rohan")
+                    boy_dob = gr.Textbox(label="Boy's Date of Birth", placeholder="YYYY-MM-DD")
                 with gr.Row():
-                    girl_name = gr.Textbox(
-                        label="Girl's Name", placeholder="e.g. Priya"
-                    )
-                    girl_dob = gr.Textbox(
-                        label="Girl's Date of Birth", placeholder="YYYY-MM-DD"
-                    )
+                    girl_name = gr.Textbox(label="Girl's Name", placeholder="e.g. Priya")
+                    girl_dob = gr.Textbox(label="Girl's Date of Birth", placeholder="YYYY-MM-DD")
 
-                submit_matching = gr.Button(
-                    "❤️ Match Kundalis Now", variant="primary"
-                )
-                output_matching = gr.Markdown(
-                    label="Compatibility & Match Report"
-                )
+                submit_matching = gr.Button("❤️ Match Kundalis Now (₹399)", variant="primary")
+                output_matching = gr.Markdown(label="Compatibility & Match Report")
+                output_matching_paywall = gr.HTML(label="Payment Card")
 
                 submit_matching.click(
                     fn=run_kundali_matching,
                     inputs=[boy_name, boy_dob, girl_name, girl_dob],
-                    outputs=output_matching,
+                    outputs=[output_matching, output_matching_paywall]
                 )
 
-            # TAB 4: GEMSTONE & REMEDIES
+            # TAB 4: GEMSTONE & REMEDIES (₹299)
             with gr.TabItem("💎 GEMSTONE & REMEDIES"):
-                gr.Markdown(
-                    "### 🧿 Discover Your Lucky Gemstones & Cosmic Remedies"
-                )
+                gr.Markdown("### 🧿 Discover Your Lucky Gemstones & Cosmic Remedies")
                 with gr.Row():
-                    gem_dob = gr.Textbox(
-                        label="Date of Birth", placeholder="YYYY-MM-DD"
-                    )
-                    gem_zodiac = gr.Textbox(
-                        label="Zodiac Sign or Ascendant (Lagnam)",
-                        placeholder="e.g. Leo / Simha",
-                    )
+                    gem_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
+                    gem_zodiac = gr.Textbox(label="Zodiac Sign or Ascendant (Lagnam)", placeholder="e.g. Leo / Simha")
 
-                submit_gem = gr.Button(
-                    "💎 Find My Lucky Gemstone", variant="primary"
-                )
+                submit_gem = gr.Button("💎 Find My Lucky Gemstone (₹299)", variant="primary")
                 output_gem = gr.Markdown(label="Gemstone & Remedy Guidance")
+                output_gem_paywall = gr.HTML(label="Payment Card")
 
-                submit_gem.click(
-                    fn=run_gemstone_remedy,
-                    inputs=[gem_dob, gem_zodiac],
-                    outputs=output_gem,
-                )
+                submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 5: KUNDALI PDF
+            # TAB 5: KUNDALI PDF (₹299)
             with gr.TabItem("📜 KUNDALI PDF"):
-                gr.Markdown(
-                    "### 📜 Detailed Janam Kundali Chart & PDF Report Generator"
-                )
+                gr.Markdown("### 📜 Detailed Janam Kundali Chart & PDF Report Generator")
                 with gr.Row():
-                    k_name = gr.Textbox(
-                        label="Full Name", placeholder="e.g. Subham Roy"
-                    )
-                    k_dob = gr.Textbox(
-                        label="Date of Birth", placeholder="YYYY-MM-DD"
-                    )
+                    k_name = gr.Textbox(label="Full Name", placeholder="e.g. Subham Roy")
+                    k_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
                 with gr.Row():
                     k_tob = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
-                    k_pob = gr.Textbox(
-                        label="Place of Birth", placeholder="City, State"
-                    )
+                    k_pob = gr.Textbox(label="Place of Birth", placeholder="City, State")
 
-                submit_kundali_pdf = gr.Button(
-                    "📜 Generate Kundali Chart & PDF", variant="primary"
-                )
-                output_kundali_pdf = gr.Markdown(
-                    label="Kundali & PDF Report Details"
-                )
+                submit_kundali_pdf = gr.Button("📜 Generate Kundali Chart & PDF (₹299)", variant="primary")
+                output_kundali_pdf = gr.Markdown(label="Kundali & PDF Report Details")
+                output_kundali_paywall = gr.HTML(label="Payment Card")
 
-                submit_kundali_pdf.click(
-                    fn=run_kundali_pdf,
-                    inputs=[k_name, k_dob, k_tob, k_pob],
-                    outputs=output_kundali_pdf,
-                )
+                submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf, output_kundali_paywall])
 
-            # TAB 6: NUMEROLOGY
+            # TAB 6: NUMEROLOGY (₹249)
             with gr.TabItem("🔢 NUMEROLOGY"):
                 gr.Markdown("### 🔢 Numerology & Name Compatibility Check")
                 with gr.Row():
-                    n_name = gr.Textbox(
-                        label="Full Name", placeholder="e.g. Amitabha Sen"
-                    )
-                    n_dob = gr.Textbox(
-                        label="Date of Birth", placeholder="YYYY-MM-DD"
-                    )
+                    n_name = gr.Textbox(label="Full Name", placeholder="e.g. Amitabha Sen")
+                    n_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
 
-                submit_num = gr.Button(
-                    "🔢 Analyze Numerology & Compatibility", variant="primary"
-                )
+                submit_num = gr.Button("🔢 Analyze Numerology (₹249)", variant="primary")
                 output_num = gr.Markdown(label="Numerology Report")
+                output_num_paywall = gr.HTML(label="Payment Card")
 
-                submit_num.click(
-                    fn=run_numerology, inputs=[n_name, n_dob], outputs=output_num
-                )
+                submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
-            # TAB 7: PANCHANG
+            # TAB 7: PANCHANG (Free & Detailed ₹99)
             with gr.TabItem("📅 PANCHANG"):
                 gr.Markdown("### 📅 Vedic Panchang & Auspicious Shubh Muhurat")
                 with gr.Row():
-                    p_date = gr.Textbox(
-                        label="Target Date", placeholder="YYYY-MM-DD"
-                    )
-                    p_city = gr.Textbox(
-                        label="City / Location", placeholder="e.g. Kolkata, India"
-                    )
+                    p_date = gr.Textbox(label="Target Date", placeholder="YYYY-MM-DD")
+                    p_city = gr.Textbox(label="City / Location", placeholder="e.g. Kolkata, India")
+                with gr.Row():
+                    p_mode = gr.Radio(choices=["Free Daily Panchang", "Detailed Shubh Muhurat Report (₹99)"], value="Free Daily Panchang", label="Select Report Type")
 
-                submit_panchang = gr.Button(
-                    "📅 Check Panchang & Muhurat", variant="primary"
-                )
+                submit_panchang = gr.Button("📅 Check Panchang", variant="primary")
                 output_panchang = gr.Markdown(label="Panchang Details")
+                output_panchang_paywall = gr.HTML(label="Payment Card")
 
                 submit_panchang.click(
-                    fn=run_panchang, inputs=[p_date, p_city], outputs=output_panchang
+                    fn=lambda date, city, mode: run_panchang(date, city, "detailed" if "Detailed" in mode else "free"),
+                    inputs=[p_date, p_city, p_mode],
+                    outputs=[output_panchang, output_panchang_paywall]
                 )
 
             # TAB 8: AI ASSISTANT
@@ -677,45 +601,22 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", js=custom_js) as d
                 gr.Markdown("### 🤖 Ask Your Personal AI Astrologer (Live Chat)")
                 gr.ChatInterface(
                     fn=astro_chat_response,
-                    chatbot=gr.Chatbot(
-                        height=380, label="Cosmic Chat Session"
-                    ),
-                    textbox=gr.Textbox(
-                        placeholder="Ask your personal AI Astrologer anything..."
-                    ),
+                    chatbot=gr.Chatbot(height=380, label="Cosmic Chat Session"),
+                    textbox=gr.Textbox(placeholder="Ask your personal AI Astrologer anything..."),
                     submit_btn="Ask Assistant ✨",
                 )
 
-        # SECRET ADMIN PORTAL (Always rendered so JS can trigger click)
+        # SECRET ADMIN PORTAL
         with gr.Group(elem_id="admin-portal-section", visible=False) as admin_group:
-            with gr.Accordion(
-                "🔒 Secure Owner Portal (Admin Dashboard)", open=True
-            ):
-                gr.Markdown(
-                    "Enter your admin password below to access user logs,"
-                    " contact details, and payment histories."
-                )
+            with gr.Accordion("🔒 Secure Owner Portal (Admin Dashboard)", open=True):
+                gr.Markdown("Enter your admin password below to access user logs and payment histories.")
                 with gr.Row():
-                    secret_pass = gr.Textbox(
-                        label="Admin Secret Password",
-                        type="password",
-                        placeholder="Enter password...",
-                    )
-                    unlock_btn = gr.Button(
-                        "Unlock Dashboard", variant="primary"
-                    )
-                secret_output = gr.Markdown(
-                    label="Admin Logs & Database Summary"
-                )
-                unlock_btn.click(
-                    fn=admin_login_and_view,
-                    inputs=secret_pass,
-                    outputs=secret_output,
-                )
+                    secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter password...")
+                    unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
+                secret_output = gr.Markdown(label="Admin Logs & Database Summary")
+                unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
 
         admin_state = gr.State(value=False)
-
-        # Hidden bridge button to connect HTML click to Gradio state
         with gr.Group(elem_id="real-hidden-btn"):
             real_hidden_trigger = gr.Button("Trigger")
 

@@ -5,7 +5,6 @@ import os
 import requests
 import gradio as gr
 import google.generativeai as genai
-from google.oauth2 import service_account
 
 # Import Hugging Face spaces for ZeroGPU support
 try:
@@ -40,19 +39,20 @@ def save_log(user_data):
         print(f"Error saving log: {e}")
 
 
-# Initialize Gemini API using Environment Variables / Service Account Credentials
-# (Hardcoded key completely removed to fix authentication and expiration errors)
+# Initialize Gemini API using Service Account JSON from Environment Variables
 google_creds_env = os.getenv("GOOGLE_CREDENTIALS")
 if google_creds_env:
     try:
-        creds_dict = json.loads(google_creds_env)
-        credentials = service_account.Credentials.from_service_account_info(
-            creds_dict,
-            scopes=["https://www.googleapis.com/auth/cloud-platform"]
-        )
-        genai.configure(credentials=credentials)
+        # Write the env JSON string to a temporary credentials file for SDK auto-detection
+        creds_path = "/tmp/service_account.json"
+        with open(creds_path, "w", encoding="utf-8") as f:
+            f.write(google_creds_env)
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+        
+        # Configure gemini using default transport with service account credentials
+        genai.configure()
     except Exception as e:
-        print(f"Error loading GOOGLE_CREDENTIALS: {e}")
+        print(f"Error setting up Google Credentials: {e}")
 
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")

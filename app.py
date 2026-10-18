@@ -335,27 +335,37 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* COMPLETE FIX FOR PANCHANG RADIO BUTTONS & OPTIONS */
-.gr-radio, div[data-testid="radio"], div[class*="radio"] {
+/* ULTIMATE GRADIO 4+ RADIO BUTTON OVERRIDE FIX FOR PANCHANG */
+.fieldset-container, fieldset, div[data-testid="radio"] {
     background: transparent !important;
     border: none !important;
 }
 
-div[data-testid="radio"] label, .gr-radio label, div[class*="radio"] label {
+div[data-testid="radio"] label, 
+.gr-radio label, 
+fieldset label, 
+label.svelte-11ic3d1,
+label:has(input[type="radio"]) {
     background: rgba(18, 8, 42, 0.9) !important;
     border: 1px solid rgba(232, 121, 249, 0.5) !important;
     border-radius: 12px !important;
-    padding: 10px 16px !important;
+    padding: 10px 18px !important;
     color: #fef08a !important;
     font-weight: 600 !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
 }
 
-div[data-testid="radio"] label *, .gr-radio label *, div[class*="radio"] label * {
+div[data-testid="radio"] label span, 
+.gr-radio label span, 
+fieldset label span,
+label:has(input[type="radio"]) span {
     color: #fef08a !important;
+    font-size: 0.95rem !important;
 }
 
-div[data-testid="radio"] label:hover, .gr-radio label:hover {
+div[data-testid="radio"] label:hover, 
+.gr-radio label:hover, 
+fieldset label:hover {
     border-color: #f472b6 !important;
     background: rgba(35, 12, 75, 0.95) !important;
 }

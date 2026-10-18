@@ -92,8 +92,17 @@ def generate_ai_prediction(system_role, prompt_text):
     full_prompt = f"{system_role}\n\n{prompt_text}"
     errors = []
 
-    # Using the standard reliable Gemini 1.5 models
-    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro"]:
+    # Auto detect dynamic active available models
+    candidate_models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-1.5-flash", "gemini-1.5-pro"]
+    
+    try:
+        available = [m.name for m in genai.list_models() if "generateContent" in m.supported_generation_methods]
+        if available:
+            candidate_models = available + candidate_models
+    except Exception as e:
+        pass
+
+    for model_name in candidate_models:
         try:
             m = genai.GenerativeModel(model_name)
             res = m.generate_content(full_prompt)
@@ -242,26 +251,10 @@ def run_panchang(date_str, city, mode="free"):
 
 
 def astro_chat_response(message, history):
-    if not GEMINI_API_KEY:
-        return "⚠️ Error: GEMINI_API_KEY environment variable is missing in Render!"
-
-    prompt = (
-        "You are 'AccAstroForge AI Assistant', a wise, empathetic, and expert "
-        f"Vedic Jyotish master. Answer this question warmly: {message}"
+    return generate_ai_prediction(
+        "You are 'AccAstroForge AI Assistant', a wise, empathetic, and expert Vedic Jyotish master.",
+        f"Answer this astrological question warmly: {message}"
     )
-    errors = []
-
-    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro"]:
-        try:
-            m = genai.GenerativeModel(model_name)
-            res = m.generate_content(prompt)
-            if res and res.text:
-                return res.text
-        except Exception as e:
-            errors.append(f"{model_name}: {str(e)}")
-            continue
-
-    return f"⚠️ Chat API Error Details: {' | '.join(errors)}"
 
 
 def admin_login_and_view(password):
@@ -339,12 +332,6 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* ULTIMATE GRADIO 4+ RADIO BUTTON OVERRIDE FIX FOR PANCHANG */
-.fieldset-container, fieldset, div[data-testid="radio"] {
-    background: transparent !important;
-    border: none !important;
-}
-
 div[data-testid="radio"] label, 
 .gr-radio label, 
 fieldset label, 
@@ -367,14 +354,6 @@ label:has(input[type="radio"]) span {
     font-size: 0.95rem !important;
 }
 
-div[data-testid="radio"] label:hover, 
-.gr-radio label:hover, 
-fieldset label:hover {
-    border-color: #f472b6 !important;
-    background: rgba(35, 12, 75, 0.95) !important;
-}
-
-/* HORIZONTAL TAB CONTAINER - ALL 8 TABS PERFECTLY FITTED */
 div[role="tablist"] {
     display: flex !important;
     flex-wrap: nowrap !important;

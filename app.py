@@ -103,10 +103,11 @@ def generate_ai_prediction(system_role, prompt_text):
 
 
 def get_paywall_html(service_name, price, user_name="User"):
+    display_name = user_name.strip() if user_name and user_name.strip() else "User"
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 Unlock {service_name} (₹{price} Only)</h3>
-        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <b>{user_name}</b>, to unlock your complete report & instantly receive detailed astrological breakdown, please complete payment below.</p>
+        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <b>{display_name}</b>, to unlock your complete report & instantly receive detailed astrological breakdown, please complete payment below.</p>
         <p style="color: #4ade80; font-size: 1.25rem; font-weight: bold; margin-bottom: 18px;">Unlock Price: ₹{price}</p>
         
         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -127,26 +128,29 @@ def run_daily_horoscope(sign):
 
 
 def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
+    b_name = boy_name.strip() if boy_name else "Boy"
+    g_name = girl_name.strip() if girl_name else "Girl"
     user_entry = {
         "timestamp": str(datetime.datetime.now()),
-        "full_name": f"{boy_name} & {girl_name}",
+        "full_name": f"{b_name} & {g_name}",
         "service": "Kundali Matching",
         "details": f"Boy DOB: {boy_dob} | Girl DOB: {girl_dob}",
         "payment_status": "Pending / Teased (₹399)",
     }
     save_log(user_entry)
 
-    teaser_prompt = f"Perform a brief 2-line Vedic Kundali compatibility teaser between {boy_name} and {girl_name}."
+    teaser_prompt = f"Perform a brief 2-line Vedic Kundali compatibility teaser between {b_name} and {g_name}."
     teaser = generate_ai_prediction("An expert Vedic Match-maker.", teaser_prompt)
-    teaser_text = f"### ❤️ Kundali Compatibility Teaser for {boy_name} & {girl_name}\n{teaser}"
-    paywall_html = get_paywall_html("Complete Kundali Matching Report", 399, f"{boy_name} & {girl_name}")
+    teaser_text = f"### ❤️ Kundali Compatibility Teaser for {b_name} & {g_name}\n{teaser}"
+    paywall_html = get_paywall_html("Complete Kundali Matching Report", 399, f"{b_name} & {g_name}")
     return teaser_text, paywall_html
 
 
 def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email, address):
+    u_name = name.strip() if name else "User"
     user_entry = {
         "timestamp": str(datetime.datetime.now()),
-        "full_name": name,
+        "full_name": u_name,
         "service": "Complete Life Prediction",
         "dob": dob, "tob": tob, "pob": pob,
         "focus_area": focus_area, "question": question,
@@ -155,10 +159,10 @@ def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email
     }
     save_log(user_entry)
 
-    teaser_prompt = f"Provide a short 2-line basic astrological teaser for Name: {name}, DOB: {dob}."
+    teaser_prompt = f"Provide a short 2-line basic astrological teaser for Name: {u_name}, DOB: {dob}."
     teaser = generate_ai_prediction("An expert Vedic Astrologer.", teaser_prompt)
-    teaser_text = f"### 🌟 Free Astrological Teaser for {name}\n{teaser}"
-    paywall_html = get_paywall_html("Complete Deep Life Forecast & PDF", 499, name)
+    teaser_text = f"### 🌟 Free Astrological Teaser for {u_name}\n{teaser}"
+    paywall_html = get_paywall_html("Complete Deep Life Forecast & PDF", 499, u_name)
     return teaser_text, paywall_html
 
 
@@ -180,36 +184,38 @@ def run_gemstone_remedy(dob, zodiac):
 
 
 def run_kundali_pdf(name, dob, tob, pob):
+    u_name = name.strip() if name else "User"
     user_entry = {
         "timestamp": str(datetime.datetime.now()),
-        "full_name": name,
+        "full_name": u_name,
         "service": "Janam Kundali PDF",
         "details": f"DOB: {dob} | TOB: {tob} | POB: {pob}",
         "payment_status": "Pending / Teased (₹299)",
     }
     save_log(user_entry)
 
-    teaser_prompt = f"Provide a 2-line basic Lagna chart summary teaser for {name} born on {dob}."
+    teaser_prompt = f"Provide a 2-line basic Lagna chart summary teaser for {u_name} born on {dob}."
     teaser = generate_ai_prediction("An expert Vedic Chart Maker.", teaser_prompt)
-    teaser_text = f"### 📜 Janam Kundali Teaser for {name}\n{teaser}"
-    paywall_html = get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
+    teaser_text = f"### 📜 Janam Kundali Teaser for {u_name}\n{teaser}"
+    paywall_html = get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name)
     return teaser_text, paywall_html
 
 
 def run_numerology(name, dob):
+    u_name = name.strip() if name else "User"
     user_entry = {
         "timestamp": str(datetime.datetime.now()),
-        "full_name": name,
+        "full_name": u_name,
         "service": "Numerology Analysis",
         "details": f"DOB: {dob}",
         "payment_status": "Pending / Teased (₹249)",
     }
     save_log(user_entry)
 
-    teaser_prompt = f"Calculate Psychic/Destiny number teaser for Name: {name}, DOB: {dob}."
+    teaser_prompt = f"Calculate Psychic/Destiny number teaser for Name: {u_name}, DOB: {dob}."
     teaser = generate_ai_prediction("An expert Numerologist.", teaser_prompt)
-    teaser_text = f"### 🔢 Numerology Preview for {name}\n{teaser}"
-    paywall_html = get_paywall_html("Detailed Numerology & Name Correction Report", 249, name)
+    teaser_text = f"### 🔢 Numerology Preview for {u_name}\n{teaser}"
+    paywall_html = get_paywall_html("Detailed Numerology & Name Correction Report", 249, u_name)
     return teaser_text, paywall_html
 
 
@@ -327,6 +333,19 @@ div[data-testid="block"], .block, .wrap, .contain {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+}
+
+/* FIX FOR RADIO BUTTONS (PANCHANG & OTHERS) TEXT COLOR & BACKGROUND */
+.radio-group, .gr-radio, div[data-testid="radio"] {
+    background: rgba(18, 8, 42, 0.85) !important;
+    border: 1px solid rgba(232, 121, 249, 0.45) !important;
+    border-radius: 14px !important;
+    padding: 12px 16px !important;
+}
+
+.radio-group label span, div[data-testid="radio"] span, .gr-radio label span {
+    color: #fef08a !important;
+    font-weight: 500 !important;
 }
 
 /* HORIZONTAL TAB CONTAINER - ALL 8 TABS PERFECTLY FITTED */

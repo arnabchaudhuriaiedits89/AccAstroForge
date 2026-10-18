@@ -2,8 +2,9 @@ import base64
 import datetime
 import json
 import os
-import requests
+import google.generativeai as genai
 import gradio as gr
+import razorpay
 
 # ---------------------------------------------------------
 # 1. ADMIN LOGGING & DATABASE SETUP (JSON FILE SYSTEM)
@@ -71,34 +72,28 @@ def generate_ai_prediction(system_role, prompt_text):
     if not api_key:
         return "⚠️ Gemini API Error: GEMINI_API_KEY is missing in environment variables."
     
-    # Using 'v1beta' endpoint with gemini-1.5-flash
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-    headers = {"Content-Type": "application/json"}
-    
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": f"{system_role}\n\n{prompt_text}"}
-                ]
-            }
-        ]
-    }
-    
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
-        if response.status_code == 200:
-            res_json = response.json()
-            return res_json["candidates"][0]["content"]["parts"][0]["text"]
-        else:
-            # Fallback to gemini-pro if flash fails
-            url_fallback = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
-            res_fb = requests.post(url_fallback, headers=headers, json=payload, timeout=30)
-            if res_fb.status_code == 200:
-                return res_fb.json()["candidates"][0]["content"]["parts"][0]["text"]
-            return f"⚠️ API Error ({response.status_code}): {response.text}"
+        genai.configure(api_key=api_key)
+        full_prompt = f"{system_role}\n\n{prompt_text}"
+        
+        # Try gemini-1.5-flash first
+        try:
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(full_prompt)
+            if response and response.text:
+                return response.text
+        except Exception:
+            pass
+            
+        # Fallback to gemini-pro if flash fails
+        model_fb = genai.GenerativeModel('gemini-pro')
+        response_fb = model_fb.generate_content(full_prompt)
+        if response_fb and response_fb.text:
+            return response_fb.text
+            
+        return "⚠️ Warning: Could not generate response from Gemini AI."
     except Exception as e:
-        return f"⚠️ Connection Error: {str(e)}"
+        return f"⚠️ API Error: {str(e)}"
 
 
 def get_paywall_html(service_name, price, user_name="User"):

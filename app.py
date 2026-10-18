@@ -2,7 +2,7 @@ import base64
 import datetime
 import json
 import os
-import google.generativeai as genai
+import requests
 import gradio as gr
 
 # Import Hugging Face spaces for ZeroGPU support
@@ -38,10 +38,8 @@ def save_log(user_data):
         print(f"Error saving log: {e}")
 
 
-# Initialize Gemini API
+# Initialize Gemini API Key
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
 
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -90,22 +88,28 @@ def generate_ai_prediction(system_role, prompt_text):
         return "⚠️ Error: GEMINI_API_KEY environment variable is missing in Render!"
 
     full_prompt = f"{system_role}\n\n{prompt_text}"
-    errors = []
-
-    # Extremely robust fallback list for Gemini models
-    candidate_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-latest"]
-
-    for model_name in candidate_models:
+    
+    # Direct REST API requests to bypass SDK version issues completely
+    models_to_try = ["gemini-1.5-flash", "gemini-1.5-pro"]
+    headers = {"Content-Type": "application/json"}
+    
+    for model in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+        data = {
+            "contents": [{
+                "parts": [{"text": full_prompt}]
+            }]
+        }
         try:
-            m = genai.GenerativeModel(model_name)
-            res = m.generate_content(full_prompt)
-            if res and res.text:
-                return res.text
-        except Exception as e:
-            errors.append(f"{model_name}: {str(e)}")
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            if response.status_code == 200:
+                res_json = response.json()
+                if "candidates" in res_json and len(res_json["candidates"]) > 0:
+                    return res_json["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception:
             continue
 
-    return f"⚠️ Chat API Error Details: {' | '.join(errors)}"
+    return "⚠️ Chat API Error: Unable to fetch response from Gemini REST API. Please check your API key."
 
 
 def get_paywall_html(service_name, price, user_name="User"):

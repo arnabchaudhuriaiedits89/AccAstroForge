@@ -107,7 +107,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 Unlock {service_name} (₹{price} Only)</h3>
-        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <b>{display_name}</b>, to unlock your complete report & instantly receive detailed astrological breakdown, please complete payment below.</p>
+        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, to unlock your complete report & instantly receive detailed astrological breakdown, please complete payment below.</p>
         <p style="color: #4ade80; font-size: 1.25rem; font-weight: bold; margin-bottom: 18px;">Unlock Price: ₹{price}</p>
         
         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -128,8 +128,8 @@ def run_daily_horoscope(sign):
 
 
 def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
-    b_name = boy_name.strip() if boy_name else "Boy"
-    g_name = girl_name.strip() if girl_name else "Girl"
+    b_name = boy_name.strip() if boy_name and boy_name.strip() else "Boy"
+    g_name = girl_name.strip() if girl_name and girl_name.strip() else "Girl"
     user_entry = {
         "timestamp": str(datetime.datetime.now()),
         "full_name": f"{b_name} & {g_name}",
@@ -147,7 +147,7 @@ def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
 
 
 def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email, address):
-    u_name = name.strip() if name else "User"
+    u_name = name.strip() if name and name.strip() else "User"
     user_entry = {
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
@@ -184,7 +184,7 @@ def run_gemstone_remedy(dob, zodiac):
 
 
 def run_kundali_pdf(name, dob, tob, pob):
-    u_name = name.strip() if name else "User"
+    u_name = name.strip() if name and name.strip() else "User"
     user_entry = {
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
@@ -202,7 +202,7 @@ def run_kundali_pdf(name, dob, tob, pob):
 
 
 def run_numerology(name, dob):
-    u_name = name.strip() if name else "User"
+    u_name = name.strip() if name and name.strip() else "User"
     user_entry = {
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
@@ -335,17 +335,29 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* FIX FOR RADIO BUTTONS (PANCHANG & OTHERS) TEXT COLOR & BACKGROUND */
-.radio-group, .gr-radio, div[data-testid="radio"] {
-    background: rgba(18, 8, 42, 0.85) !important;
-    border: 1px solid rgba(232, 121, 249, 0.45) !important;
-    border-radius: 14px !important;
-    padding: 12px 16px !important;
+/* COMPLETE FIX FOR PANCHANG RADIO BUTTONS & OPTIONS */
+.gr-radio, div[data-testid="radio"], div[class*="radio"] {
+    background: transparent !important;
+    border: none !important;
 }
 
-.radio-group label span, div[data-testid="radio"] span, .gr-radio label span {
+div[data-testid="radio"] label, .gr-radio label, div[class*="radio"] label {
+    background: rgba(18, 8, 42, 0.9) !important;
+    border: 1px solid rgba(232, 121, 249, 0.5) !important;
+    border-radius: 12px !important;
+    padding: 10px 16px !important;
     color: #fef08a !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+}
+
+div[data-testid="radio"] label *, .gr-radio label *, div[class*="radio"] label * {
+    color: #fef08a !important;
+}
+
+div[data-testid="radio"] label:hover, .gr-radio label:hover {
+    border-color: #f472b6 !important;
+    background: rgba(35, 12, 75, 0.95) !important;
 }
 
 /* HORIZONTAL TAB CONTAINER - ALL 8 TABS PERFECTLY FITTED */

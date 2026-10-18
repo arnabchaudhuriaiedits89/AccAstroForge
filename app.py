@@ -4,7 +4,6 @@ import json
 import os
 import requests
 import gradio as gr
-import google.generativeai as genai
 
 # ---------------------------------------------------------
 # 1. ADMIN LOGGING & DATABASE SETUP (JSON FILE SYSTEM)
@@ -31,13 +30,6 @@ def save_log(user_data):
     except Exception as e:
         print(f"Error saving log: {e}")
 
-
-# Initialize Gemini API using standard API Key
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-if gemini_api_key:
-    genai.configure(api_key=gemini_api_key.strip())
-else:
-    print("⚠️ Warning: GEMINI_API_KEY is not set in environment variables.")
 
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -75,29 +67,32 @@ else:
 
 
 def generate_ai_prediction(system_role, prompt_text):
-    full_prompt = f"{system_role}\n\n{prompt_text}"
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        return "⚠️ Gemini API Error: GEMINI_API_KEY is missing in environment variables."
     
-    # Updated direct endpoints compatible with standard AI Studio API Key
-    model_candidates = [
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro-latest',
-        'gemini-1.0-pro',
-        'gemini-pro'
-    ]
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    headers = {"Content-Type": "application/json"}
     
-    last_error = ""
-    for m_name in model_candidates:
-        try:
-            model = genai.GenerativeModel(m_name)
-            response = model.generate_content(full_prompt)
-            if response and response.text:
-                return response.text
-        except Exception as e:
-            last_error = str(e)
-            print(f"Model {m_name} failed: {e}")
-            continue
-            
-    return f"⚠️ Gemini API Error: {last_error if last_error else 'All model candidates failed.'}"
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": f"{system_role}\n\n{prompt_text}"}
+                ]
+            }
+        ]
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        if response.status_code == 200:
+            res_json = response.json()
+            return res_json["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            return f"⚠️ API Error ({response.status_code}): {response.text}"
+    except Exception as e:
+        return f"⚠️ Connection Error: {str(e)}"
 
 
 def get_paywall_html(service_name, price, user_name="User"):

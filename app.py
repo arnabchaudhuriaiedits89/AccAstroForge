@@ -89,8 +89,8 @@ def generate_ai_prediction(system_role, prompt_text):
 
     full_prompt = f"{system_role}\n\n{prompt_text}"
     
-    # Direct REST API requests to bypass SDK version issues completely
-    models_to_try = ["gemini-1.5-flash", "gemini-1.5-pro"]
+    # Direct REST API requests targeting latest stable models compatible with new keys
+    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash"]
     headers = {"Content-Type": "application/json"}
     
     for model in models_to_try:

@@ -32,19 +32,12 @@ def save_log(user_data):
         print(f"Error saving log: {e}")
 
 
-# Initialize Gemini API using GCP Service Account JSON from Environment Variables
-google_creds_env = os.getenv("GOOGLE_CREDENTIALS")
-if google_creds_env:
-    try:
-        creds_path = "/tmp/service_account.json"
-        with open(creds_path, "w", encoding="utf-8") as f:
-            f.write(google_creds_env)
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
-        genai.configure()
-    except Exception as e:
-        print(f"Error setting up Google Credentials: {e}")
+# Initialize Gemini API using standard API Key from Environment Variables
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+if gemini_api_key:
+    genai.configure(api_key=gemini_api_key)
 else:
-    print("⚠️ Warning: GOOGLE_CREDENTIALS is not set in environment variables.")
+    print("⚠️ Warning: GEMINI_API_KEY is not set in environment variables.")
 
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -84,7 +77,7 @@ else:
 def generate_ai_prediction(system_role, prompt_text):
     full_prompt = f"{system_role}\n\n{prompt_text}"
     
-    # Fallback mechanism for models using Service Account credentials
+    # Multi-model fallback list to completely avoid 404 model errors
     model_candidates = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
     
     for m_name in model_candidates:
@@ -97,7 +90,7 @@ def generate_ai_prediction(system_role, prompt_text):
             print(f"Model {m_name} failed: {e}")
             continue
             
-    return "⚠️ Gemini API Error: All model candidates failed using GOOGLE_CREDENTIALS."
+    return "⚠️ Gemini API Error: All model candidates failed. Please verify your GEMINI_API_KEY."
 
 
 def get_paywall_html(service_name, price, user_name="User"):

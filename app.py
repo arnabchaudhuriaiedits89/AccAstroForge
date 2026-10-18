@@ -75,7 +75,7 @@ def generate_ai_prediction(system_role, prompt_text):
     try:
         client = Groq(api_key=api_key)
         completion = client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": system_role},
                 {"role": "user", "content": prompt_text}

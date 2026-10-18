@@ -92,8 +92,8 @@ def generate_ai_prediction(system_role, prompt_text):
     full_prompt = f"{system_role}\n\n{prompt_text}"
     errors = []
 
-    # Modern Google GenAI stable fallback model names
-    candidate_models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-latest"]
+    # Extremely robust fallback list for Gemini models
+    candidate_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-latest"]
 
     for model_name in candidate_models:
         try:

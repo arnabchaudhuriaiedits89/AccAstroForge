@@ -87,9 +87,10 @@ def gpu_decorator(func):
 @gpu_decorator
 def generate_ai_prediction(system_role, prompt_text):
     if not GEMINI_API_KEY:
-        return "✨ *Cosmic Alignment in Progress... Please ensure GEMINI_API_KEY is properly configured.*"
+        return "⚠️ Error: GEMINI_API_KEY environment variable is missing in Render!"
 
     full_prompt = f"{system_role}\n\n{prompt_text}"
+    errors = []
 
     for model_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
         try:
@@ -98,10 +99,10 @@ def generate_ai_prediction(system_role, prompt_text):
             if res and res.text:
                 return res.text
         except Exception as e:
-            print(f"Error trying {model_name}: {e}")
+            errors.append(f"{model_name}: {str(e)}")
             continue
 
-    return "✨ *Cosmic Insights Preview:* Planetary energy shows strong growth and unexpected auspicious opportunities heading your way."
+    return f"⚠️ Gemini API Error Details: {' | '.join(errors)}"
 
 
 def get_paywall_html(service_name, price, user_name="User"):
@@ -241,12 +242,13 @@ def run_panchang(date_str, city, mode="free"):
 
 def astro_chat_response(message, history):
     if not GEMINI_API_KEY:
-        return "The planets are aligning. Please ensure your Gemini API key is active."
+        return "⚠️ Error: GEMINI_API_KEY environment variable is missing in Render!"
 
     prompt = (
         "You are 'AccAstroForge AI Assistant', a wise, empathetic, and expert "
         f"Vedic Jyotish master. Answer this question warmly: {message}"
     )
+    errors = []
 
     for model_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
         try:
@@ -255,10 +257,10 @@ def astro_chat_response(message, history):
             if res and res.text:
                 return res.text
         except Exception as e:
-            print(f"Chat error with {model_name}: {e}")
+            errors.append(f"{model_name}: {str(e)}")
             continue
 
-    return "✨ *Cosmic Guidance:* Your energy shows high potential. Focus on spiritual grounding."
+    return f"⚠️ Chat API Error Details: {' | '.join(errors)}"
 
 
 def admin_login_and_view(password):

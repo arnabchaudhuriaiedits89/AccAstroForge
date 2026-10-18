@@ -48,9 +48,8 @@ if GEMINI_API_KEY:
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
-model = None
-if GEMINI_API_KEY:
-    model = genai.GenerativeModel("gemini-1.5-flash")
+# Fallback models list for robust dynamic response
+SUPPORTED_MODELS = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]
 
 logo_path = "logo.png" if os.path.exists("logo.png") else None
 
@@ -92,14 +91,23 @@ def gpu_decorator(func):
 
 @gpu_decorator
 def generate_ai_prediction(system_role, prompt_text):
-    if not model:
-        return "✨ *Cosmic Alignment in Progress... Your planetary energy indicates strong luck and success ahead.*"
-    try:
-        full_prompt = f"{system_role}\n\n{prompt_text}"
-        response = model.generate_content(full_prompt)
-        return response.text
-    except Exception as e:
-        return "✨ *Cosmic Insights Preview:* Your chart reflects high potential and favorable planetary alignments in the coming period."
+    if not GEMINI_API_KEY:
+        return "✨ *Cosmic Alignment in Progress... Please set GEMINI_API_KEY.*"
+    
+    full_prompt = f"{system_role}\n\n{prompt_text}"
+    
+    # Try multiple Gemini model fallbacks to ensure dynamic generation works
+    for model_name in SUPPORTED_MODELS:
+        try:
+            m = genai.GenerativeModel(model_name)
+            response = m.generate_content(full_prompt)
+            if response and response.text:
+                return response.text
+        except Exception as err:
+            print(f"Error with model {model_name}: {err}")
+            continue
+
+    return "✨ *Cosmic Insights Preview:* Your chart reflects high potential and favorable planetary alignments in the coming period."
 
 
 def get_paywall_html(service_name, price, user_name="User"):
@@ -238,7 +246,7 @@ def run_panchang(date_str, city, mode="free"):
 
 
 def astro_chat_response(message, history):
-    if not model:
+    if not GEMINI_API_KEY:
         return "The planets are aligning. Please ensure your Gemini API key is active."
 
     chat_history = []
@@ -246,18 +254,25 @@ def astro_chat_response(message, history):
         chat_history.append({"role": "user", "parts": [human]})
         chat_history.append({"role": "model", "parts": [assistant]})
 
-    try:
-        chat = model.start_chat(history=chat_history)
-        system_instruction = (
-            "You are 'AccAstroForge AI Assistant', a wise, empathetic, and expert "
-            "Vedic Jyotish master. Answer users' astrological questions with deep "
-            "wisdom, remedies, and a welcoming tone."
-        )
-        full_message = f"{system_instruction}\n\nUser Question: {message}"
-        response = chat.send_message(full_message)
-        return response.text
-    except Exception:
-        return "✨ *Cosmic Guidance:* Your energy shows high potential. Focus on spiritual grounding."
+    system_instruction = (
+        "You are 'AccAstroForge AI Assistant', a wise, empathetic, and expert "
+        "Vedic Jyotish master. Answer users' astrological questions with deep "
+        "wisdom, remedies, and a welcoming tone."
+    )
+    full_message = f"{system_instruction}\n\nUser Question: {message}"
+
+    for model_name in SUPPORTED_MODELS:
+        try:
+            m = genai.GenerativeModel(model_name)
+            chat = m.start_chat(history=chat_history)
+            response = chat.send_message(full_message)
+            if response and response.text:
+                return response.text
+        except Exception as err:
+            print(f"Chat error with {model_name}: {err}")
+            continue
+
+    return "✨ *Cosmic Guidance:* Your energy shows high potential. Focus on spiritual grounding."
 
 
 def admin_login_and_view(password):

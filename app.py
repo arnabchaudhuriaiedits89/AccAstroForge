@@ -39,8 +39,8 @@ def save_log(user_data):
         print(f"Error saving log: {e}")
 
 
-# Initialize Gemini API Key using official SDK
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# Initialize Gemini API Key (Hardcoded to bypass Render env variable issues)
+GEMINI_API_KEY = "AIzaSyBpLh54UVFoanlyPbso-asa-N0RKC7KmHQ"
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY.strip().strip('"').strip("'"))
 
@@ -88,7 +88,7 @@ def gpu_decorator(func):
 @gpu_decorator
 def generate_ai_prediction(system_role, prompt_text):
     if not GEMINI_API_KEY:
-        return "⚠️ Error: GEMINI_API_KEY environment variable is missing in Render!"
+        return "⚠️ Error: GEMINI_API_KEY is missing!"
 
     full_prompt = f"{system_role}\n\n{prompt_text}"
     

@@ -4,6 +4,7 @@ import json
 import os
 import requests
 import gradio as gr
+import google.generativeai as genai
 
 # Import Hugging Face spaces for ZeroGPU support
 try:
@@ -38,8 +39,10 @@ def save_log(user_data):
         print(f"Error saving log: {e}")
 
 
-# Initialize Gemini API Key
+# Initialize Gemini API Key using official SDK
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY.strip().strip('"').strip("'"))
 
 # Admin Password
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -87,31 +90,17 @@ def generate_ai_prediction(system_role, prompt_text):
     if not GEMINI_API_KEY:
         return "⚠️ Error: GEMINI_API_KEY environment variable is missing in Render!"
 
-    # Clean the API Key (remove any extra spaces, quotes, or trailing characters)
-    clean_key = GEMINI_API_KEY.strip().strip('"').strip("'")
     full_prompt = f"{system_role}\n\n{prompt_text}"
     
-    model_name = "gemini-1.5-flash"
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={clean_key}"
-    
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "contents": [{
-            "parts": [{"text": full_prompt}]
-        }]
-    }
-    
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=25)
-        if response.status_code == 200:
-            res_json = response.json()
-            if "candidates" in res_json and len(res_json["candidates"]) > 0:
-                return res_json["candidates"][0]["content"]["parts"][0]["text"]
-            return "⚠️ No response generated from Gemini API."
-        else:
-            return f"⚠️ API Error ({response.status_code}): {response.text}"
+        # Using official google-generativeai SDK for robust and direct connection
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(full_prompt)
+        if response and response.text:
+            return response.text
+        return "⚠️ No response generated from Gemini API."
     except Exception as e:
-        return f"⚠️ Request Failed: {str(e)}"
+        return f"⚠️ Gemini API Error: {str(e)}"
 
 
 def get_paywall_html(service_name, price, user_name="User"):

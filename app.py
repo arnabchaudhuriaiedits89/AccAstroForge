@@ -32,10 +32,10 @@ def save_log(user_data):
         print(f"Error saving log: {e}")
 
 
-# Initialize Gemini API using standard API Key from Environment Variables
+# Initialize Gemini API using standard API Key
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 if gemini_api_key:
-    genai.configure(api_key=gemini_api_key)
+    genai.configure(api_key=gemini_api_key.strip())
 else:
     print("⚠️ Warning: GEMINI_API_KEY is not set in environment variables.")
 
@@ -77,9 +77,15 @@ else:
 def generate_ai_prediction(system_role, prompt_text):
     full_prompt = f"{system_role}\n\n{prompt_text}"
     
-    # Multi-model fallback list to completely avoid 404 model errors
-    model_candidates = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+    # Updated direct endpoints compatible with standard AI Studio API Key
+    model_candidates = [
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-pro-latest',
+        'gemini-1.0-pro',
+        'gemini-pro'
+    ]
     
+    last_error = ""
     for m_name in model_candidates:
         try:
             model = genai.GenerativeModel(m_name)
@@ -87,10 +93,11 @@ def generate_ai_prediction(system_role, prompt_text):
             if response and response.text:
                 return response.text
         except Exception as e:
+            last_error = str(e)
             print(f"Model {m_name} failed: {e}")
             continue
             
-    return "⚠️ Gemini API Error: All model candidates failed. Please verify your GEMINI_API_KEY."
+    return f"⚠️ Gemini API Error: {last_error if last_error else 'All model candidates failed.'}"
 
 
 def get_paywall_html(service_name, price, user_name="User"):

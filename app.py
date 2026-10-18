@@ -92,15 +92,8 @@ def generate_ai_prediction(system_role, prompt_text):
     full_prompt = f"{system_role}\n\n{prompt_text}"
     errors = []
 
-    # Auto detect dynamic active available models
-    candidate_models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-1.5-flash", "gemini-1.5-pro"]
-    
-    try:
-        available = [m.name for m in genai.list_models() if "generateContent" in m.supported_generation_methods]
-        if available:
-            candidate_models = available + candidate_models
-    except Exception as e:
-        pass
+    # Modern Google GenAI stable fallback model names
+    candidate_models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-latest"]
 
     for model_name in candidate_models:
         try:
@@ -112,7 +105,7 @@ def generate_ai_prediction(system_role, prompt_text):
             errors.append(f"{model_name}: {str(e)}")
             continue
 
-    return f"⚠️ Gemini API Error Details: {' | '.join(errors)}"
+    return f"⚠️ Chat API Error Details: {' | '.join(errors)}"
 
 
 def get_paywall_html(service_name, price, user_name="User"):

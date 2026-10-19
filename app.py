@@ -295,7 +295,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. MASTER TRANSPARENT GLASSMORPHISM CSS & UI
+# 5. MASTER TRANSPARENT GLASSMORPHISM CSS & UI (FORCE OVERRIDE)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -438,24 +438,29 @@ input:focus, textarea:focus, select:focus {
     color: #ffffff !important;
 }
 
-/* Markdown Headings & Output Box Fix for ALL tabs */
-h1, h2, h3, h4, h5, h6, .gr-markdown h1, .gr-markdown h2, .gr-markdown h3 {
+/* ABSOLUTE FORCE OVERRIDE FOR ALL MARKDOWN & OUTPUT CONTAINERS */
+h1, h2, h3, h4, h5, h6, 
+.gr-markdown h1, .gr-markdown h2, .gr-markdown h3,
+.prose h1, .prose h2, .prose h3 {
     color: #fde047 !important;
     font-family: 'Cinzel', serif !important;
     text-shadow: 0 0 10px rgba(253, 224, 71, 0.4);
 }
 
-.gr-markdown {
-    background: rgba(14, 5, 35, 0.92) !important;
+.gr-markdown, .prose, div[data-testid="markdown"] {
+    background: rgba(14, 5, 35, 0.95) !important;
     backdrop-filter: blur(18px) !important;
-    border: 1px solid rgba(232, 121, 249, 0.5) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    border: 1px solid rgba(232, 121, 249, 0.6) !important;
     border-radius: 18px !important;
     padding: 24px !important;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
     color: #ffffff !important;
 }
 
-.gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span {
+.gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span,
+.prose p, .prose li, .prose strong, .prose span,
+div[data-testid="markdown"] p, div[data-testid="markdown"] span {
     color: #ffffff !important;
 }
 """

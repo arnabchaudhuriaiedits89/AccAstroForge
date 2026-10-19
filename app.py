@@ -295,7 +295,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. ABSOLUTE CLEAN GLASSMORPHISM CSS & PADDING FIX
+# 5. ABSOLUTE CLEAN GLASSMORPHISM CSS & PSEUDO-ELEMENT RESET
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -430,10 +430,11 @@ input:focus, textarea:focus, select:focus {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-radius: 12px !important;
-    padding: 12px 18px !important;
+    padding: 10px 14px !important;
     border: 1px solid rgba(254, 240, 138, 0.4) !important;
-    margin: 6px 0 !important;
-    max-width: 85% !important;
+    margin: 4px 0 !important;
+    width: auto !important;
+    display: inline-block !important;
 }
 
 .message.bot, .bot-row, div[data-testid="bot"], .message.bot p, .message.bot span {
@@ -441,7 +442,7 @@ input:focus, textarea:focus, select:focus {
     color: #ffffff !important;
 }
 
-/* REMOVE INVERTED COMMAS & FIX TEXT PADDING IN OUTPUT BOXES */
+/* COMPLETELY REMOVE INVERTED COMMAS & LEFT BORDER SHIFTS IN OUTPUT BOXES */
 h1, h2, h3, h4, h5, h6, 
 .gr-markdown h1, .gr-markdown h2, .gr-markdown h3,
 .prose h1, .prose h2, .prose h3 {
@@ -462,6 +463,15 @@ h1, h2, h3, h4, h5, h6,
     margin-top: 10px !important;
 }
 
+/* KILL GRADIO'S PSEUDO-ELEMENTS CAUSING THE INVERTED COMMA SHAPE */
+.gr-markdown::before, .gr-markdown::after,
+.prose::before, .prose::after,
+div[data-testid="markdown"]::before, div[data-testid="markdown"]::after {
+    content: none !important;
+    display: none !important;
+    border: none !important;
+}
+
 .gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span,
 .prose p, .prose li, .prose strong, .prose span,
 div[data-testid="markdown"] p, div[data-testid="markdown"] span {
@@ -469,6 +479,7 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
     padding-left: 0 !important;
     margin-left: 0 !important;
     text-indent: 0 !important;
+    border-left: none !important;
 }
 """
 

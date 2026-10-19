@@ -143,7 +143,7 @@ def calculate_astrological_profile(name, dob_str):
 
 
 # ---------------------------------------------------------
-# 3. REPORTLAB PDF GENERATOR & SECURE RAZORPAY SDK PAYWALL
+# 3. REPORTLAB PDF GENERATOR & DIRECT RAZORPAY LINK PAYWALL
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -200,42 +200,17 @@ def create_kundali_pdf_file(name, dob, tob, pob):
 
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
-    amount_in_paisa = price * 100
+    pay_url = "https://rzp.io/l/accastroforge"
     
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
-        <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 Unlock {service_name} (₹{price} Only)</h3>
+        <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
         <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
         <p style="color: #4ade80; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
         
-        <button onclick="openRazorpayCheckout_{price}()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
+        <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
             🚀 Proceed to Pay ₹{price} (UPI, GPay, PhonePe & Cards)
-        </button>
-
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-        <script>
-        function openRazorpayCheckout_{price}() {{
-            var options = {{
-                "key": "{RAZORPAY_KEY_ID}",
-                "amount": "{amount_in_paisa}",
-                "currency": "INR",
-                "name": "AccAstroForge",
-                "description": "{service_name}",
-                "image": "{logo_src if logo_b64 else ''}",
-                "handler": function (response){{
-                    alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
-                }},
-                "prefill": {{
-                    "name": "{display_name}"
-                }},
-                "theme": {{
-                    "color": "#7c3aed"
-                }}
-            }};
-            var rzp1 = new Razorpay(options);
-            rzp1.open();
-        }}
-        </script>
+        </a>
     </div>
     """
 
@@ -261,7 +236,7 @@ def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Complete Life Prediction", "payment_status": "Pending (₹499)"})
     
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser_text = f"""### 🌟 Astrological Teaser for {u_name}
+    teaser_text = f"""### 🌟 ASTROLOGICAL TEASER FOR USER
 - <span style="color: #fde047; font-weight: 700;">Rashi:</span> <span style="color: #ffffff; font-weight: 600;">{profile['zodiac']}</span>
 - <span style="color: #fde047; font-weight: 700;">Nakshatra:</span> <span style="color: #ffffff; font-weight: 600;">{profile['nakshatra']}</span>
 - <span style="color: #fde047; font-weight: 700;">Dasha:</span> <span style="color: #ffffff; font-weight: 600;">{profile['dasha']}</span>

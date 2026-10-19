@@ -295,7 +295,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. BULLETPROOF ULTIMATE CSS & LAYOUT OVERRIDE
+# 5. FINAL PINPOINT CSS OVERRIDE FOR RADIO & USER CHAT BUBBLE
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -404,15 +404,16 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
-/* ABSOLUTE FIX FOR PANCHANG RADIO & CHECKBOX BUTTONS */
-.gr-radio, .gr-checkbox, div[data-testid="radio"], div[data-testid="checkbox-group"] {
+/* 1. AGGRESSIVE FIX FOR PANCHANG RADIO BUTTONS (WHITE BOX BACKGROUND REMOVAL) */
+.gr-radio, .gr-checkbox, div[data-testid="radio"], div[data-testid="checkbox-group"], .wrap.svelte-1g8cm1c {
     background: rgba(18, 8, 42, 0.95) !important;
+    background-color: rgba(18, 8, 42, 0.95) !important;
     border: 1px solid rgba(232, 121, 249, 0.6) !important;
     border-radius: 14px !important;
     padding: 14px 18px !important;
 }
 
-.gr-radio label, .gr-checkbox label, .gr-radio span, .gr-checkbox span, label span, .gr-radio input + label, .gr-checkbox input + label {
+.gr-radio label, .gr-checkbox label, .gr-radio span, .gr-checkbox span, label span, .gr-radio input + label, .gr-checkbox input + label, span.svelte-1ipelgc {
     background: transparent !important;
     background-color: transparent !important;
     color: #ffffff !important;
@@ -420,7 +421,7 @@ input:focus, textarea:focus, select:focus {
     border: none !important;
 }
 
-/* Chatbot Fixes for clear visibility & proper user message bubble */
+/* 2. FIX FOR AI ASSISTANT USER MESSAGE BUBBLE (PREVENT VERTICAL STRETCHING) */
 .chatbot, .message-wrap, .message, div[data-testid="chatbot"] {
     background: rgba(14, 5, 35, 0.92) !important;
     border: 1px solid rgba(232, 121, 249, 0.45) !important;
@@ -432,12 +433,15 @@ input:focus, textarea:focus, select:focus {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-radius: 12px !important;
-    padding: 10px 16px !important;
+    padding: 12px 18px !important;
     border: 1px solid rgba(254, 240, 138, 0.5) !important;
-    margin: 6px 0 !important;
-    display: inline-block !important;
-    width: fit-content !important;
-    max-width: 85% !important;
+    margin: 8px 0 !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: 80% !important;
+    height: auto !important;
     word-break: break-word !important;
 }
 
@@ -446,7 +450,7 @@ input:focus, textarea:focus, select:focus {
     color: #ffffff !important;
 }
 
-/* TOTAL REMOVAL OF INVERTED COMMAS AND PADDING FIX FOR MARKDOWN BOXES */
+/* MARKDOWN STYLING */
 h1, h2, h3, h4, h5, h6, 
 .gr-markdown h1, .gr-markdown h2, .gr-markdown h3,
 .prose h1, .prose h2, .prose h3 {
@@ -467,7 +471,6 @@ h1, h2, h3, h4, h5, h6,
     margin-top: 10px !important;
 }
 
-/* NUCLEAR RESET FOR GRADIO PSEUDO ELEMENTS AND INDENTATIONS */
 .gr-markdown::before, .gr-markdown::after,
 .prose::before, .prose::after,
 div[data-testid="markdown"]::before, div[data-testid="markdown"]::after {

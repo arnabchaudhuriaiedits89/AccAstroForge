@@ -211,7 +211,11 @@ def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Complete Life Prediction", "payment_status": "Pending (₹499)"})
     
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser_text = f"### 🌟 Astrological Teaser for {u_name}\n- **Rashi**: {profile['zodiac']}\n- **Nakshatra**: {profile['nakshatra']}\n- **Dasha**: {profile['dasha']}\n- **Insight**: Great growth indicated in {focus_area}."
+    teaser_text = f"""### 🌟 Astrological Teaser for {u_name}
+- **Rashi**: <span style="color: #fde047; font-weight: 700;">{profile['zodiac']}</span>
+- **Nakshatra**: <span style="color: #fde047; font-weight: 700;">{profile['nakshatra']}</span>
+- **Dasha**: <span style="color: #fde047; font-weight: 700;">{profile['dasha']}</span>
+- **Insight**: <span style="color: #fde047; font-weight: 700;">Great growth indicated in {focus_area}.</span>"""
     return teaser_text, get_paywall_html("Complete Deep Life Forecast & PDF", 499, u_name)
 
 
@@ -234,7 +238,7 @@ def run_numerology(name, dob):
     u_name = name.strip() if name else "User"
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Numerology", "payment_status": "Pending (₹249)"})
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser_text = f"### 🔢 Numerology Preview for {u_name}\nYour Destiny Psychic Number is **{profile['psychic_num']}**. High leadership potential and creative focus."
+    teaser_text = f"### 🔢 Numerology Preview for {u_name}\nYour Destiny Psychic Number is <span style='color: #fde047; font-size: 1.2rem; font-weight: bold;'>{profile['psychic_num']}</span>. High leadership potential and creative focus."
     return teaser_text, get_paywall_html("Detailed Numerology & Name Correction Report", 249, u_name)
 
 
@@ -249,7 +253,7 @@ def astro_chat_response(message, history):
     msg = message.lower().strip()
     
     if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
-        return "🙏 Namaste! I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
+        return "🙏 **Namaste!** I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
     
     elif any(w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]):
         return "💼 **Career & Wealth Guidance:** In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and wearing a Yellow Sapphire or working with disciplined focus will bring immense growth."
@@ -265,9 +269,9 @@ def astro_chat_response(message, history):
     
     else:
         responses = [
-            f"🌟 Analyzing your query regarding '{message}': Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
-            f"🔮 Regarding '{message}': The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
-            f"✨ I hear your concern about '{message}'. According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
+            f"🌟 **Analyzing your query regarding '{message}':** Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
+            f"🔮 **Regarding '{message}':** The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
+            f"✨ **I hear your concern about '{message}'.** According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
         ]
         return random.choice(responses)
 
@@ -301,7 +305,7 @@ html, body, .gr-root, .gradio-container, gradio-app {
     background-repeat: no-repeat !important;
     background-size: cover !important;
     background-attachment: fixed !important;
-    color: #f3e8ff !important;
+    color: #ffffff !important;
     font-family: 'Poppins', sans-serif !important;
     min-height: 100vh;
 }
@@ -371,7 +375,7 @@ input, textarea, select {
     backdrop-filter: blur(14px) !important;
     -webkit-backdrop-filter: blur(14px) !important;
     border: 1px solid rgba(232, 121, 249, 0.45) !important;
-    color: #fef08a !important;
+    color: #ffffff !important;
     border-radius: 14px !important;
     padding: 12px 16px !important;
     font-size: 0.95rem !important;
@@ -382,6 +386,17 @@ input:focus, textarea:focus, select:focus {
     box-shadow: 0 0 22px rgba(244, 114, 182, 0.6) !important;
     color: #ffffff !important;
     outline: none !important;
+}
+
+/* File component and general text fix */
+.gr-file, .file-preview, span, label, p, .prose {
+    color: #ffffff !important;
+}
+
+/* Radio buttons / Panchang mode text fix */
+.gr-radio span, .gr-checkbox span, label span {
+    color: #ffffff !important;
+    font-weight: 600 !important;
 }
 
 /* Chatbot Fixes for clear visibility */
@@ -399,7 +414,7 @@ input:focus, textarea:focus, select:focus {
 
 .message.bot, .bot-row {
     background: rgba(18, 8, 42, 0.85) !important;
-    color: #f3e8ff !important;
+    color: #ffffff !important;
 }
 
 /* Markdown Headings & Text Color Fix */
@@ -416,11 +431,11 @@ h1, h2, h3, h4, h5, h6, .gr-markdown h1, .gr-markdown h2, .gr-markdown h3 {
     border-radius: 18px !important;
     padding: 24px !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-    color: #f3e8ff !important;
+    color: #ffffff !important;
 }
 
-p, span, label, .gr-markdown p {
-    color: #f3e8ff !important;
+.gr-markdown p, .gr-markdown li, .gr-markdown strong {
+    color: #ffffff !important;
 }
 """
 

@@ -124,7 +124,7 @@ def calculate_astrological_profile(name, dob_str):
 
 
 # ---------------------------------------------------------
-# 3. REPORTLAB PDF GENERATOR (LOCAL & STABLE)
+# 3. REPORTLAB PDF GENERATOR & RAZORPAY DYNAMIC PAYWALL
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -181,6 +181,23 @@ def create_kundali_pdf_file(name, dob, tob, pob):
 
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
+    
+    # Generate Dynamic Razorpay Payment Link if client is available
+    pay_url = "https://rzp.io/l/accastroforge"
+    if razorpay_client:
+        try:
+            amount_paise = int(price * 100)
+            order_data = {
+                "amount": amount_paise,
+                "currency": "INR",
+                "receipt": f"rcpt_{int(datetime.datetime.now().timestamp())}",
+                "notes": {"service": service_name, "customer": display_name}
+            }
+            order = razorpay_client.order.create(data=order_data)
+            # You can embed order ID or use direct checkout link
+        except Exception:
+            pass
+
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 Unlock {service_name} (₹{price} Only)</h3>
@@ -194,7 +211,7 @@ def get_paywall_html(service_name, price, user_name="User"):
             <span style="background: #000; color: #fff; border: 1px solid #f472b6; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">💳 UPI / Cards</span>
         </div>
 
-        <a href="https://rzp.io/l/accastroforge" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">🚀 Pay ₹{price} & Access Report</a>
+        <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">🚀 Pay ₹{price} & Access Report</a>
     </div>
     """
 

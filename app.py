@@ -67,14 +67,14 @@ if logo_b64:
     logo_element = f"""
     <div style="display: flex; align-items: center; gap: 10px;">
         <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
-        <span id="secret-admin-dot" title="Admin Trigger" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
+        <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger button').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
     </div>
     """
 else:
     logo_element = """
     <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
-        <span id="secret-admin-dot" title="Admin Trigger" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
+        <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger button').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
     </div>
     """
 
@@ -459,21 +459,7 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
 }
 """
 
-with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", js="""
-function() {
-    setTimeout(() => {
-        const dot = document.getElementById('secret-admin-dot');
-        if (dot) {
-            dot.onclick = () => {
-                const triggerBtn = document.querySelector('#real-hidden-trigger button');
-                if (triggerBtn) {
-                    triggerBtn.click();
-                }
-            };
-        }
-    }, 1200);
-}
-""") as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
@@ -591,10 +577,10 @@ function() {
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-        # SECRET ADMIN PORTAL (PROPERLY HIDDEN BY DEFAULT)
+        # SECRET ADMIN PORTAL (PROPERLY HIDDEN BY DEFAULT, OPENS ON DOT CLICK)
         with gr.Group(visible=False) as admin_group:
             with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
-                secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Admin Password")
+                secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")
                 unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
                 secret_output = gr.Markdown()
                 unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)

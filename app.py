@@ -295,7 +295,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. ABSOLUTE CLEAN GLASSMORPHISM CSS & PSEUDO-ELEMENT RESET
+# 5. BULLETPROOF ULTIMATE CSS & LAYOUT OVERRIDE
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -392,7 +392,7 @@ input:focus, textarea:focus, select:focus {
     outline: none !important;
 }
 
-/* File component, containers & general text fix */
+/* File component */
 .gr-file, .file-preview, .gr-file div, .gr-file span, .file-preview * {
     background: rgba(18, 8, 42, 0.95) !important;
     color: #fde047 !important;
@@ -404,21 +404,23 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
-/* Radio buttons / Panchang mode absolute background & text fix */
+/* ABSOLUTE FIX FOR PANCHANG RADIO & CHECKBOX BUTTONS */
 .gr-radio, .gr-checkbox, div[data-testid="radio"], div[data-testid="checkbox-group"] {
     background: rgba(18, 8, 42, 0.95) !important;
-    border: 1px solid rgba(232, 121, 249, 0.5) !important;
+    border: 1px solid rgba(232, 121, 249, 0.6) !important;
     border-radius: 14px !important;
-    padding: 12px 16px !important;
+    padding: 14px 18px !important;
 }
 
-.gr-radio label, .gr-checkbox label, .gr-radio span, .gr-checkbox span, label span, .gr-radio input + label {
+.gr-radio label, .gr-checkbox label, .gr-radio span, .gr-checkbox span, label span, .gr-radio input + label, .gr-checkbox input + label {
     background: transparent !important;
+    background-color: transparent !important;
     color: #ffffff !important;
     font-weight: 600 !important;
+    border: none !important;
 }
 
-/* Chatbot Fixes for clear visibility & proper padding */
+/* Chatbot Fixes for clear visibility & proper user message bubble */
 .chatbot, .message-wrap, .message, div[data-testid="chatbot"] {
     background: rgba(14, 5, 35, 0.92) !important;
     border: 1px solid rgba(232, 121, 249, 0.45) !important;
@@ -430,11 +432,13 @@ input:focus, textarea:focus, select:focus {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-radius: 12px !important;
-    padding: 10px 14px !important;
-    border: 1px solid rgba(254, 240, 138, 0.4) !important;
-    margin: 4px 0 !important;
-    width: auto !important;
+    padding: 10px 16px !important;
+    border: 1px solid rgba(254, 240, 138, 0.5) !important;
+    margin: 6px 0 !important;
     display: inline-block !important;
+    width: fit-content !important;
+    max-width: 85% !important;
+    word-break: break-word !important;
 }
 
 .message.bot, .bot-row, div[data-testid="bot"], .message.bot p, .message.bot span {
@@ -442,7 +446,7 @@ input:focus, textarea:focus, select:focus {
     color: #ffffff !important;
 }
 
-/* COMPLETELY REMOVE INVERTED COMMAS & LEFT BORDER SHIFTS IN OUTPUT BOXES */
+/* TOTAL REMOVAL OF INVERTED COMMAS AND PADDING FIX FOR MARKDOWN BOXES */
 h1, h2, h3, h4, h5, h6, 
 .gr-markdown h1, .gr-markdown h2, .gr-markdown h3,
 .prose h1, .prose h2, .prose h3 {
@@ -463,13 +467,14 @@ h1, h2, h3, h4, h5, h6,
     margin-top: 10px !important;
 }
 
-/* KILL GRADIO'S PSEUDO-ELEMENTS CAUSING THE INVERTED COMMA SHAPE */
+/* NUCLEAR RESET FOR GRADIO PSEUDO ELEMENTS AND INDENTATIONS */
 .gr-markdown::before, .gr-markdown::after,
 .prose::before, .prose::after,
 div[data-testid="markdown"]::before, div[data-testid="markdown"]::after {
     content: none !important;
     display: none !important;
     border: none !important;
+    width: 0 !important;
 }
 
 .gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span,
@@ -480,6 +485,7 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
     margin-left: 0 !important;
     text-indent: 0 !important;
     border-left: none !important;
+    background: transparent !important;
 }
 """
 

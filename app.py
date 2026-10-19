@@ -253,31 +253,29 @@ def run_panchang(date_str, city, mode="free"):
     return f"### 📅 Free Daily Panchang for {city}\n{teaser}", ""
 
 
-def astro_chat_response(message, history):
-    msg = message.lower().strip()
+def simple_astro_query(user_query):
+    if not user_query or not user_query.strip():
+        return "🙏 **Namaste!** Please ask any question regarding career, marriage, health, or planetary transits."
+    
+    msg = user_query.lower().strip()
     
     if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
-        return "🙏 **Namaste!** I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
-    
+        reply = "🙏 **Namaste!** I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
     elif any(w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]):
-        return "💼 **Career & Wealth Guidance:** In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and wearing a Yellow Sapphire or working with disciplined focus will bring immense growth."
-    
+        reply = "💼 **Career & Wealth Guidance:** In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and wearing a Yellow Sapphire or working with disciplined focus will bring immense growth."
     elif any(w in msg for w in ["marriage", "love", "relationship", "partner", "match"]):
-        return "❤️ **Love & Marriage Insights:** Compatibility in Vedic astrology is evaluated through Guna Milan (36 points) and the positions of Venus (Shukra) and Mars (Mangal). Strengthening your 7th house through positive communication and harmony will resolve relationship hurdles."
-    
+        reply = "❤️ **Love & Marriage Insights:** Compatibility in Vedic astrology is evaluated through Guna Milan (36 points) and the positions of Venus (Shukra) and Mars (Mangal). Strengthening your 7th house through positive communication and harmony will resolve relationship hurdles."
     elif any(w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]):
-        return "🌿 **Health & Spiritual Well-being:** Physical vitality is tied to the Sun (Surya) and Moon (Chandra). Practicing early morning Surya Namaskar, meditation during Brahma Muhurta, and keeping a calm mindset will balance your inner cosmic energy."
-    
-    elif any(w in msg for w in ["prediction", "future", "life", "horoscope", "gem", "gems", "gemstone", "rashi"]):
-        return "✨ **Astrological Guidance:** Planetary dashas and transits shape our life path. For personalized gemstone recommendations and deep life forecasts based on your exact birth chart, check our **GEMSTONE & REMEDIES** or **COMPLETE LIFE PREDICTION** tabs above!"
-    
+        reply = "🌿 **Health & Spiritual Well-being:** Physical vitality is tied to the Sun (Surya) and Moon (Chandra). Practicing early morning Surya Namaskar, meditation during Brahma Muhurta, and keeping a calm mindset will balance your inner cosmic energy."
     else:
         responses = [
-            f"🌟 **Analyzing your query regarding '{message}':** Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
-            f"🔮 **Regarding '{message}':** The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
-            f"✨ **I hear your concern about '{message}'.** According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
+            f"🌟 **Analyzing your query regarding '{user_query}':** Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
+            f"🔮 **Regarding '{user_query}':** The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
+            f"✨ **I hear your concern about '{user_query}'.** According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
         ]
-        return random.choice(responses)
+        reply = random.choice(responses)
+
+    return f"**Your Query:** {user_query}\n\n---\n\n{reply}"
 
 
 def admin_login_and_view(password):
@@ -295,7 +293,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. ULTIMATE BYPASS CSS FOR PANCHANG RADIO & CHAT USER BUBBLE
+# 5. CSS: FORCE BLACK TEXT ON PANCHANG RADIO LABELS & CLEAN UI
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -404,52 +402,11 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
-/* 1. BULLETPROOF BYPASS FOR PANCHANG RADIO WHITE BOXES */
-.gr-radio, .gr-checkbox, div[data-testid="radio"], div[data-testid="checkbox-group"], 
-fieldset, .wrap.svelte-1g8cm1c, label.svelte-1g8cm1c {
-    background: rgba(18, 8, 42, 0.95) !important;
-    background-color: rgba(18, 8, 42, 0.95) !important;
-    border: 1px solid rgba(232, 121, 249, 0.6) !important;
-    border-radius: 14px !important;
-    padding: 14px 18px !important;
-}
-
-.gr-radio label, .gr-checkbox label, .gr-radio span, .gr-checkbox span, 
-label span, .gr-radio input + label, .gr-checkbox input + label, 
-span.svelte-1ipelgc, label.svelte-1ipelgc {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: #ffffff !important;
-    font-weight: 600 !important;
-    border: none !important;
-}
-
-/* 2. ABSOLUTE FLATTENING & FIX FOR AI ASSISTANT USER MESSAGE BUBBLE */
-.chatbot, .message-wrap, .message, div[data-testid="chatbot"] {
-    background: rgba(14, 5, 35, 0.92) !important;
-    border: 1px solid rgba(232, 121, 249, 0.45) !important;
-    border-radius: 16px !important;
-    color: #ffffff !important;
-}
-
-.message.user, .user-row, div[data-testid="user"] {
-    background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
-    color: #ffffff !important;
-    border-radius: 12px !important;
-    padding: 12px 18px !important;
-    border: 1px solid rgba(254, 240, 138, 0.5) !important;
-    margin: 8px 0 !important;
-    display: inline-block !important;
-    width: auto !important;
-    max-width: 85% !important;
-    height: auto !important;
-    word-break: normal !important;
-    overflow: visible !important;
-}
-
-.message.bot, .bot-row, div[data-testid="bot"], .message.bot p, .message.bot span {
-    background: rgba(18, 8, 42, 0.85) !important;
-    color: #ffffff !important;
+/* 1. DIRECT FORCE BLACK TEXT COLOR ON PANCHANG RADIO BUTTON LABELS */
+.gr-radio label, .gr-radio label span, div[data-testid="radio"] label, div[data-testid="radio"] label span {
+    color: #000000 !important;
+    font-weight: 800 !important;
+    font-size: 0.95rem !important;
 }
 
 /* MARKDOWN STYLING */
@@ -602,10 +559,13 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            # TAB 8: AI ASSISTANT
+            # TAB 8: AI ASSISTANT (CLEAN INTERFACE WITHOUT AVATAR / GLITCHY BUBBLES)
             with gr.TabItem("💬 AI ASSISTANT"):
                 gr.Markdown("### 🤖 Ask Your Personal AI Astrologer")
-                gr.ChatInterface(fn=astro_chat_response, chatbot=gr.Chatbot(height=380), submit_btn="Ask Assistant ✨")
+                ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
+                ai_submit = gr.Button("Ask Assistant ✨", variant="primary")
+                ai_output = gr.Markdown()
+                ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
         # SECRET ADMIN PORTAL
         with gr.Group(visible=False) as admin_group:

@@ -200,13 +200,18 @@ def get_paywall_html(service_name, price, user_name="User"):
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 Unlock {service_name} (₹{price} Only)</h3>
         <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, to unlock your complete report & instantly receive detailed astrological breakdown, please complete payment below.</p>
-        <p style="color: #4ade80; font-size: 1.25rem; font-weight: bold; margin-bottom: 18px;">Unlock Price: ₹{price}</p>
+        <p style="color: #4ade80; font-size: 1.25rem; font-weight: bold; margin-bottom: 12px;">Unlock Price: ₹{price}</p>
         
-        <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-            <span style="background: #5f259f; color: white; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">🟣 PhonePe</span>
-            <span style="background: #4285f4; color: white; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">🔵 Google Pay</span>
-            <span style="background: #00baf2; color: white; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">🔷 Paytm</span>
-            <span style="background: #000; color: #fff; border: 1px solid #f472b6; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;">💳 UPI / Cards</span>
+        <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
+            <span style="background: #5f259f; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🟣 PhonePe</span>
+            <span style="background: #4285f4; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🔵 Google Pay</span>
+            <span style="background: #00baf2; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🔷 Paytm</span>
+            <span style="background: #000; color: #fff; border: 1px solid #f472b6; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">💳 UPI / Cards</span>
+            <span style="background: #10b981; color: #fff; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">⚡ Quick Link / QR</span>
+        </div>
+
+        <div style="margin-bottom: 18px; font-size: 0.85rem; color: #fef08a;">
+            💡 Scan Razorpay QR or use Direct Fast Link for instant checkout.
         </div>
 
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">🚀 Pay ₹{price} & Access Report</a>
@@ -426,7 +431,7 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
-/* 1. DIRECT FORCE BLACK TEXT COLOR ON PANCHANG RADIO BUTTON LABELS */
+/* DIRECT FORCE BLACK TEXT COLOR ON PANCHANG RADIO BUTTON LABELS */
 .gr-radio label, .gr-radio label span, div[data-testid="radio"] label, div[data-testid="radio"] label span {
     color: #000000 !important;
     font-weight: 800 !important;
@@ -482,10 +487,12 @@ function() {
         if (dot) {
             dot.onclick = () => {
                 const triggerBtn = document.querySelector('#real-hidden-trigger button');
-                if (triggerBtn) triggerBtn.click();
+                if (triggerBtn) {
+                    triggerBtn.click();
+                }
             };
         }
-    }, 1000);
+    }, 1200);
 }
 """) as demo:
     with gr.Column():

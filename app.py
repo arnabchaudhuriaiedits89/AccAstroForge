@@ -392,19 +392,27 @@ input:focus, textarea:focus, select:focus {
     outline: none !important;
 }
 
-/* File component and general text fix */
-.gr-file, .file-preview, span, label, p, .prose {
-    color: #ffffff !important;
+/* File component, containers & general text fix */
+.gr-file, .file-preview, .gr-file div, .gr-file span, .file-preview * {
+    background: rgba(18, 8, 42, 0.95) !important;
+    color: #fde047 !important;
+    border-color: rgba(244, 114, 182, 0.5) !important;
 }
 
-/* Fix for PDF download / file list text inside white/light containers */
-.gr-file span, .gr-file a, .file-name, .file-preview * {
-    color: #1e1b4b !important;
-    font-weight: 600 !important;
+.gr-file a, .file-name {
+    color: #fde047 !important;
+    font-weight: 700 !important;
 }
 
-/* Radio buttons / Panchang mode text fix */
-.gr-radio span, .gr-checkbox span, label span {
+/* Radio buttons / Panchang mode text & box fix */
+.gr-radio, .gr-checkbox, div[data-testid="radio"], div[data-testid="checkbox-group"] {
+    background: rgba(18, 8, 42, 0.85) !important;
+    border: 1px solid rgba(232, 121, 249, 0.45) !important;
+    border-radius: 14px !important;
+    padding: 10px 14px !important;
+}
+
+.gr-radio span, .gr-checkbox span, label span, .gr-radio label, .gr-checkbox label {
     color: #ffffff !important;
     font-weight: 600 !important;
 }

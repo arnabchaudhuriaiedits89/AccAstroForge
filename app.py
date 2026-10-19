@@ -425,12 +425,15 @@ input:focus, textarea:focus, select:focus {
     color: #ffffff !important;
 }
 
-.message.user, .user-row {
-    background: rgba(124, 58, 237, 0.35) !important;
-    color: #fef08a !important;
+.message.user, .user-row, div[data-testid="user"] {
+    background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
+    color: #ffffff !important;
+    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    border: 1px solid rgba(254, 240, 138, 0.4) !important;
 }
 
-.message.bot, .bot-row {
+.message.bot, .bot-row, div[data-testid="bot"] {
     background: rgba(18, 8, 42, 0.85) !important;
     color: #ffffff !important;
 }

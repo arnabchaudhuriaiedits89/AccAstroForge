@@ -306,7 +306,7 @@ input, textarea, select {
 }
 """
 
-with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", css=custom_css) as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8):
@@ -432,4 +432,4 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", css=custom_css) as
         real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False)
+    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, favicon_path="favicon.png")

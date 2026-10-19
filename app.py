@@ -295,7 +295,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. FINAL PINPOINT CSS OVERRIDE FOR RADIO & USER CHAT BUBBLE
+# 5. ULTIMATE BYPASS CSS FOR PANCHANG RADIO & CHAT USER BUBBLE
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -404,8 +404,9 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
-/* 1. AGGRESSIVE FIX FOR PANCHANG RADIO BUTTONS (WHITE BOX BACKGROUND REMOVAL) */
-.gr-radio, .gr-checkbox, div[data-testid="radio"], div[data-testid="checkbox-group"], .wrap.svelte-1g8cm1c {
+/* 1. BULLETPROOF BYPASS FOR PANCHANG RADIO WHITE BOXES */
+.gr-radio, .gr-checkbox, div[data-testid="radio"], div[data-testid="checkbox-group"], 
+fieldset, .wrap.svelte-1g8cm1c, label.svelte-1g8cm1c {
     background: rgba(18, 8, 42, 0.95) !important;
     background-color: rgba(18, 8, 42, 0.95) !important;
     border: 1px solid rgba(232, 121, 249, 0.6) !important;
@@ -413,7 +414,9 @@ input:focus, textarea:focus, select:focus {
     padding: 14px 18px !important;
 }
 
-.gr-radio label, .gr-checkbox label, .gr-radio span, .gr-checkbox span, label span, .gr-radio input + label, .gr-checkbox input + label, span.svelte-1ipelgc {
+.gr-radio label, .gr-checkbox label, .gr-radio span, .gr-checkbox span, 
+label span, .gr-radio input + label, .gr-checkbox input + label, 
+span.svelte-1ipelgc, label.svelte-1ipelgc {
     background: transparent !important;
     background-color: transparent !important;
     color: #ffffff !important;
@@ -421,7 +424,7 @@ input:focus, textarea:focus, select:focus {
     border: none !important;
 }
 
-/* 2. FIX FOR AI ASSISTANT USER MESSAGE BUBBLE (PREVENT VERTICAL STRETCHING) */
+/* 2. ABSOLUTE FLATTENING & FIX FOR AI ASSISTANT USER MESSAGE BUBBLE */
 .chatbot, .message-wrap, .message, div[data-testid="chatbot"] {
     background: rgba(14, 5, 35, 0.92) !important;
     border: 1px solid rgba(232, 121, 249, 0.45) !important;
@@ -436,13 +439,12 @@ input:focus, textarea:focus, select:focus {
     padding: 12px 18px !important;
     border: 1px solid rgba(254, 240, 138, 0.5) !important;
     margin: 8px 0 !important;
-    display: inline-flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
+    display: inline-block !important;
     width: auto !important;
-    max-width: 80% !important;
+    max-width: 85% !important;
     height: auto !important;
-    word-break: break-word !important;
+    word-break: normal !important;
+    overflow: visible !important;
 }
 
 .message.bot, .bot-row, div[data-testid="bot"], .message.bot p, .message.bot span {

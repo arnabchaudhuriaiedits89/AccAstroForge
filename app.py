@@ -143,7 +143,7 @@ def calculate_astrological_profile(name, dob_str):
 
 
 # ---------------------------------------------------------
-# 3. REPORTLAB PDF GENERATOR & DIRECT RAZORPAY LINK PAYWALL
+# 3. REPORTLAB PDF GENERATOR & DYNAMIC RAZORPAY PAYMENT LINK API
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -198,14 +198,38 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     return filename
 
 
+def generate_dynamic_razorpay_link(service_name, price, user_name):
+    try:
+        if razorpay_client:
+            data = {
+                "amount": int(price) * 100,
+                "currency": "INR",
+                "accept_partial": False,
+                "description": f"Payment for {service_name}",
+                "customer": {
+                    "name": user_name if user_name else "User"
+                },
+                "notify": {"sms": False, "email": False},
+                "reminder_enable": False,
+                "callback_url": "https://accastroforge.in/",
+                "callback_method": "get"
+            }
+            response = razorpay_client.payment_link.create(data)
+            if response and "short_url" in response:
+                return response["short_url"]
+    except Exception as e:
+        print(f"Razorpay Link API Generation Error: {e}")
+    return "https://rzp.io/l/accastroforge"
+
+
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
-    pay_url = "https://rzp.io/l/accastroforge"
+    pay_url = generate_dynamic_razorpay_link(service_name, price, display_name)
     
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
-        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
+        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay live checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
         <p style="color: #4ade80; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
         
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">

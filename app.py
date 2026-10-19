@@ -599,16 +599,17 @@ function() {
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-        # SECRET ADMIN PORTAL (FORCED ACCESSIBLE GROUP)
-        with gr.Group(visible=True) as admin_group:
+        # SECRET ADMIN PORTAL (CORRECTLY HIDDEN BY DEFAULT)
+        with gr.Group(visible=False) as admin_group:
             with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
-                secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password (MeherArnab1989)")
+                secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Admin Password")
                 unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
                 secret_output = gr.Markdown()
                 unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
 
-        admin_state = gr.State(value=True)
+        admin_state = gr.State(value=False)
         real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger", visible=False)
+        real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, favicon_path="favicon.png")

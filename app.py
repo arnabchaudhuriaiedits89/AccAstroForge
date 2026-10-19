@@ -67,14 +67,14 @@ if logo_b64:
     logo_element = f"""
     <div style="display: flex; align-items: center; gap: 10px;">
         <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
-        <span id="secret-admin-dot" title="Admin Trigger" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
+        <span id="secret-admin-dot" title="Admin Trigger" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 2px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 16px #fde047; margin-bottom: 35px;"></span>
     </div>
     """
 else:
     logo_element = """
     <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
-        <span id="secret-admin-dot" title="Admin Trigger" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
+        <span id="secret-admin-dot" title="Admin Trigger" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 2px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 16px #fde047;"></span>
     </div>
     """
 
@@ -181,21 +181,8 @@ def create_kundali_pdf_file(name, dob, tob, pob):
 
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
-    
     pay_url = "https://rzp.io/l/accastroforge"
-    if razorpay_client:
-        try:
-            amount_paise = int(price * 100)
-            order_data = {
-                "amount": amount_paise,
-                "currency": "INR",
-                "receipt": f"rcpt_{int(datetime.datetime.now().timestamp())}",
-                "notes": {"service": service_name, "customer": display_name}
-            }
-            order = razorpay_client.order.create(data=order_data)
-        except Exception:
-            pass
-
+    
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 Unlock {service_name} (₹{price} Only)</h3>
@@ -612,17 +599,16 @@ function() {
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-        # SECRET ADMIN PORTAL
-        with gr.Group(visible=False) as admin_group:
+        # SECRET ADMIN PORTAL (FORCED ACCESSIBLE GROUP)
+        with gr.Group(visible=True) as admin_group:
             with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
-                secret_pass = gr.Textbox(label="Admin Secret Password", type="password")
+                secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password (MeherArnab1989)")
                 unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
                 secret_output = gr.Markdown()
                 unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
 
-        admin_state = gr.State(value=False)
+        admin_state = gr.State(value=True)
         real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger", visible=False)
-        real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, favicon_path="favicon.png")

@@ -248,7 +248,6 @@ def run_panchang(date_str, city, mode="free"):
 def astro_chat_response(message, history):
     msg = message.lower().strip()
     
-    # Intelligent Vedic astrology response generator based on user queries
     if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
         return "🙏 Namaste! I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
     
@@ -261,8 +260,8 @@ def astro_chat_response(message, history):
     elif any(w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]):
         return "🌿 **Health & Spiritual Well-being:** Physical vitality is tied to the Sun (Surya) and Moon (Chandra). Practicing early morning Surya Namaskar, meditation during Brahma Muhurta, and keeping a calm mindset will balance your inner cosmic energy."
     
-    elif any(w in msg for w in ["prediction", "future", "life", "horoscope"]):
-        return "✨ **Life Predictions:** Planetary dashas and transits shape our life path. For a complete and customized deep life forecast based on your exact birth chart, you can check our **Complete Life Prediction** or generate your **Janam Kundali PDF** from the tabs above!"
+    elif any(w in msg for w in ["prediction", "future", "life", "horoscope", "gem", "gems", "gemstone"]):
+        return "✨ **Astrological Guidance:** Planetary dashas and transits shape our life path. For personalized gemstone recommendations and deep life forecasts based on your exact birth chart, check our **GEMSTONE & REMEDIES** or **COMPLETE LIFE PREDICTION** tabs above!"
     
     else:
         responses = [
@@ -335,6 +334,7 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
+/* Tab styling */
 div[role="tablist"] {
     display: flex !important;
     flex-wrap: nowrap !important;
@@ -365,6 +365,7 @@ button[role="tab"][aria-selected="true"] {
     box-shadow: 0 4px 18px rgba(219, 39, 119, 0.8) !important;
 }
 
+/* Input Fields styling */
 input, textarea, select {
     background: rgba(18, 8, 42, 0.85) !important;
     backdrop-filter: blur(14px) !important;
@@ -383,6 +384,13 @@ input:focus, textarea:focus, select:focus {
     outline: none !important;
 }
 
+/* Markdown Headings & Text Color Fix */
+h1, h2, h3, h4, h5, h6, .gr-markdown h1, .gr-markdown h2, .gr-markdown h3 {
+    color: #fde047 !important;
+    font-family: 'Cinzel', serif !important;
+    text-shadow: 0 0 10px rgba(253, 224, 71, 0.4);
+}
+
 .gr-markdown {
     background: rgba(14, 5, 35, 0.88) !important;
     backdrop-filter: blur(18px) !important;
@@ -390,6 +398,10 @@ input:focus, textarea:focus, select:focus {
     border-radius: 18px !important;
     padding: 24px !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    color: #f3e8ff !important;
+}
+
+p, span, label, .gr-markdown p {
     color: #f3e8ff !important;
 }
 """

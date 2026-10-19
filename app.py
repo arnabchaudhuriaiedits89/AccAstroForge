@@ -1,6 +1,6 @@
 import base64
 import datetime
-import json
+json
 import os
 import io
 import random
@@ -9,10 +9,19 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+import razorpay
 
 # ---------------------------------------------------------
-# 1. ADMIN LOGGING & DATABASE SETUP (JSON FILE SYSTEM)
+# 0. RAZORPAY & ADMIN CONFIG
 # ---------------------------------------------------------
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
+
+try:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+except Exception:
+    razorpay_client = None
+
 LOG_FILE = "admin_logs.json"
 
 

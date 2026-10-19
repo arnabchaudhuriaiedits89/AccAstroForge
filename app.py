@@ -295,7 +295,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. MASTER TRANSPARENT GLASSMORPHISM CSS & UI (FORCE OVERRIDE)
+# 5. ABSOLUTE CLEAN GLASSMORPHISM CSS & PADDING FIX
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -404,20 +404,21 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
-/* Radio buttons / Panchang mode text & box fix */
+/* Radio buttons / Panchang mode absolute background & text fix */
 .gr-radio, .gr-checkbox, div[data-testid="radio"], div[data-testid="checkbox-group"] {
-    background: rgba(18, 8, 42, 0.85) !important;
-    border: 1px solid rgba(232, 121, 249, 0.45) !important;
+    background: rgba(18, 8, 42, 0.95) !important;
+    border: 1px solid rgba(232, 121, 249, 0.5) !important;
     border-radius: 14px !important;
-    padding: 10px 14px !important;
+    padding: 12px 16px !important;
 }
 
-.gr-radio span, .gr-checkbox span, label span, .gr-radio label, .gr-checkbox label, .gr-radio input + label, .gr-checkbox input + label {
+.gr-radio label, .gr-checkbox label, .gr-radio span, .gr-checkbox span, label span, .gr-radio input + label {
+    background: transparent !important;
     color: #ffffff !important;
     font-weight: 600 !important;
 }
 
-/* Chatbot Fixes for clear visibility */
+/* Chatbot Fixes for clear visibility & proper padding */
 .chatbot, .message-wrap, .message, div[data-testid="chatbot"] {
     background: rgba(14, 5, 35, 0.92) !important;
     border: 1px solid rgba(232, 121, 249, 0.45) !important;
@@ -429,8 +430,10 @@ input:focus, textarea:focus, select:focus {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-radius: 12px !important;
-    padding: 10px 14px !important;
+    padding: 12px 18px !important;
     border: 1px solid rgba(254, 240, 138, 0.4) !important;
+    margin: 6px 0 !important;
+    max-width: 85% !important;
 }
 
 .message.bot, .bot-row, div[data-testid="bot"], .message.bot p, .message.bot span {
@@ -438,7 +441,7 @@ input:focus, textarea:focus, select:focus {
     color: #ffffff !important;
 }
 
-/* ABSOLUTE FORCE OVERRIDE FOR ALL MARKDOWN & OUTPUT CONTAINERS */
+/* REMOVE INVERTED COMMAS & FIX TEXT PADDING IN OUTPUT BOXES */
 h1, h2, h3, h4, h5, h6, 
 .gr-markdown h1, .gr-markdown h2, .gr-markdown h3,
 .prose h1, .prose h2, .prose h3 {
@@ -453,15 +456,19 @@ h1, h2, h3, h4, h5, h6,
     -webkit-backdrop-filter: blur(18px) !important;
     border: 1px solid rgba(232, 121, 249, 0.6) !important;
     border-radius: 18px !important;
-    padding: 24px !important;
+    padding: 24px 28px !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
     color: #ffffff !important;
+    margin-top: 10px !important;
 }
 
 .gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span,
 .prose p, .prose li, .prose strong, .prose span,
 div[data-testid="markdown"] p, div[data-testid="markdown"] span {
     color: #ffffff !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    text-indent: 0 !important;
 }
 """
 

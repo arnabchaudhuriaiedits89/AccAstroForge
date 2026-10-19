@@ -4,6 +4,7 @@ import json
 import os
 import io
 import random
+import requests
 import gradio as gr
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -12,10 +13,13 @@ from reportlab.lib import colors
 import razorpay
 
 # ---------------------------------------------------------
-# 0. RAZORPAY & ADMIN CONFIG
+# 0. CONFIGURATIONS & SECRETS (RAZORPAY & PROKERALA)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
+
+PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
+PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -79,7 +83,7 @@ else:
     """
 
 # ---------------------------------------------------------
-# 2. LOCAL VEDIC ASTROLOGICAL CALCULATION ENGINE
+# 2. PROKERALA API & LOCAL ASTROLOGICAL ENGINE
 # ---------------------------------------------------------
 ZODIAC_SIGNS = [
     "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
@@ -94,6 +98,21 @@ NAKSHATRAS = [
     "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta",
     "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
 ]
+
+
+def fetch_prokerala_token():
+    try:
+        url = "https://api.prokerala.com/token"
+        payload = {
+            "client_id": PROKERALA_CLIENT_ID,
+            "client_secret": PROKERALA_CLIENT_SECRET
+        }
+        response = requests.post(url, data=payload, timeout=5)
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception as e:
+        print(f"Prokerala Token Error: {e}")
+    return None
 
 
 def calculate_astrological_profile(name, dob_str):
@@ -124,7 +143,7 @@ def calculate_astrological_profile(name, dob_str):
 
 
 # ---------------------------------------------------------
-# 3. REPORTLAB PDF GENERATOR & RAZORPAY DYNAMIC PAYWALL
+# 3. REPORTLAB PDF GENERATOR & SECURE RAZORPAY SDK PAYWALL
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -181,28 +200,42 @@ def create_kundali_pdf_file(name, dob, tob, pob):
 
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
-    pay_url = "https://rzp.io/l/accastroforge"
+    amount_in_paisa = price * 100
     
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 Unlock {service_name} (₹{price} Only)</h3>
-        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, to unlock your complete report & instantly receive detailed astrological breakdown, please complete payment below.</p>
-        <p style="color: #4ade80; font-size: 1.25rem; font-weight: bold; margin-bottom: 12px;">Unlock Price: ₹{price}</p>
+        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
+        <p style="color: #4ade80; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
         
-        <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
-            <span style="background: #5f259f; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🟣 PhonePe</span>
-            <span style="background: #4285f4; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🔵 Google Pay</span>
-            <span style="background: #00baf2; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🔷 Paytm</span>
-            <span style="background: #16a34a; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🟢 BHIM UPI</span>
-            <span style="background: #000; color: #fff; border: 1px solid #f472b6; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">💳 Cards / NetBanking</span>
-            <span style="background: #10b981; color: #fff; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">⚡ Quick Link / QR</span>
-        </div>
+        <button onclick="openRazorpayCheckout_{price}()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
+            🚀 Proceed to Pay ₹{price} (UPI, GPay, PhonePe & Cards)
+        </button>
 
-        <div style="margin-bottom: 18px; font-size: 0.85rem; color: #fef08a;">
-            💡 Scan Razorpay QR or use Direct Fast Link for instant checkout via BHIM, PhonePe, GPay, Paytm or Cards.
-        </div>
-
-        <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">🚀 Pay ₹{price} & Access Report</a>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <script>
+        function openRazorpayCheckout_{price}() {{
+            var options = {{
+                "key": "{RAZORPAY_KEY_ID}",
+                "amount": "{amount_in_paisa}",
+                "currency": "INR",
+                "name": "AccAstroForge",
+                "description": "{service_name}",
+                "image": "{logo_src if logo_b64 else ''}",
+                "handler": function (response){{
+                    alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+                }},
+                "prefill": {{
+                    "name": "{display_name}"
+                }},
+                "theme": {{
+                    "color": "#7c3aed"
+                }}
+            }};
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+        }}
+        </script>
     </div>
     """
 

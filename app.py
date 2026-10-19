@@ -412,7 +412,7 @@ input:focus, textarea:focus, select:focus {
     padding: 10px 14px !important;
 }
 
-.gr-radio span, .gr-checkbox span, label span, .gr-radio label, .gr-checkbox label {
+.gr-radio span, .gr-checkbox span, label span, .gr-radio label, .gr-checkbox label, .gr-radio input + label, .gr-checkbox input + label {
     color: #ffffff !important;
     font-weight: 600 !important;
 }
@@ -438,7 +438,7 @@ input:focus, textarea:focus, select:focus {
     color: #ffffff !important;
 }
 
-/* Markdown Headings & Text Color Fix */
+/* Markdown Headings & Output Box Fix for ALL tabs */
 h1, h2, h3, h4, h5, h6, .gr-markdown h1, .gr-markdown h2, .gr-markdown h3 {
     color: #fde047 !important;
     font-family: 'Cinzel', serif !important;
@@ -446,7 +446,7 @@ h1, h2, h3, h4, h5, h6, .gr-markdown h1, .gr-markdown h2, .gr-markdown h3 {
 }
 
 .gr-markdown {
-    background: rgba(14, 5, 35, 0.88) !important;
+    background: rgba(14, 5, 35, 0.92) !important;
     backdrop-filter: blur(18px) !important;
     border: 1px solid rgba(232, 121, 249, 0.5) !important;
     border-radius: 18px !important;
@@ -455,7 +455,7 @@ h1, h2, h3, h4, h5, h6, .gr-markdown h1, .gr-markdown h2, .gr-markdown h3 {
     color: #ffffff !important;
 }
 
-.gr-markdown p, .gr-markdown li, .gr-markdown strong {
+.gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span {
     color: #ffffff !important;
 }
 """

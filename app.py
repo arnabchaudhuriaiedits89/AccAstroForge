@@ -263,14 +263,16 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. MASTER GRADIO UI & STYLING
+# 5. MASTER TRANSPARENT GLASSMORPHISM CSS & UI
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 html, body, .gradio-container, gradio-app {
     background-color: #030014 !important;
-    background-image: linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)), url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg") !important;
+    background-image: 
+        linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)),
+        url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg") !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
     background-size: cover !important;
@@ -280,8 +282,44 @@ html, body, .gradio-container, gradio-app {
     min-height: 100vh;
 }
 
+.gradio-container::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: radial-gradient(white 1.2px, transparent 0), radial-gradient(rgba(252, 211, 77, 0.85) 1.8px, transparent 0);
+    background-size: 140px 140px, 210px 210px;
+    background-position: 0 0, 60px 80px;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.gradio-container > * {
+    position: relative;
+    z-index: 1;
+}
+
 footer, header, #footer, .footer, .built-with, a[href*="huggingface.co/space"] {
     display: none !important;
+}
+
+.gr-box, .gr-row, .gr-form, .form, panel, 
+div[data-testid="block"], .block, .wrap, .contain {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+div[role="tablist"] {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+    background: rgba(10, 3, 25, 0.85) !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(244, 114, 182, 0.35) !important;
 }
 
 button[role="tab"] {
@@ -290,30 +328,55 @@ button[role="tab"] {
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
+    font-size: 0.73rem !important;
     border-radius: 10px !important;
+    padding: 9px 11px !important;
 }
 
 button[role="tab"][aria-selected="true"] {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
+    border-color: #fde047 !important;
+    box-shadow: 0 4px 18px rgba(219, 39, 119, 0.8) !important;
 }
 
 input, textarea, select {
     background: rgba(18, 8, 42, 0.85) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
     border: 1px solid rgba(232, 121, 249, 0.45) !important;
     color: #fef08a !important;
     border-radius: 14px !important;
+    padding: 12px 16px !important;
+    font-size: 0.95rem !important;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #f472b6 !important;
+    box-shadow: 0 0 22px rgba(244, 114, 182, 0.6) !important;
+    color: #ffffff !important;
+    outline: none !important;
+}
+
+.gr-markdown {
+    background: rgba(14, 5, 35, 0.88) !important;
+    backdrop-filter: blur(18px) !important;
+    border: 1px solid rgba(232, 121, 249, 0.5) !important;
+    border-radius: 18px !important;
+    padding: 24px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    color: #f3e8ff !important;
 }
 """
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     with gr.Column():
         with gr.Row():
-            with gr.Column(scale=8):
+            with gr.Column(scale=8, min_width=300):
                 gr.HTML(f"<div>{logo_element}</div>")
-            with gr.Column(scale=4):
+            with gr.Column(scale=4, min_width=350):
                 gr.HTML("""
-                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 12px; align-items: center; justify-content: flex-end;">
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 12px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                     <span style="font-size: 0.85rem; color: #fde047; font-weight: 600;">🔐 Quick Login:</span>
                     <a href="#" style="color: #fff; background: #ea4335; padding: 5px 10px; border-radius: 8px; font-size: 0.8rem; text-decoration: none;">Google</a>
                     <a href="#" style="color: #fff; background: #1877f2; padding: 5px 10px; border-radius: 8px; font-size: 0.8rem; text-decoration: none;">Facebook</a>

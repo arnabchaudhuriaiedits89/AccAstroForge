@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 import io
+import random
 import gradio as gr
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -245,7 +246,31 @@ def run_panchang(date_str, city, mode="free"):
 
 
 def astro_chat_response(message, history):
-    return f"Greetings! As your AI Astro Assistant, I see strong planetary alignments regarding your query: '{message}'. Trust in your karma and focus on auspicious timings."
+    msg = message.lower().strip()
+    
+    # Intelligent Vedic astrology response generator based on user queries
+    if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
+        return "🙏 Namaste! I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
+    
+    elif any(w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]):
+        return "💼 **Career & Wealth Guidance:** In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and wearing a Yellow Sapphire or working with disciplined focus will bring immense growth."
+    
+    elif any(w in msg for w in ["marriage", "love", "relationship", "partner", "match"]):
+        return "❤️ **Love & Marriage Insights:** Compatibility in Vedic astrology is evaluated through Guna Milan (36 points) and the positions of Venus (Shukra) and Mars (Mangal). Strengthening your 7th house through positive communication and harmony will resolve relationship hurdles."
+    
+    elif any(w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]):
+        return "🌿 **Health & Spiritual Well-being:** Physical vitality is tied to the Sun (Surya) and Moon (Chandra). Practicing early morning Surya Namaskar, meditation during Brahma Muhurta, and keeping a calm mindset will balance your inner cosmic energy."
+    
+    elif any(w in msg for w in ["prediction", "future", "life", "horoscope"]):
+        return "✨ **Life Predictions:** Planetary dashas and transits shape our life path. For a complete and customized deep life forecast based on your exact birth chart, you can check our **Complete Life Prediction** or generate your **Janam Kundali PDF** from the tabs above!"
+    
+    else:
+        responses = [
+            f"🌟 Analyzing your query regarding '{message}': Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
+            f"🔮 Regarding '{message}': The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
+            f"✨ I hear your concern about '{message}'. According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
+        ]
+        return random.choice(responses)
 
 
 def admin_login_and_view(password):

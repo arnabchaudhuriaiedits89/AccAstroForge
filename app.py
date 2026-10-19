@@ -212,10 +212,10 @@ def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email
     
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
     teaser_text = f"""### 🌟 Astrological Teaser for {u_name}
-- **Rashi**: <span style="color: #fde047; font-weight: 700;">{profile['zodiac']}</span>
-- **Nakshatra**: <span style="color: #fde047; font-weight: 700;">{profile['nakshatra']}</span>
-- **Dasha**: <span style="color: #fde047; font-weight: 700;">{profile['dasha']}</span>
-- **Insight**: <span style="color: #fde047; font-weight: 700;">Great growth indicated in {focus_area}.</span>"""
+- <span style="color: #fde047; font-weight: 700;">Rashi:</span> <span style="color: #ffffff; font-weight: 600;">{profile['zodiac']}</span>
+- <span style="color: #fde047; font-weight: 700;">Nakshatra:</span> <span style="color: #ffffff; font-weight: 600;">{profile['nakshatra']}</span>
+- <span style="color: #fde047; font-weight: 700;">Dasha:</span> <span style="color: #ffffff; font-weight: 600;">{profile['dasha']}</span>
+- <span style="color: #fde047; font-weight: 700;">Insight:</span> <span style="color: #ffffff; font-weight: 600;">Great growth indicated in {focus_area}.</span>"""
     return teaser_text, get_paywall_html("Complete Deep Life Forecast & PDF", 499, u_name)
 
 
@@ -243,7 +243,11 @@ def run_numerology(name, dob):
 
 
 def run_panchang(date_str, city, mode="free"):
-    teaser = f"Complete Vedic Panchang for {city} on {date_str}:\n- **Tithi**: Shukla Paksha Navami\n- **Nakshatra**: Rohini\n- **Rahu Kalam**: 10:30 AM - 12:00 PM\n- **Shubh Muhurat**: 11:45 AM - 12:30 PM"
+    teaser = f"""Complete Vedic Panchang for {city} on {date_str}:
+- <span style="color: #fde047; font-weight: 700;">Tithi:</span> <span style="color: #ffffff;">Shukla Paksha Navami</span>
+- <span style="color: #fde047; font-weight: 700;">Nakshatra:</span> <span style="color: #ffffff;">Rohini</span>
+- <span style="color: #fde047; font-weight: 700;">Rahu Kalam:</span> <span style="color: #ffffff;">10:30 AM - 12:00 PM</span>
+- <span style="color: #fde047; font-weight: 700;">Shubh Muhurat:</span> <span style="color: #ffffff;">11:45 AM - 12:30 PM</span>"""
     if "Detailed" in mode:
         return f"### 📅 Detailed Shubh Muhurat Report\n{teaser}", get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
     return f"### 📅 Free Daily Panchang for {city}\n{teaser}", ""
@@ -391,6 +395,12 @@ input:focus, textarea:focus, select:focus {
 /* File component and general text fix */
 .gr-file, .file-preview, span, label, p, .prose {
     color: #ffffff !important;
+}
+
+/* Fix for PDF download / file list text inside white/light containers */
+.gr-file span, .gr-file a, .file-name, .file-preview * {
+    color: #1e1b4b !important;
+    font-weight: 600 !important;
 }
 
 /* Radio buttons / Panchang mode text fix */

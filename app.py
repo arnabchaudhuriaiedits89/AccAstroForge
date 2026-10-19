@@ -67,14 +67,14 @@ if logo_b64:
     logo_element = f"""
     <div style="display: flex; align-items: center; gap: 10px;">
         <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
-        <span id="secret-admin-dot" title="" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
+        <span id="secret-admin-dot" title="Admin Trigger" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
     </div>
     """
 else:
     logo_element = """
     <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
-        <span id="secret-admin-dot" title="" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
+        <span id="secret-admin-dot" title="Admin Trigger" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
     </div>
     """
 
@@ -302,7 +302,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS: FORCE BLACK TEXT ON PANCHANG RADIO LABELS & CLEAN UI
+# 5. CSS & JAVASCRIPT: ACTIONABLE LOGIN & ADMIN TRIGGER
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -460,17 +460,30 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
 }
 """
 
-with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", js="""
+function() {
+    setTimeout(() => {
+        const dot = document.getElementById('secret-admin-dot');
+        if (dot) {
+            dot.onclick = () => {
+                const triggerBtn = document.querySelector('#real-hidden-trigger button');
+                if (triggerBtn) triggerBtn.click();
+            };
+        }
+    }, 1000);
+}
+""") as demo:
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
                 gr.HTML(f"<div>{logo_element}</div>")
             with gr.Column(scale=4, min_width=350):
                 gr.HTML("""
-                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 12px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                    <span style="font-size: 0.85rem; color: #fde047; font-weight: 600;">🔐 Quick Login:</span>
-                    <a href="#" style="color: #fff; background: #ea4335; padding: 5px 10px; border-radius: 8px; font-size: 0.8rem; text-decoration: none;">Google</a>
-                    <a href="#" style="color: #fff; background: #1877f2; padding: 5px 10px; border-radius: 8px; font-size: 0.8rem; text-decoration: none;">Facebook</a>
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Login:</span>
+                    <a href="https://accounts.google.com/signin" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
+                    <a href="https://www.facebook.com/login" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
+                    <a href="https://twitter.com/login" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
                 </div>
                 """)
 
@@ -568,7 +581,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            # TAB 8: AI ASSISTANT (CLEAN INTERFACE WITHOUT AVATAR / GLITCHY BUBBLES)
+            # TAB 8: AI ASSISTANT
             with gr.TabItem("💬 AI ASSISTANT"):
                 gr.Markdown("### 🤖 Ask Your Personal AI Astrologer")
                 ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
@@ -585,7 +598,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
 
         admin_state = gr.State(value=False)
-        real_hidden_trigger = gr.Button("Trigger", visible=False)
+        real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger", visible=False)
         real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
 if __name__ == "__main__":

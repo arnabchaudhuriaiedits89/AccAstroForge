@@ -433,7 +433,7 @@ input:focus, textarea:focus, select:focus {
     border: 1px solid rgba(254, 240, 138, 0.4) !important;
 }
 
-.message.bot, .bot-row, div[data-testid="bot"] {
+.message.bot, .bot-row, div[data-testid="bot"], .message.bot p, .message.bot span {
     background: rgba(18, 8, 42, 0.85) !important;
     color: #ffffff !important;
 }

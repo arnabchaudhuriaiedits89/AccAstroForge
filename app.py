@@ -67,14 +67,12 @@ if logo_b64:
     logo_element = f"""
     <div style="display: flex; align-items: center; gap: 10px;">
         <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
-        <span id="secret-admin-dot" title="Admin Trigger" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 2px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 16px #fde047; margin-bottom: 35px;"></span>
     </div>
     """
 else:
     logo_element = """
     <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
-        <span id="secret-admin-dot" title="Admin Trigger" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 2px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 16px #fde047;"></span>
     </div>
     """
 
@@ -193,12 +191,13 @@ def get_paywall_html(service_name, price, user_name="User"):
             <span style="background: #5f259f; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🟣 PhonePe</span>
             <span style="background: #4285f4; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🔵 Google Pay</span>
             <span style="background: #00baf2; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🔷 Paytm</span>
-            <span style="background: #000; color: #fff; border: 1px solid #f472b6; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">💳 UPI / Cards</span>
+            <span style="background: #16a34a; color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">🟢 BHIM UPI</span>
+            <span style="background: #000; color: #fff; border: 1px solid #f472b6; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">💳 Cards / NetBanking</span>
             <span style="background: #10b981; color: #fff; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">⚡ Quick Link / QR</span>
         </div>
 
         <div style="margin-bottom: 18px; font-size: 0.85rem; color: #fef08a;">
-            💡 Scan Razorpay QR or use Direct Fast Link for instant checkout.
+            💡 Scan Razorpay QR or use Direct Fast Link for instant checkout via BHIM, PhonePe, GPay, Paytm or Cards.
         </div>
 
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">🚀 Pay ₹{price} & Access Report</a>
@@ -309,7 +308,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT: ACTIONABLE LOGIN & ADMIN TRIGGER
+# 5. CSS & JAVASCRIPT
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -446,15 +445,6 @@ h1, h2, h3, h4, h5, h6,
     margin-top: 10px !important;
 }
 
-.gr-markdown::before, .gr-markdown::after,
-.prose::before, .prose::after,
-div[data-testid="markdown"]::before, div[data-testid="markdown"]::after {
-    content: none !important;
-    display: none !important;
-    border: none !important;
-    width: 0 !important;
-}
-
 .gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span,
 .prose p, .prose li, .prose strong, .prose span,
 div[data-testid="markdown"] p, div[data-testid="markdown"] span {
@@ -467,25 +457,14 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
 }
 """
 
-with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", js="""
-function() {
-    setTimeout(() => {
-        const dot = document.getElementById('secret-admin-dot');
-        if (dot) {
-            dot.onclick = () => {
-                const triggerBtn = document.querySelector('#real-hidden-trigger button');
-                if (triggerBtn) {
-                    triggerBtn.click();
-                }
-            };
-        }
-    }, 1200);
-}
-""") as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
-                gr.HTML(f"<div>{logo_element}</div>")
+                with gr.Row(elem_id="logo-header-row"):
+                    gr.HTML(f"<div>{logo_element}</div>")
+                    admin_dot_btn = gr.Button("", elem_id="secret-admin-dot-btn", variant="secondary")
+                    
             with gr.Column(scale=4, min_width=350):
                 gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
@@ -599,7 +578,7 @@ function() {
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-        # SECRET ADMIN PORTAL (PROPERLY HIDDEN BY DEFAULT, OPENS ONLY ON DOT CLICK)
+        # SECRET ADMIN PORTAL (DYNAMICALLY TOGGLED VIA DOT BUTTON)
         with gr.Group(visible=False) as admin_group:
             with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
                 secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")
@@ -607,9 +586,36 @@ function() {
                 secret_output = gr.Markdown()
                 unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
 
-        admin_state = gr.State(value=False)
-        real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger", visible=False)
-        real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
+        admin_vis_state = gr.State(value=False)
+
+        def toggle_admin_panel(current_vis):
+            new_vis = not current_vis
+            return new_vis, gr.update(visible=new_vis)
+
+        admin_dot_btn.click(fn=toggle_admin_panel, inputs=[admin_vis_state], outputs=[admin_vis_state, admin_group])
+
+# Add styling for the Secret Dot Button
+custom_css += """
+#secret-admin-dot-btn {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    background: radial-gradient(circle, #fde047 0%, #d97706 100%) !important;
+    border: 2px solid #fef08a !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    box-shadow: 0 0 16px #fde047 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    align-self: center !important;
+}
+#logo-header-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+"""
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, favicon_path="favicon.png")

@@ -182,7 +182,6 @@ def create_kundali_pdf_file(name, dob, tob, pob):
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
     
-    # Generate Dynamic Razorpay Payment Link if client is available
     pay_url = "https://rzp.io/l/accastroforge"
     if razorpay_client:
         try:
@@ -194,7 +193,6 @@ def get_paywall_html(service_name, price, user_name="User"):
                 "notes": {"service": service_name, "customer": display_name}
             }
             order = razorpay_client.order.create(data=order_data)
-            # You can embed order ID or use direct checkout link
         except Exception:
             pass
 
@@ -497,10 +495,11 @@ function() {
             with gr.Column(scale=4, min_width=350):
                 gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                    <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Login:</span>
+                    <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
                     <a href="https://accounts.google.com/signin" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
                     <a href="https://www.facebook.com/login" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
                     <a href="https://twitter.com/login" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
+                    <a href="https://accounts.google.com/signup" target="_blank" style="color: #fff; background: #7c3aed; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: 700; border: 1px solid #fde047;">📝 Sign Up</a>
                 </div>
                 """)
 

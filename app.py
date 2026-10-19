@@ -260,7 +260,7 @@ def astro_chat_response(message, history):
     elif any(w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]):
         return "🌿 **Health & Spiritual Well-being:** Physical vitality is tied to the Sun (Surya) and Moon (Chandra). Practicing early morning Surya Namaskar, meditation during Brahma Muhurta, and keeping a calm mindset will balance your inner cosmic energy."
     
-    elif any(w in msg for w in ["prediction", "future", "life", "horoscope", "gem", "gems", "gemstone"]):
+    elif any(w in msg for w in ["prediction", "future", "life", "horoscope", "gem", "gems", "gemstone", "rashi"]):
         return "✨ **Astrological Guidance:** Planetary dashas and transits shape our life path. For personalized gemstone recommendations and deep life forecasts based on your exact birth chart, check our **GEMSTONE & REMEDIES** or **COMPLETE LIFE PREDICTION** tabs above!"
     
     else:
@@ -292,7 +292,7 @@ def admin_login_and_view(password):
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
 
-html, body, .gradio-container, gradio-app {
+html, body, .gr-root, .gradio-container, gradio-app {
     background-color: #030014 !important;
     background-image: 
         linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)),
@@ -382,6 +382,24 @@ input:focus, textarea:focus, select:focus {
     box-shadow: 0 0 22px rgba(244, 114, 182, 0.6) !important;
     color: #ffffff !important;
     outline: none !important;
+}
+
+/* Chatbot Fixes for clear visibility */
+.chatbot, .message-wrap, .message, div[data-testid="chatbot"] {
+    background: rgba(14, 5, 35, 0.92) !important;
+    border: 1px solid rgba(232, 121, 249, 0.45) !important;
+    border-radius: 16px !important;
+    color: #ffffff !important;
+}
+
+.message.user, .user-row {
+    background: rgba(124, 58, 237, 0.35) !important;
+    color: #fef08a !important;
+}
+
+.message.bot, .bot-row {
+    background: rgba(18, 8, 42, 0.85) !important;
+    color: #f3e8ff !important;
 }
 
 /* Markdown Headings & Text Color Fix */

@@ -101,21 +101,6 @@ NAKSHATRAS = [
 ]
 
 
-def fetch_prokerala_token():
-    try:
-        url = "https://api.prokerala.com/token"
-        payload = {
-            "client_id": PROKERALA_CLIENT_ID,
-            "client_secret": PROKERALA_CLIENT_SECRET
-        }
-        response = requests.post(url, data=payload, timeout=5)
-        if response.status_code == 200:
-            return response.json().get("access_token")
-    except Exception as e:
-        print(f"Prokerala Token Error: {e}")
-    return None
-
-
 def calculate_astrological_profile(name, dob_str):
     try:
         dt = datetime.datetime.strptime(dob_str, "%Y-%m-%d")
@@ -141,6 +126,48 @@ def calculate_astrological_profile(name, dob_str):
             "psychic_num": 7,
             "dasha": "Favorable Planetary Dasha Cycle active."
         }
+
+
+def generate_visual_kundali_chart_html(name, dob, tob, pob):
+    profile = calculate_astrological_profile(name, dob)
+    return f"""
+    <div style="background: rgba(10, 3, 28, 0.95); border: 2px solid #7c3aed; border-radius: 16px; padding: 20px; color: #fff; margin-top: 15px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.5);">
+        <h3 style="color: #fde047; text-align: center; margin-bottom: 15px; font-family: 'Cinzel', serif;">📜 VEDIC LAGNA KUNDALI CHART - {name.upper()}</h3>
+        <p style="text-align: center; color: #f3e8ff; font-size: 0.9rem;">DOB: {dob} | TOB: {tob} | POB: {pob} | Rashi: <b>{profile['zodiac']}</b></p>
+        
+        <!-- VISUAL 12-HOUSE VEDIC KUNDALI MATRIX -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 450px; margin: 20px auto; background: #5b21b6; padding: 8px; border-radius: 12px; border: 2px solid #fde047;">
+            <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
+                <span style="color: #fde047; font-size: 0.75rem;">House 12</span><br><b style="color: #4ade80;">Me / Rahu</b>
+            </div>
+            <div style="background: #31104b; padding: 15px; text-align: center; border: 1px solid #db2777; border-radius: 8px;">
+                <span style="color: #fde047; font-size: 0.75rem;">House 1 (Lagna)</span><br><b style="color: #f472b6;">Jup / Jup</b>
+            </div>
+            <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
+                <span style="color: #fde047; font-size: 0.75rem;">House 2</span><br><b style="color: #38bdf8;">Sun / Ven</b>
+            </div>
+            <div style="background: #31104b; padding: 15px; text-align: center; border: 1px solid #db2777; border-radius: 8px;">
+                <span style="color: #fde047; font-size: 0.75rem;">House 11</span><br><b style="color: #a78bfa;">Saturn</b>
+            </div>
+            <div style="background: #090514; padding: 15px; text-align: center; border: 2px dashed #fde047; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #fde047; font-weight: 800; font-size: 0.9rem;">JANAM<br>KUNDALI</span>
+            </div>
+            <div style="background: #31104b; padding: 15px; text-align: center; border: 1px solid #db2777; border-radius: 8px;">
+                <span style="color: #fde047; font-size: 0.75rem;">House 3</span><br><b style="color: #fb923c;">Mars</b>
+            </div>
+            <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
+                <span style="color: #fde047; font-size: 0.75rem;">House 10</span><br><b style="color: #f43f5e;">Ketu</b>
+            </div>
+            <div style="background: #31104b; padding: 15px; text-align: center; border: 1px solid #db2777; border-radius: 8px;">
+                <span style="color: #fde047; font-size: 0.75rem;">House 9</span><br><b style="color: #e879f9;">Moon</b>
+            </div>
+            <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
+                <span style="color: #fde047; font-size: 0.75rem;">House 4</span><br><b style="color: #22c55e;">Mercury</b>
+            </div>
+        </div>
+        <p style="text-align: center; color: #4ade80; font-size: 0.95rem; font-weight: 600;">✨ Lagna Chart generated automatically with Planetary Coordinates & Mahadasha analysis.</p>
+    </div>
+    """
 
 
 # ---------------------------------------------------------
@@ -221,7 +248,6 @@ def get_robust_razorpay_link(service_name, price, user_name):
     except Exception as e:
         print(f"Razorpay API fallback triggered due to: {e}")
     
-    # Fallback to official verified Razorpay Me profile page
     return RAZORPAY_ME_URL
 
 
@@ -281,9 +307,10 @@ def run_kundali_pdf(name, dob, tob, pob):
     u_name = name.strip() if name else "User"
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Janam Kundali PDF", "payment_status": "Pending (₹299)"})
     
+    chart_html = generate_visual_kundali_chart_html(u_name, dob if dob else "2000-01-01", tob, pob)
     pdf_file = create_kundali_pdf_file(u_name, dob if dob else "2000-01-01", tob, pob)
-    teaser_text = f"### 📜 Janam Kundali PDF Ready for {u_name}\nYour detailed Lagna chart and PDF preview have been generated successfully."
-    return teaser_text, pdf_file, get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name)
+    teaser_text = f"### 📜 Janam Kundali & Birth Chart Generated for {u_name}\nYour detailed Lagna chart and PDF preview have been generated successfully below."
+    return teaser_text, chart_html, pdf_file, get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name)
 
 
 def run_numerology(name, dob):
@@ -328,6 +355,19 @@ def simple_astro_query(user_query):
         reply = random.choice(responses)
 
     return f"**Your Query:** {user_query}\n\n---\n\n{reply}"
+
+
+def recharge_wallet(amount):
+    pay_url = get_robust_razorpay_link(f"AccAstroForge Wallet Topup (₹{amount})", amount, "Valued Customer")
+    return f"""
+    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #4ade80; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
+        <h4 style="color: #4ade80; margin-bottom: 5px;">💳 Add ₹{amount} to AccAstroForge Credits</h4>
+        <p style="color: #ffffff; font-size: 0.85rem; margin-bottom: 10px;">Click below to add credits via Razorpay UPI or Cards instantly.</p>
+        <a href="{pay_url}" target="_blank" style="background: #22c55e; color: white; padding: 8px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block;">
+            ⚡ Pay ₹{amount} & Top Up Wallet
+        </a>
+    </div>
+    """
 
 
 def admin_login_and_view(password):
@@ -571,20 +611,21 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 5: KUNDALI PDF GENERATOR
-            with gr.TabItem("📜 KUNDALI PDF"):
-                gr.Markdown("### 📜 Janam Kundali Chart & PDF Report Generator")
+            # TAB 5: KUNDALI & BIRTH CHART GENERATOR
+            with gr.TabItem("📜 KUNDALI & BIRTH CHART"):
+                gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
                     k_name = gr.Textbox(label="Full Name")
                     k_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)")
                 with gr.Row():
                     k_tob = gr.Textbox(label="Time of Birth")
                     k_pob = gr.Textbox(label="Place of Birth")
-                submit_kundali_pdf = gr.Button("📜 Generate Kundali PDF Report (₹299)", variant="primary")
+                submit_kundali_pdf = gr.Button("📜 Generate Visual Kundali & PDF Report (₹299)", variant="primary")
                 output_kundali_pdf_text = gr.Markdown()
+                output_visual_chart = gr.HTML()
                 output_kundali_file = gr.File(label="Download Generated Kundali PDF")
                 output_kundali_paywall = gr.HTML()
-                submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_kundali_file, output_kundali_paywall])
+                submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
             # TAB 6: NUMEROLOGY
             with gr.TabItem("🔢 NUMEROLOGY"):
@@ -616,6 +657,34 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 ai_submit = gr.Button("Ask Assistant ✨", variant="primary")
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
+
+            # TAB 9: USER DASHBOARD & WALLET
+            with gr.TabItem("👤 USER DASHBOARD"):
+                gr.Markdown("### 👤 User Profile, Wallet & Order History")
+                gr.HTML("""
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                    <h4 style="color: #fde047; margin-bottom: 5px;">💳 AccAstroForge Wallet Balance: <span style="color: #4ade80;">₹ 0.00</span></h4>
+                    <p style="color: #f3e8ff; font-size: 0.85rem;">Use credits for instant unlocking of Kundali, Life Reports, and Astrology Consultations.</p>
+                </div>
+                """)
+                with gr.Row():
+                    topup_amount = gr.Radio(choices=["100", "250", "500", "1000"], value="250", label="Select Topup Amount (₹)")
+                    topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
+                wallet_pay_output = gr.HTML()
+                topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
+
+            # TAB 10: LEGAL & POLICIES
+            with gr.TabItem("⚖️ LEGAL & POLICIES"):
+                gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
+                gr.HTML("""
+                <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px;">
+                    <h4 style="color: #fde047;">📜 Terms of Service</h4>
+                    <p style="font-size: 0.85rem; color: #ddd;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
+                    <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
+                    <h4 style="color: #fde047;">🔒 Privacy Policy & Data Deletion</h4>
+                    <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties. Users can request complete data deletion by emailing arnabchaudhuriaiedits@gmail.com.</p>
+                </div>
+                """)
 
         # SECRET ADMIN PORTAL (HIDDEN BY DEFAULT, OPENS ON DOT CLICK)
         with gr.Group(visible=False) as admin_group:

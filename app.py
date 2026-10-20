@@ -432,28 +432,40 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* Tab styling */
+/* Tab container - Force Wrapping to 2 Rows with 5 Items Each */
 div[role="tablist"] {
     display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
+    flex-wrap: wrap !important;
     width: 100% !important;
-    gap: 6px !important;
-    padding: 8px 10px !important;
+    gap: 8px !important;
+    padding: 12px 10px !important;
     background: rgba(10, 3, 25, 0.85) !important;
     border-radius: 14px !important;
     border: 1px solid rgba(244, 114, 182, 0.35) !important;
+    justify-content: space-between !important;
+}
+
+/* Hide Gradio's overflow/dropdown button completely */
+div[role="tablist"] > button:last-child[aria-haspopup="true"] {
+    display: none !important;
 }
 
 button[role="tab"] {
+    flex: 1 1 calc(19% - 6px) !important;
+    min-width: 160px !important;
+    max-width: 20% !important;
     background: rgba(18, 8, 42, 0.9) !important;
     border: 1px solid rgba(244, 114, 182, 0.45) !important;
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.73rem !important;
+    font-size: 0.72rem !important;
     border-radius: 10px !important;
-    padding: 9px 11px !important;
+    padding: 10px 6px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 button[role="tab"][aria-selected="true"] {
@@ -556,6 +568,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 """)
 
         with gr.Tabs():
+            # ROW 1 - TOP 5 TABS
             # TAB 1: COMPLETE LIFE PREDICTION
             with gr.TabItem("🌟 COMPLETE LIFE PREDICTION"):
                 gr.Markdown("### 🌌 Vedic Astrology & Deep Life Forecast")
@@ -627,6 +640,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
+            # ROW 2 - BOTTOM 5 TABS
             # TAB 6: NUMEROLOGY
             with gr.TabItem("🔢 NUMEROLOGY"):
                 gr.Markdown("### 🔢 Numerology Check")

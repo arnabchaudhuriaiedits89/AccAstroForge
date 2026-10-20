@@ -135,7 +135,6 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
         <h3 style="color: #fde047; text-align: center; margin-bottom: 15px; font-family: 'Cinzel', serif;">📜 VEDIC LAGNA KUNDALI CHART - {name.upper()}</h3>
         <p style="text-align: center; color: #f3e8ff; font-size: 0.9rem;">DOB: {dob} | TOB: {tob} | POB: {pob} | Rashi: <b>{profile['zodiac']}</b></p>
         
-        <!-- VISUAL 12-HOUSE VEDIC KUNDALI MATRIX -->
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 450px; margin: 20px auto; background: #5b21b6; padding: 8px; border-radius: 12px; border: 2px solid #fde047;">
             <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
                 <span style="color: #fde047; font-size: 0.75rem;">House 12</span><br><b style="color: #4ade80;">Me / Rahu</b>
@@ -432,47 +431,37 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* Tab container - Force Wrapping to 2 Rows with 5 Items Each */
+/* Tab Bar Styling for Both Rows */
 div[role="tablist"] {
     display: flex !important;
-    flex-wrap: wrap !important;
     width: 100% !important;
-    gap: 8px !important;
-    padding: 12px 10px !important;
+    gap: 6px !important;
+    padding: 6px 8px !important;
     background: rgba(10, 3, 25, 0.85) !important;
-    border-radius: 14px !important;
+    border-radius: 12px !important;
     border: 1px solid rgba(244, 114, 182, 0.35) !important;
-    justify-content: space-between !important;
-}
-
-/* Hide Gradio's overflow/dropdown button completely */
-div[role="tablist"] > button:last-child[aria-haspopup="true"] {
-    display: none !important;
+    margin-bottom: 8px !important;
 }
 
 button[role="tab"] {
-    flex: 1 1 calc(19% - 6px) !important;
-    min-width: 160px !important;
-    max-width: 20% !important;
+    flex: 1 1 20% !important;
     background: rgba(18, 8, 42, 0.9) !important;
     border: 1px solid rgba(244, 114, 182, 0.45) !important;
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
     font-size: 0.72rem !important;
-    border-radius: 10px !important;
-    padding: 10px 6px !important;
+    border-radius: 8px !important;
+    padding: 8px 4px !important;
     text-align: center !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
 }
 
 button[role="tab"][aria-selected="true"] {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-color: #fde047 !important;
-    box-shadow: 0 4px 18px rgba(219, 39, 119, 0.8) !important;
+    box-shadow: 0 4px 14px rgba(219, 39, 119, 0.8) !important;
 }
 
 /* Input Fields styling */
@@ -567,9 +556,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
+        # FIRST ROW OF 5 TABS
         with gr.Tabs():
-            # ROW 1 - TOP 5 TABS
-            # TAB 1: COMPLETE LIFE PREDICTION
             with gr.TabItem("🌟 COMPLETE LIFE PREDICTION"):
                 gr.Markdown("### 🌌 Vedic Astrology & Deep Life Forecast")
                 with gr.Row():
@@ -591,7 +579,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
 
-            # TAB 2: DAILY HOROSCOPE
             with gr.TabItem("☀️ DAILY HOROSCOPE"):
                 gr.Markdown("### 🔮 Daily Zodiac Predictions (Free)")
                 zodiac_sign = gr.Dropdown(choices=ZODIAC_SIGNS, value="Aries (Mesha)", label="Select Zodiac Sign")
@@ -599,7 +586,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_horoscope = gr.Markdown()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            # TAB 3: KUNDALI MATCHING
             with gr.TabItem("❤️ KUNDALI MATCHING"):
                 gr.Markdown("### 💍 Vedic Compatibility & Guna Milan")
                 with gr.Row():
@@ -613,7 +599,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_matching_paywall = gr.HTML()
                 submit_matching.click(fn=run_kundali_matching, inputs=[boy_name, boy_dob, girl_name, girl_dob], outputs=[output_matching, output_matching_paywall])
 
-            # TAB 4: GEMSTONE & REMEDIES
             with gr.TabItem("💎 GEMSTONE & REMEDIES"):
                 gr.Markdown("### 🧿 Lucky Gemstones & Cosmic Remedies")
                 with gr.Row():
@@ -624,7 +609,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 5: KUNDALI & BIRTH CHART GENERATOR
             with gr.TabItem("📜 KUNDALI & BIRTH CHART"):
                 gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
@@ -640,8 +624,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
-            # ROW 2 - BOTTOM 5 TABS
-            # TAB 6: NUMEROLOGY
+        # SECOND ROW OF 5 TABS
+        with gr.Tabs():
             with gr.TabItem("🔢 NUMEROLOGY"):
                 gr.Markdown("### 🔢 Numerology Check")
                 with gr.Row():
@@ -652,7 +636,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_num_paywall = gr.HTML()
                 submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
-            # TAB 7: PANCHANG
             with gr.TabItem("📅 PANCHANG"):
                 gr.Markdown("### 📅 Vedic Panchang & Shubh Muhurat")
                 with gr.Row():
@@ -664,7 +647,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            # TAB 8: AI ASSISTANT
             with gr.TabItem("💬 AI ASSISTANT"):
                 gr.Markdown("### 🤖 Ask Your Personal AI Astrologer")
                 ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
@@ -672,7 +654,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            # TAB 9: USER DASHBOARD & WALLET
             with gr.TabItem("👤 USER DASHBOARD"):
                 gr.Markdown("### 👤 User Profile, Wallet & Order History")
                 gr.HTML("""
@@ -687,7 +668,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
-            # TAB 10: LEGAL & POLICIES
             with gr.TabItem("⚖️ LEGAL & POLICIES"):
                 gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""

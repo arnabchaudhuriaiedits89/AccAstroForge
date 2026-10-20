@@ -431,29 +431,37 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* Tab Bar Styling for Both Rows */
+/* COMPACT SINGLE-ROW TAB BAR FOR ALL 10 TABS */
 div[role="tablist"] {
     display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
     width: 100% !important;
-    gap: 6px !important;
+    gap: 4px !important;
     padding: 6px 8px !important;
-    background: rgba(10, 3, 25, 0.85) !important;
+    background: rgba(10, 3, 25, 0.9) !important;
     border-radius: 12px !important;
-    border: 1px solid rgba(244, 114, 182, 0.35) !important;
-    margin-bottom: 8px !important;
+    border: 1px solid rgba(244, 114, 182, 0.4) !important;
+}
+
+div[role="tablist"]::-webkit-scrollbar {
+    height: 4px;
+}
+div[role="tablist"]::-webkit-scrollbar-thumb {
+    background: #db2777;
+    border-radius: 4px;
 }
 
 button[role="tab"] {
-    flex: 1 1 20% !important;
+    flex: 0 0 auto !important;
     background: rgba(18, 8, 42, 0.9) !important;
     border: 1px solid rgba(244, 114, 182, 0.45) !important;
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.72rem !important;
+    font-size: 0.68rem !important;
     border-radius: 8px !important;
-    padding: 8px 4px !important;
-    text-align: center !important;
+    padding: 8px 10px !important;
     white-space: nowrap !important;
 }
 
@@ -462,6 +470,11 @@ button[role="tab"][aria-selected="true"] {
     color: #ffffff !important;
     border-color: #fde047 !important;
     box-shadow: 0 4px 14px rgba(219, 39, 119, 0.8) !important;
+}
+
+/* Hide overflow dropdown button completely */
+div[role="tablist"] > button:last-child[aria-haspopup="true"] {
+    display: none !important;
 }
 
 /* Input Fields styling */
@@ -556,9 +569,10 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # FIRST ROW OF 5 TABS
+        # SINGLE UNIFIED TABS BLOCK WITH SHORTENED TITLES SO ALL 10 FIT IN A SINGLE CLEAN SCROLLABLE BAR
         with gr.Tabs():
-            with gr.TabItem("🌟 COMPLETE LIFE PREDICTION"):
+            # TAB 1: LIFE PREDICTION
+            with gr.TabItem("🌟 LIFE PREDICTION"):
                 gr.Markdown("### 🌌 Vedic Astrology & Deep Life Forecast")
                 with gr.Row():
                     name_input = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
@@ -579,14 +593,16 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
 
-            with gr.TabItem("☀️ DAILY HOROSCOPE"):
+            # TAB 2: HOROSCOPE
+            with gr.TabItem("☀️ HOROSCOPE"):
                 gr.Markdown("### 🔮 Daily Zodiac Predictions (Free)")
                 zodiac_sign = gr.Dropdown(choices=ZODIAC_SIGNS, value="Aries (Mesha)", label="Select Zodiac Sign")
                 submit_horoscope = gr.Button("🔮 Get Today's Horoscope", variant="primary")
                 output_horoscope = gr.Markdown()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            with gr.TabItem("❤️ KUNDALI MATCHING"):
+            # TAB 3: MATCHING
+            with gr.TabItem("❤️ MATCHING"):
                 gr.Markdown("### 💍 Vedic Compatibility & Guna Milan")
                 with gr.Row():
                     boy_name = gr.Textbox(label="Boy's Name")
@@ -599,7 +615,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_matching_paywall = gr.HTML()
                 submit_matching.click(fn=run_kundali_matching, inputs=[boy_name, boy_dob, girl_name, girl_dob], outputs=[output_matching, output_matching_paywall])
 
-            with gr.TabItem("💎 GEMSTONE & REMEDIES"):
+            # TAB 4: GEMSTONES
+            with gr.TabItem("💎 GEMSTONES"):
                 gr.Markdown("### 🧿 Lucky Gemstones & Cosmic Remedies")
                 with gr.Row():
                     gem_dob = gr.Textbox(label="Date of Birth")
@@ -609,7 +626,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            with gr.TabItem("📜 KUNDALI & BIRTH CHART"):
+            # TAB 5: BIRTH CHART
+            with gr.TabItem("📜 BIRTH CHART"):
                 gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
                     k_name = gr.Textbox(label="Full Name")
@@ -624,8 +642,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
-        # SECOND ROW OF 5 TABS
-        with gr.Tabs():
+            # TAB 6: NUMEROLOGY
             with gr.TabItem("🔢 NUMEROLOGY"):
                 gr.Markdown("### 🔢 Numerology Check")
                 with gr.Row():
@@ -636,6 +653,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_num_paywall = gr.HTML()
                 submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
+            # TAB 7: PANCHANG
             with gr.TabItem("📅 PANCHANG"):
                 gr.Markdown("### 📅 Vedic Panchang & Shubh Muhurat")
                 with gr.Row():
@@ -647,14 +665,16 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            with gr.TabItem("💬 AI ASSISTANT"):
+            # TAB 8: AI ASSISTANT
+            with gr.TabItem("🤖 AI ASSISTANT"):
                 gr.Markdown("### 🤖 Ask Your Personal AI Astrologer")
                 ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
                 ai_submit = gr.Button("Ask Assistant ✨", variant="primary")
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            with gr.TabItem("👤 USER DASHBOARD"):
+            # TAB 9: USER DASHBOARD
+            with gr.TabItem("👤 DASHBOARD"):
                 gr.Markdown("### 👤 User Profile, Wallet & Order History")
                 gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
@@ -668,7 +688,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
-            with gr.TabItem("⚖️ LEGAL & POLICIES"):
+            # TAB 10: LEGAL & POLICIES
+            with gr.TabItem("⚖️ LEGAL"):
                 gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""
                 <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px;">

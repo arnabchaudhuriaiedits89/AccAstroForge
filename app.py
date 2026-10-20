@@ -431,21 +431,22 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* COMPACT SINGLE-ROW TAB BAR FOR ALL 10 TABS */
+/* SINGLE-ROW TAB BAR FIT FOR ALL 10 TABS */
 div[role="tablist"] {
     display: flex !important;
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     width: 100% !important;
-    gap: 4px !important;
-    padding: 6px 8px !important;
+    gap: 3px !important;
+    padding: 6px 6px !important;
     background: rgba(10, 3, 25, 0.9) !important;
     border-radius: 12px !important;
     border: 1px solid rgba(244, 114, 182, 0.4) !important;
+    justify-content: space-between !important;
 }
 
 div[role="tablist"]::-webkit-scrollbar {
-    height: 4px;
+    height: 3px;
 }
 div[role="tablist"]::-webkit-scrollbar-thumb {
     background: #db2777;
@@ -453,15 +454,15 @@ div[role="tablist"]::-webkit-scrollbar-thumb {
 }
 
 button[role="tab"] {
-    flex: 0 0 auto !important;
+    flex: 1 1 auto !important;
     background: rgba(18, 8, 42, 0.9) !important;
     border: 1px solid rgba(244, 114, 182, 0.45) !important;
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.68rem !important;
+    font-size: 0.65rem !important;
     border-radius: 8px !important;
-    padding: 8px 10px !important;
+    padding: 7px 6px !important;
     white-space: nowrap !important;
 }
 
@@ -569,7 +570,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # SINGLE UNIFIED TABS BLOCK WITH SHORTENED TITLES SO ALL 10 FIT IN A SINGLE CLEAN SCROLLABLE BAR
+        # SINGLE UNIFIED TABS BLOCK WITH CLEAN & REFINED TITLES
         with gr.Tabs():
             # TAB 1: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -601,8 +602,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_horoscope = gr.Markdown()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            # TAB 3: MATCHING
-            with gr.TabItem("❤️ MATCHING"):
+            # TAB 3: KUNDALI MATCHING
+            with gr.TabItem("❤️ KUNDALI MATCHING"):
                 gr.Markdown("### 💍 Vedic Compatibility & Guna Milan")
                 with gr.Row():
                     boy_name = gr.Textbox(label="Boy's Name")
@@ -626,8 +627,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 5: BIRTH CHART
-            with gr.TabItem("📜 BIRTH CHART"):
+            # TAB 5: BIRTH & KUNDALI CHART
+            with gr.TabItem("📜 BIRTH & KUNDALI CHART"):
                 gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
                     k_name = gr.Textbox(label="Full Name")
@@ -635,7 +636,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 with gr.Row():
                     k_tob = gr.Textbox(label="Time of Birth")
                     k_pob = gr.Textbox(label="Place of Birth")
-                submit_kundali_pdf = gr.Button("📜 Generate Visual Kundali & PDF Report (₹299)", variant="primary")
+                submit_kundali_pdf = gr.Button("📜 Generate Visual Birth Chart & Kundali PDF (₹299)", variant="primary")
                 output_kundali_pdf_text = gr.Markdown()
                 output_visual_chart = gr.HTML()
                 output_kundali_file = gr.File(label="Download Generated Kundali PDF")

@@ -13,7 +13,7 @@ from reportlab.lib import colors
 import razorpay
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (RAZORPAY, PROKERALA & SOCIAL OAUTH)
+# 0. CONFIGURATIONS & SECRETS (RAZORPAY, PROKERALA & OAUTH)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
@@ -22,9 +22,10 @@ RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
 
-# SOCIAL OAUTH CREDENTIALS
+# SOCIAL OAUTH CREDENTIALS & REDIRECT URIS
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
+GOOGLE_REDIRECT_URI = "https://accastroforge.in/login/google/callback"
 
 FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "1487294163221538")
 FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "b0bacbcf5968b456843fe66aeea8af47")
@@ -286,10 +287,10 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SERVICE HANDLERS & SOCIAL OAUTH AUTHENTICATION URLs
+# 4. SOCIAL OAUTH DIALOG URLS
 # ---------------------------------------------------------
-GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri=https://accastroforge.in/&response_type=token&scope=email%20profile"
-FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email"
+GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
+FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state"
 
 
@@ -454,7 +455,6 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* SINGLE-ROW EXACT-FIT TAB BAR CSS (PREVENTS GRADIO DROPDOWN ENTIRELY) */
 div[role="tablist"] {
     display: flex !important;
     flex-wrap: nowrap !important;
@@ -493,13 +493,11 @@ button[role="tab"][aria-selected="true"] {
     box-shadow: 0 4px 12px rgba(219, 39, 119, 0.8) !important;
 }
 
-/* Force hiding Gradio's overflow menu trigger */
 div[role="tablist"] > button:last-child[aria-haspopup="true"], 
 .tabs > .tab-nav > button:last-child {
     display: none !important;
 }
 
-/* Input Fields styling */
 input, textarea, select {
     background: rgba(18, 8, 42, 0.85) !important;
     backdrop-filter: blur(14px) !important;
@@ -518,7 +516,6 @@ input:focus, textarea:focus, select:focus {
     outline: none !important;
 }
 
-/* File component */
 .gr-file, .file-preview, .gr-file div, .gr-file span, .file-preview * {
     background: rgba(18, 8, 42, 0.95) !important;
     color: #fde047 !important;
@@ -530,14 +527,12 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
-/* DIRECT FORCE BLACK TEXT COLOR ON PANCHANG RADIO BUTTON LABELS */
 .gr-radio label, .gr-radio label span, div[data-testid="radio"] label, div[data-testid="radio"] label span {
     color: #000000 !important;
     font-weight: 800 !important;
     font-size: 0.95rem !important;
 }
 
-/* MARKDOWN STYLING */
 h1, h2, h3, h4, h5, h6, 
 .gr-markdown h1, .gr-markdown h2, .gr-markdown h3,
 .prose h1, .prose h2, .prose h3 {
@@ -722,7 +717,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # SECRET ADMIN PORTAL (HIDDEN BY DEFAULT, OPENS ON DOT CLICK)
+        # SECRET ADMIN PORTAL
         with gr.Group(visible=False) as admin_group:
             with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
                 secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")

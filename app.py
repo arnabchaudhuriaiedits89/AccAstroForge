@@ -431,46 +431,43 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* SINGLE-ROW TAB BAR FIT FOR ALL 10 TABS */
+/* SINGLE-ROW COMPACT TAB BAR DESIGN TO FIT ALL 10 TABS FLUSH WITHOUT DROPDOWN */
 div[role="tablist"] {
     display: flex !important;
     flex-wrap: nowrap !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
     width: 100% !important;
-    gap: 3px !important;
-    padding: 6px 6px !important;
+    gap: 2px !important;
+    padding: 4px 4px !important;
     background: rgba(10, 3, 25, 0.9) !important;
     border-radius: 12px !important;
     border: 1px solid rgba(244, 114, 182, 0.4) !important;
     justify-content: space-between !important;
 }
 
-div[role="tablist"]::-webkit-scrollbar {
-    height: 3px;
-}
-div[role="tablist"]::-webkit-scrollbar-thumb {
-    background: #db2777;
-    border-radius: 4px;
-}
-
 button[role="tab"] {
-    flex: 1 1 auto !important;
+    flex: 1 1 0px !important;
+    min-width: 0 !important;
     background: rgba(18, 8, 42, 0.9) !important;
     border: 1px solid rgba(244, 114, 182, 0.45) !important;
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.65rem !important;
+    font-size: 0.62rem !important;
     border-radius: 8px !important;
-    padding: 7px 6px !important;
+    padding: 6px 2px !important;
+    margin: 0 !important;
     white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    text-align: center !important;
 }
 
 button[role="tab"][aria-selected="true"] {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-color: #fde047 !important;
-    box-shadow: 0 4px 14px rgba(219, 39, 119, 0.8) !important;
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.8) !important;
 }
 
 /* Hide overflow dropdown button completely */
@@ -570,7 +567,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # SINGLE UNIFIED TABS BLOCK WITH CLEAN & REFINED TITLES
+        # SINGLE UNIFIED TABS BLOCK WITH COMPACT EXACT-FIT LABELS
         with gr.Tabs():
             # TAB 1: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -627,8 +624,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 5: BIRTH & KUNDALI CHART
-            with gr.TabItem("📜 BIRTH & KUNDALI CHART"):
+            # TAB 5: KUNDALI & BIRTH PDF
+            with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
                 gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
                     k_name = gr.Textbox(label="Full Name")

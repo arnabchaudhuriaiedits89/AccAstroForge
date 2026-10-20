@@ -13,7 +13,7 @@ from reportlab.lib import colors
 import razorpay
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (RAZORPAY & PROKERALA)
+# 0. CONFIGURATIONS & SECRETS (RAZORPAY, PROKERALA & SOCIAL OAUTH)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
@@ -21,6 +21,18 @@ RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
+
+# SOCIAL OAUTH CREDENTIALS
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
+
+FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "1487294163221538")
+FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "b0bacbcf5968b456843fe66aeea8af47")
+FACEBOOK_REDIRECT_URI = "https://accastroforge.in/login/facebook/callback"
+
+TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "aVhTS1MteGFWLWpfMzNwNlBrVEQ6MTpjaQ")
+TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "jQVr7c1Rssf7WiS2omPKEXBgS47eX8hecTHakNGizEPebHlJq6")
+TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -134,7 +146,6 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
     <div style="background: rgba(10, 3, 28, 0.95); border: 2px solid #7c3aed; border-radius: 16px; padding: 20px; color: #fff; margin-top: 15px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.5);">
         <h3 style="color: #fde047; text-align: center; margin-bottom: 15px; font-family: 'Cinzel', serif;">📜 VEDIC LAGNA KUNDALI CHART - {name.upper()}</h3>
         
-        <!-- GLOWING HIGH-VISIBILITY RASHI & DOB HEADER -->
         <p style="text-align: center; color: #ffffff; font-size: 1.05rem; background: rgba(30, 11, 60, 0.8); padding: 8px 12px; border-radius: 10px; border: 1px solid #7c3aed; margin-bottom: 15px;">
             DOB: <span style="color: #fde047; font-weight: 700;">{dob}</span> | 
             TOB: <span style="color: #fde047; font-weight: 700;">{tob}</span> | 
@@ -275,8 +286,13 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SERVICE HANDLERS FOR GRADIO
+# 4. SERVICE HANDLERS & SOCIAL OAUTH AUTHENTICATION URLs
 # ---------------------------------------------------------
+GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri=https://accastroforge.in/&response_type=token&scope=email%20profile"
+FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email"
+TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state"
+
+
 def run_daily_horoscope(sign):
     return f"### 🔮 Daily Vedic Horoscope for {sign}\nToday brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!"
 
@@ -553,7 +569,6 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
     background: transparent !important;
 }
 
-/* Hide the trigger button while keeping it in DOM */
 #real-hidden-trigger {
     display: none !important;
 }
@@ -565,17 +580,17 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
             with gr.Column(scale=8, min_width=300):
                 gr.HTML(f"<div>{logo_element}</div>")
             with gr.Column(scale=4, min_width=350):
-                gr.HTML("""
+                gr.HTML(f"""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                     <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
-                    <a href="https://accounts.google.com/signin" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
-                    <a href="https://www.facebook.com/login" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
-                    <a href="https://twitter.com/login" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
-                    <a href="https://accounts.google.com/signup" target="_blank" style="color: #fff; background: #7c3aed; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: 700; border: 1px solid #fde047;">📝 Sign Up</a>
+                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
+                    <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
+                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
+                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #7c3aed; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: 700; border: 1px solid #fde047;">📝 Sign Up</a>
                 </div>
                 """)
 
-        # SINGLE UNIFIED TABS BLOCK
+        # SINGLE UNIFIED TABS BLOCK WITH ALL 10 EXACT-FIT TABS
         with gr.Tabs():
             # TAB 1: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):

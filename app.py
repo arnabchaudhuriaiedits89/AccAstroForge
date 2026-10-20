@@ -539,11 +539,18 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
-/* FIXED RADIO BUTTON CONTRAST AGAINST WHITE BACKGROUND */
-.gr-radio label, .gr-radio label span, div[data-testid="radio"] label, div[data-testid="radio"] label span {
-    color: #030014 !important;
-    font-weight: 700 !important;
+/* STRICT TEXT COLOR OVERRIDE FOR RADIO BOX INNER TEXT */
+.gr-radio label, 
+.gr-radio label span, 
+div[data-testid="radio"] label, 
+div[data-testid="radio"] label span,
+.gr-radio input[type="radio"] + span,
+label.gr-radio-label span,
+.gr-form fieldset label span {
+    color: #000000 !important;
+    font-weight: 800 !important;
     font-size: 0.95rem !important;
+    text-shadow: none !important;
 }
 
 h1, h2, h3, h4, h5, h6, 
@@ -600,7 +607,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
 
         # RE-ARRANGED TABS WITH DASHBOARD PROMINENTLY PLACED & WITHOUT TWITTER AUTH
         with gr.Tabs() as main_tabs:
-            # TAB 1: DASHBOARD (PLACED FIRST FOR EASY ACCESS)
+            # TAB 1: DASHBOARD
             with gr.TabItem("👤 DASHBOARD"):
                 gr.Markdown("### 👤 User Profile, Wallet & Order History")
                 gr.HTML("""

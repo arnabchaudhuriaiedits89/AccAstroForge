@@ -725,7 +725,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            # TAB 10: LEGAL & POLICIES (EMAIL REMOVED)
+            # TAB 10: LEGAL & POLICIES (SUPPORT EMAIL INCLUDED)
             with gr.TabItem("⚖️ LEGAL"):
                 gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""
@@ -735,6 +735,9 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047;">🔒 Privacy Policy & Data Deletion</h4>
                     <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
+                    <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
+                    <h4 style="color: #fde047;">📧 Support Contact</h4>
+                    <p style="font-size: 0.85rem; color: #ddd;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047; font-weight: 700;">support@accastroforge.in</a></p>
                 </div>
                 """)
 

@@ -22,18 +22,18 @@ RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
 
-# SOCIAL OAUTH CREDENTIALS & REDIRECT URIS
+# SOCIAL OAUTH CREDENTIALS & ROOT REDIRECT URIS
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
-GOOGLE_REDIRECT_URI = "https://accastroforge.in/login/google/callback"
+GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
 
 FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "1487294163221538")
 FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "b0bacbcf5968b456843fe66aeea8af47")
-FACEBOOK_REDIRECT_URI = "https://accastroforge.in/login/facebook/callback"
+FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
 TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "aVhTS1MteGFWLWpfMzNwNlBrVEQ6MTpjaQ")
 TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "jQVr7c1Rssf7WiS2omPKEXBgS47eX8hecTHakNGizEPebHlJq6")
-TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
+TWITTER_REDIRECT_URI = "https://accastroforge.in/"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))

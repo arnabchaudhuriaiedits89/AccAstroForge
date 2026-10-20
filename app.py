@@ -287,17 +287,11 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH DIALOG URLS & TWITTER CALLBACK ROUTE
+# 4. SOCIAL OAUTH DIALOG URLS
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
-
-
-def handle_twitter_callback(code=None, state=None):
-    if code:
-        return f"### 🎉 Twitter Authentication Successful!\nAuthorization Code received successfully. You are now logged in to AccAstroForge."
-    return f"### ⚠️ Twitter Login Status\nAuthentication callback received."
 
 
 def run_daily_horoscope(sign):
@@ -370,7 +364,7 @@ def simple_astro_query(user_query):
     if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
         reply = "🙏 **Namaste!** I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
     elif any(w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]):
-        reply = "💼 **Career & Wealth Guidance:** In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and wearing a Yellow Sapphire or working with disciplined focus will bring immense growth."
+        reply = "💼 **Career & Wealth Guidance:** In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and working with disciplined focus will bring immense growth."
     elif any(w in msg for w in ["marriage", "love", "relationship", "partner", "match"]):
         reply = "❤️ **Love & Marriage Insights:** Compatibility in Vedic astrology is evaluated through Guna Milan (36 points) and the positions of Venus (Shukra) and Mars (Mangal). Strengthening your 7th house through positive communication and harmony will resolve relationship hurdles."
     elif any(w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]):
@@ -414,7 +408,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT
+# 5. CSS & JAVASCRIPT (HIGH CONTRAST & CLEAR LABELS)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -504,20 +498,32 @@ div[role="tablist"] > button:last-child[aria-haspopup="true"],
     display: none !important;
 }
 
-input, textarea, select {
-    background: rgba(18, 8, 42, 0.85) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    border: 1px solid rgba(232, 121, 249, 0.45) !important;
-    color: #ffffff !important;
-    border-radius: 14px !important;
-    padding: 12px 16px !important;
+/* HIGH CONTRAST LABELS & PLACEHOLDERS FOR READABILITY */
+label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span {
+    color: #fde047 !important;
+    font-weight: 600 !important;
     font-size: 0.95rem !important;
 }
 
+input, textarea, select {
+    background: rgba(22, 10, 48, 0.95) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1.5px solid rgba(244, 114, 182, 0.7) !important;
+    color: #ffffff !important;
+    border-radius: 14px !important;
+    padding: 12px 16px !important;
+    font-size: 0.98rem !important;
+    font-weight: 500 !important;
+}
+
+input::placeholder, textarea::placeholder {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
 input:focus, textarea:focus, select:focus {
-    border-color: #f472b6 !important;
-    box-shadow: 0 0 22px rgba(244, 114, 182, 0.6) !important;
+    border-color: #fde047 !important;
+    box-shadow: 0 0 22px rgba(253, 224, 71, 0.6) !important;
     color: #ffffff !important;
     outline: none !important;
 }
@@ -534,8 +540,8 @@ input:focus, textarea:focus, select:focus {
 }
 
 .gr-radio label, .gr-radio label span, div[data-testid="radio"] label, div[data-testid="radio"] label span {
-    color: #000000 !important;
-    font-weight: 800 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
     font-size: 0.95rem !important;
 }
 
@@ -591,9 +597,24 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # SINGLE UNIFIED TABS BLOCK WITH ALL 10 EXACT-FIT TABS + TWITTER CALLBACK TAB
+        # RE-ARRANGED TABS WITH DASHBOARD PROMINENTLY PLACED & WITHOUT TWITTER AUTH
         with gr.Tabs() as main_tabs:
-            # TAB 1: LIFE PREDICTION
+            # TAB 1: DASHBOARD (PLACED FIRST FOR EASY ACCESS)
+            with gr.TabItem("👤 DASHBOARD"):
+                gr.Markdown("### 👤 User Profile, Wallet & Order History")
+                gr.HTML("""
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                    <h4 style="color: #fde047; margin-bottom: 5px;">💳 AccAstroForge Wallet Balance: <span style="color: #4ade80;">₹ 0.00</span></h4>
+                    <p style="color: #f3e8ff; font-size: 0.85rem;">Use credits for instant unlocking of Kundali, Life Reports, and Astrology Consultations.</p>
+                </div>
+                """)
+                with gr.Row():
+                    topup_amount = gr.Radio(choices=["100", "250", "500", "1000"], value="250", label="Select Topup Amount (₹)")
+                    topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
+                wallet_pay_output = gr.HTML()
+                topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
+
+            # TAB 2: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
                 gr.Markdown("### 🌌 Vedic Astrology & Deep Life Forecast")
                 with gr.Row():
@@ -615,7 +636,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
 
-            # TAB 2: HOROSCOPE
+            # TAB 3: HOROSCOPE
             with gr.TabItem("☀️ HOROSCOPE"):
                 gr.Markdown("### 🔮 Daily Zodiac Predictions (Free)")
                 zodiac_sign = gr.Dropdown(choices=ZODIAC_SIGNS, value="Aries (Mesha)", label="Select Zodiac Sign")
@@ -623,40 +644,40 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_horoscope = gr.Markdown()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            # TAB 3: MATCHING
+            # TAB 4: MATCHING
             with gr.TabItem("❤️ MATCHING"):
                 gr.Markdown("### 💍 Vedic Compatibility & Guna Milan")
                 with gr.Row():
-                    boy_name = gr.Textbox(label="Boy's Name")
-                    boy_dob = gr.Textbox(label="Boy's DOB (YYYY-MM-DD)")
+                    boy_name = gr.Textbox(label="Boy's Name", placeholder="e.g. Rahul")
+                    boy_dob = gr.Textbox(label="Boy's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
                 with gr.Row():
-                    girl_name = gr.Textbox(label="Girl's Name")
-                    girl_dob = gr.Textbox(label="Girl's DOB (YYYY-MM-DD)")
+                    girl_name = gr.Textbox(label="Girl's Name", placeholder="e.g. Priya")
+                    girl_dob = gr.Textbox(label="Girl's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
                 submit_matching = gr.Button("❤️ Match Kundalis Now (₹399)", variant="primary")
                 output_matching = gr.Markdown()
                 output_matching_paywall = gr.HTML()
                 submit_matching.click(fn=run_kundali_matching, inputs=[boy_name, boy_dob, girl_name, girl_dob], outputs=[output_matching, output_matching_paywall])
 
-            # TAB 4: GEMSTONES
+            # TAB 5: GEMSTONES
             with gr.TabItem("💎 GEMSTONES"):
                 gr.Markdown("### 🧿 Lucky Gemstones & Cosmic Remedies")
                 with gr.Row():
-                    gem_dob = gr.Textbox(label="Date of Birth")
-                    gem_zodiac = gr.Textbox(label="Zodiac Sign")
+                    gem_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
+                    gem_zodiac = gr.Textbox(label="Zodiac Sign", placeholder="e.g. Aries (Mesha)")
                 submit_gem = gr.Button("💎 Find My Gemstone (₹299)", variant="primary")
                 output_gem = gr.Markdown()
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 5: KUNDALI & BIRTH PDF
+            # TAB 6: KUNDALI & BIRTH PDF
             with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
                 gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
-                    k_name = gr.Textbox(label="Full Name")
-                    k_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)")
+                    k_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                    k_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
                 with gr.Row():
-                    k_tob = gr.Textbox(label="Time of Birth")
-                    k_pob = gr.Textbox(label="Place of Birth")
+                    k_tob = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
+                    k_pob = gr.Textbox(label="Place of Birth", placeholder="City, Country")
                 submit_kundali_pdf = gr.Button("📜 Generate Visual Birth Chart & Kundali PDF (₹299)", variant="primary")
                 output_kundali_pdf_text = gr.Markdown()
                 output_visual_chart = gr.HTML()
@@ -664,51 +685,36 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
-            # TAB 6: NUMEROLOGY
+            # TAB 7: NUMEROLOGY
             with gr.TabItem("🔢 NUMEROLOGY"):
                 gr.Markdown("### 🔢 Numerology Check")
                 with gr.Row():
-                    n_name = gr.Textbox(label="Full Name")
-                    n_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)")
+                    n_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                    n_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
                 submit_num = gr.Button("🔢 Analyze Numerology (₹249)", variant="primary")
                 output_num = gr.Markdown()
                 output_num_paywall = gr.HTML()
                 submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
-            # TAB 7: PANCHANG
+            # TAB 8: PANCHANG
             with gr.TabItem("📅 PANCHANG"):
                 gr.Markdown("### 📅 Vedic Panchang & Shubh Muhurat")
                 with gr.Row():
-                    p_date = gr.Textbox(label="Date (YYYY-MM-DD)")
-                    p_city = gr.Textbox(label="City")
+                    p_date = gr.Textbox(label="Date (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
+                    p_city = gr.Textbox(label="City", placeholder="e.g. Kolkata")
                 p_mode = gr.Radio(choices=["Free Daily Panchang", "Detailed Shubh Muhurat Report (₹99)"], value="Free Daily Panchang")
                 submit_panchang = gr.Button("📅 Check Panchang", variant="primary")
                 output_panchang = gr.Markdown()
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            # TAB 8: AI ASSISTANT
+            # TAB 9: AI ASSISTANT
             with gr.TabItem("🤖 AI ASSISTANT"):
                 gr.Markdown("### 🤖 Ask Your Personal AI Astrologer")
                 ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
                 ai_submit = gr.Button("Ask Assistant ✨", variant="primary")
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
-
-            # TAB 9: USER DASHBOARD
-            with gr.TabItem("👤 DASHBOARD"):
-                gr.Markdown("### 👤 User Profile, Wallet & Order History")
-                gr.HTML("""
-                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
-                    <h4 style="color: #fde047; margin-bottom: 5px;">💳 AccAstroForge Wallet Balance: <span style="color: #4ade80;">₹ 0.00</span></h4>
-                    <p style="color: #f3e8ff; font-size: 0.85rem;">Use credits for instant unlocking of Kundali, Life Reports, and Astrology Consultations.</p>
-                </div>
-                """)
-                with gr.Row():
-                    topup_amount = gr.Radio(choices=["100", "250", "500", "1000"], value="250", label="Select Topup Amount (₹)")
-                    topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
-                wallet_pay_output = gr.HTML()
-                topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
             # TAB 10: LEGAL & POLICIES
             with gr.TabItem("⚖️ LEGAL"):
@@ -722,15 +728,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties. Users can request complete data deletion by emailing arnabchaudhuriaiedits@gmail.com.</p>
                 </div>
                 """)
-
-            # TAB 11: TWITTER CALLBACK HANDLER
-            with gr.TabItem("🐦 TWITTER AUTH"):
-                gr.Markdown("### 🐦 Twitter/X OAuth Callback Handler")
-                tw_code = gr.Textbox(label="Authorization Code", placeholder="Code from Twitter")
-                tw_state = gr.Textbox(label="State", placeholder="State")
-                tw_btn = gr.Button("Complete Twitter Login", variant="primary")
-                tw_output = gr.Markdown()
-                tw_btn.click(fn=handle_twitter_callback, inputs=[tw_code, tw_state], outputs=tw_output)
 
         # SECRET ADMIN PORTAL
         with gr.Group(visible=False) as admin_group:

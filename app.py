@@ -539,8 +539,9 @@ input:focus, textarea:focus, select:focus {
     font-weight: 700 !important;
 }
 
+/* FIXED RADIO BUTTON CONTRAST AGAINST WHITE BACKGROUND */
 .gr-radio label, .gr-radio label span, div[data-testid="radio"] label, div[data-testid="radio"] label span {
-    color: #ffffff !important;
+    color: #030014 !important;
     font-weight: 700 !important;
     font-size: 0.95rem !important;
 }
@@ -716,7 +717,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            # TAB 10: LEGAL & POLICIES
+            # TAB 10: LEGAL & POLICIES (EMAIL REMOVED)
             with gr.TabItem("⚖️ LEGAL"):
                 gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""
@@ -725,7 +726,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <p style="font-size: 0.85rem; color: #ddd;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties. Users can request complete data deletion by emailing arnabchaudhuriaiedits@gmail.com.</p>
+                    <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
                 </div>
                 """)
 

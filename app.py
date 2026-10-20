@@ -133,7 +133,14 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
     return f"""
     <div style="background: rgba(10, 3, 28, 0.95); border: 2px solid #7c3aed; border-radius: 16px; padding: 20px; color: #fff; margin-top: 15px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.5);">
         <h3 style="color: #fde047; text-align: center; margin-bottom: 15px; font-family: 'Cinzel', serif;">📜 VEDIC LAGNA KUNDALI CHART - {name.upper()}</h3>
-        <p style="text-align: center; color: #f3e8ff; font-size: 0.9rem;">DOB: {dob} | TOB: {tob} | POB: {pob} | Rashi: <b>{profile['zodiac']}</b></p>
+        
+        <!-- GLOWING HIGH-VISIBILITY RASHI & DOB HEADER -->
+        <p style="text-align: center; color: #ffffff; font-size: 1.05rem; background: rgba(30, 11, 60, 0.8); padding: 8px 12px; border-radius: 10px; border: 1px solid #7c3aed; margin-bottom: 15px;">
+            DOB: <span style="color: #fde047; font-weight: 700;">{dob}</span> | 
+            TOB: <span style="color: #fde047; font-weight: 700;">{tob}</span> | 
+            POB: <span style="color: #fde047; font-weight: 700;">{pob}</span> | 
+            Rashi: <span style="color: #4ade80; font-weight: 800; font-size: 1.15rem; text-shadow: 0 0 10px rgba(74, 222, 128, 0.8);">✨ {profile['zodiac']}</span>
+        </p>
         
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 450px; margin: 20px auto; background: #5b21b6; padding: 8px; border-radius: 12px; border: 2px solid #fde047;">
             <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
@@ -431,14 +438,14 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* SINGLE-ROW COMPACT TAB BAR DESIGN TO FIT ALL 10 TABS FLUSH WITHOUT DROPDOWN */
+/* SINGLE-ROW EXACT-FIT TAB BAR CSS (PREVENTS GRADIO DROPDOWN ENTIRELY) */
 div[role="tablist"] {
     display: flex !important;
     flex-wrap: nowrap !important;
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
     width: 100% !important;
     gap: 2px !important;
-    padding: 4px 4px !important;
+    padding: 4px 2px !important;
     background: rgba(10, 3, 25, 0.9) !important;
     border-radius: 12px !important;
     border: 1px solid rgba(244, 114, 182, 0.4) !important;
@@ -446,16 +453,16 @@ div[role="tablist"] {
 }
 
 button[role="tab"] {
-    flex: 1 1 0px !important;
+    flex: 1 1 auto !important;
     min-width: 0 !important;
     background: rgba(18, 8, 42, 0.9) !important;
     border: 1px solid rgba(244, 114, 182, 0.45) !important;
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.62rem !important;
+    font-size: 0.60rem !important;
     border-radius: 8px !important;
-    padding: 6px 2px !important;
+    padding: 6px 1px !important;
     margin: 0 !important;
     white-space: nowrap !important;
     text-overflow: ellipsis !important;
@@ -470,8 +477,9 @@ button[role="tab"][aria-selected="true"] {
     box-shadow: 0 4px 12px rgba(219, 39, 119, 0.8) !important;
 }
 
-/* Hide overflow dropdown button completely */
-div[role="tablist"] > button:last-child[aria-haspopup="true"] {
+/* Force hiding Gradio's overflow menu trigger */
+div[role="tablist"] > button:last-child[aria-haspopup="true"], 
+.tabs > .tab-nav > button:last-child {
     display: none !important;
 }
 
@@ -567,7 +575,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # SINGLE UNIFIED TABS BLOCK WITH COMPACT EXACT-FIT LABELS
+        # SINGLE UNIFIED TABS BLOCK
         with gr.Tabs():
             # TAB 1: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -599,8 +607,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_horoscope = gr.Markdown()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            # TAB 3: KUNDALI MATCHING
-            with gr.TabItem("❤️ KUNDALI MATCHING"):
+            # TAB 3: MATCHING
+            with gr.TabItem("❤️ MATCHING"):
                 gr.Markdown("### 💍 Vedic Compatibility & Guna Milan")
                 with gr.Row():
                     boy_name = gr.Textbox(label="Boy's Name")

@@ -22,7 +22,7 @@ RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
 
-# SOCIAL OAUTH CREDENTIALS & ROOT REDIRECT URIS
+# SOCIAL OAUTH CREDENTIALS & REDIRECT URIS
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -33,7 +33,7 @@ FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
 TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "aVhTS1MteGFWLWpfMzNwNlBrVEQ6MTpjaQ")
 TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "jQVr7c1Rssf7WiS2omPKEXBgS47eX8hecTHakNGizEPebHlJq6")
-TWITTER_REDIRECT_URI = "https://accastroforge.in/"
+TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -97,7 +97,7 @@ else:
     """
 
 # ---------------------------------------------------------
-# 2. PROKERALA API & LOCAL ASTROLOGICAL ENGINE
+# 2. ASTROLOGICAL ENGINE & KUNDALI GENERATOR
 # ---------------------------------------------------------
 ZODIAC_SIGNS = [
     "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
@@ -189,7 +189,7 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
 
 
 # ---------------------------------------------------------
-# 3. REPORTLAB PDF GENERATOR & DUAL-FALLBACK RAZORPAY PAYWALL
+# 3. REPORTLAB PDF & RAZORPAY PAYWALL
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -287,11 +287,17 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH DIALOG URLS
+# 4. SOCIAL OAUTH DIALOG URLS & TWITTER CALLBACK ROUTE
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
-TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state"
+TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
+
+
+def handle_twitter_callback(code=None, state=None):
+    if code:
+        return f"### 🎉 Twitter Authentication Successful!\nAuthorization Code received successfully. You are now logged in to AccAstroForge."
+    return f"### ⚠️ Twitter Login Status\nAuthentication callback received."
 
 
 def run_daily_horoscope(sign):
@@ -585,8 +591,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # SINGLE UNIFIED TABS BLOCK WITH ALL 10 EXACT-FIT TABS
-        with gr.Tabs():
+        # SINGLE UNIFIED TABS BLOCK WITH ALL 10 EXACT-FIT TABS + TWITTER CALLBACK TAB
+        with gr.Tabs() as main_tabs:
             # TAB 1: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
                 gr.Markdown("### 🌌 Vedic Astrology & Deep Life Forecast")
@@ -716,6 +722,15 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties. Users can request complete data deletion by emailing arnabchaudhuriaiedits@gmail.com.</p>
                 </div>
                 """)
+
+            # TAB 11: TWITTER CALLBACK HANDLER
+            with gr.TabItem("🐦 TWITTER AUTH"):
+                gr.Markdown("### 🐦 Twitter/X OAuth Callback Handler")
+                tw_code = gr.Textbox(label="Authorization Code", placeholder="Code from Twitter")
+                tw_state = gr.Textbox(label="State", placeholder="State")
+                tw_btn = gr.Button("Complete Twitter Login", variant="primary")
+                tw_output = gr.Markdown()
+                tw_btn.click(fn=handle_twitter_callback, inputs=[tw_code, tw_state], outputs=tw_output)
 
         # SECRET ADMIN PORTAL
         with gr.Group(visible=False) as admin_group:

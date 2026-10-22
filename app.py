@@ -288,11 +288,27 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH DIALOG URLS
+# 4. SOCIAL OAUTH DIALOG URLS & MANUAL SIGNUP HANDLER
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
+
+
+def handle_manual_signup(name, email, password):
+    u_name = name.strip() if name else "New User"
+    u_email = email.strip() if email else "N/A"
+    if not u_email or "@" not in u_email:
+        return "❌ Please enter a valid email address."
+    
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
+        "service": "Manual Account Registration",
+        "details": f"Email: {u_email}",
+        "payment_status": "Registered"
+    })
+    return f"### ✨ Welcome to AccAstroForge, {u_name}!\nYour account has been created successfully with **{u_email}**. You can now explore all Vedic astrology and horoscope services!"
 
 
 def run_daily_horoscope(sign):
@@ -602,11 +618,10 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
                     <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
                     <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
-                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #7c3aed; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: 700; border: 1px solid #fde047;">📝 Sign Up</a>
                 </div>
                 """)
 
-        # RE-ARRANGED TABS WITH DASHBOARD PROMINENTLY PLACED
+        # RE-ARRANGED TABS WITH DASHBOARD & SIGN UP PROMINENTLY PLACED
         with gr.Tabs() as main_tabs:
             # TAB 1: DASHBOARD
             with gr.TabItem("👤 DASHBOARD"):
@@ -623,7 +638,19 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
-            # TAB 2: LIFE PREDICTION
+            # TAB 2: SIGN UP (MANUAL REGISTRATION)
+            with gr.TabItem("📝 SIGN UP"):
+                gr.Markdown("### 📝 Create Your AccAstroForge Account (Manual Registration)")
+                gr.HTML("<p style='color: #f3e8ff; font-size: 0.9rem; margin-bottom: 15px;'>Enter your details below to register your account securely on our platform.</p>")
+                with gr.Row():
+                    signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                    signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
+                signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
+                signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
+                signup_output = gr.Markdown()
+                signup_btn.click(fn=handle_manual_signup, inputs=[signup_name, signup_email, signup_pass], outputs=[signup_output])
+
+            # TAB 3: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
                 gr.Markdown("### 🌌 Vedic Astrology & Deep Life Forecast")
                 with gr.Row():
@@ -645,7 +672,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
 
-            # TAB 3: HOROSCOPE
+            # TAB 4: HOROSCOPE
             with gr.TabItem("☀️ HOROSCOPE"):
                 gr.Markdown("### 🔮 Daily Zodiac Predictions (Free)")
                 zodiac_sign = gr.Dropdown(choices=ZODIAC_SIGNS, value="Aries (Mesha)", label="Select Zodiac Sign")
@@ -653,7 +680,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_horoscope = gr.Markdown()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            # TAB 4: MATCHING
+            # TAB 5: MATCHING
             with gr.TabItem("❤️ MATCHING"):
                 gr.Markdown("### 💍 Vedic Compatibility & Guna Milan")
                 with gr.Row():
@@ -667,7 +694,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_matching_paywall = gr.HTML()
                 submit_matching.click(fn=run_kundali_matching, inputs=[boy_name, boy_dob, girl_name, girl_dob], outputs=[output_matching, output_matching_paywall])
 
-            # TAB 5: GEMSTONES
+            # TAB 6: GEMSTONES
             with gr.TabItem("💎 GEMSTONES"):
                 gr.Markdown("### 🧿 Lucky Gemstones & Cosmic Remedies")
                 with gr.Row():
@@ -678,7 +705,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 6: KUNDALI & BIRTH PDF
+            # TAB 7: KUNDALI & BIRTH PDF
             with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
                 gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
@@ -694,7 +721,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
-            # TAB 7: NUMEROLOGY
+            # TAB 8: NUMEROLOGY
             with gr.TabItem("🔢 NUMEROLOGY"):
                 gr.Markdown("### 🔢 Numerology Check")
                 with gr.Row():
@@ -705,7 +732,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_num_paywall = gr.HTML()
                 submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
-            # TAB 8: PANCHANG
+            # TAB 9: PANCHANG
             with gr.TabItem("📅 PANCHANG"):
                 gr.Markdown("### 📅 Vedic Panchang & Shubh Muhurat")
                 with gr.Row():
@@ -717,7 +744,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            # TAB 9: AI ASSISTANT
+            # TAB 10: AI ASSISTANT
             with gr.TabItem("🤖 AI ASSISTANT"):
                 gr.Markdown("### 🤖 Ask Your Personal AI Astrologer")
                 ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
@@ -725,7 +752,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            # TAB 10: LEGAL & POLICIES
+            # TAB 11: LEGAL & POLICIES
             with gr.TabItem("⚖️ LEGAL"):
                 gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""

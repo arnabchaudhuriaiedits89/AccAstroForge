@@ -31,10 +31,15 @@ FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "1487294163221538")
 FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "b0bacbcf5968b456843fe66aeea8af47")
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# UPDATED BRAND TWITTER (X) CREDENTIALS FROM NOTEPAD
+# TWITTER (X) CREDENTIALS
 TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "VlVoTTA2WEFJNzdTWlp5X2llV186MTpjaQ")
 TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "pwm4ty1VPp6SswUy4pwmKlNNEvhI4P6axeNibIbxwNla7lzZSH")
 TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
+
+# INSTAGRAM CREDENTIALS FROM NOTEPAD
+INSTAGRAM_CLIENT_ID = os.getenv("INSTAGRAM_CLIENT_ID", "904674332731217")
+INSTAGRAM_CLIENT_SECRET = os.getenv("INSTAGRAM_CLIENT_SECRET", "c3d105b8932ef3bff7a804d142480a0")
+INSTAGRAM_REDIRECT_URI = "https://accastroforge.in/auth/instagram/callback"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -293,6 +298,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
+INSTAGRAM_OAUTH_URL = f"https://api.instagram.com/oauth/authorize?client_id={INSTAGRAM_CLIENT_ID}&redirect_uri={INSTAGRAM_REDIRECT_URI}&scope=user_profile,user_media&response_type=code"
 
 
 def run_daily_horoscope(sign):
@@ -602,11 +608,12 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
                     <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
                     <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
+                    <a href="{INSTAGRAM_OAUTH_URL}" target="_blank" style="color: #fff; background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Instagram</a>
                     <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #7c3aed; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: 700; border: 1px solid #fde047;">📝 Sign Up</a>
                 </div>
                 """)
 
-        # RE-ARRANGED TABS WITH DASHBOARD PROMINENTLY PLACED & WITHOUT TWITTER AUTH
+        # RE-ARRANGED TABS WITH DASHBOARD PROMINENTLY PLACED
         with gr.Tabs() as main_tabs:
             # TAB 1: DASHBOARD
             with gr.TabItem("👤 DASHBOARD"):
@@ -725,7 +732,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            # TAB 10: LEGAL & POLICIES (SUPPORT EMAIL & OFFICIAL SOCIAL HANDLES INCLUDED)
+            # TAB 10: LEGAL & POLICIES
             with gr.TabItem("⚖️ LEGAL"):
                 gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""
@@ -734,7 +741,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <p style="font-size: 0.85rem; color: #ddd;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
+                    <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter/Instagram login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047;">📧 Support Contact & Official Handles</h4>
                     <p style="font-size: 0.85rem; color: #ddd; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047; font-weight: 700;">support@accastroforge.in</a></p>

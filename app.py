@@ -302,7 +302,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH DIALOG URLS & MANUAL SIGNUP HANDLER
+# 4. SOCIAL OAUTH & SIGNUP / USER SESSION STATE HANDLERS
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -313,16 +313,22 @@ def handle_manual_signup(name, email, password):
     u_name = name.strip() if name else "New User"
     u_email = email.strip() if email else "N/A"
     if not u_email or "@" not in u_email:
-        return "❌ Please enter a valid email address."
+        return "❌ Please enter a valid email address.", f"👤 Guest User", "₹ 0.00", "No active sessions."
     
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
         "service": "Manual Account Registration",
         "details": f"Email: {u_email}",
-        "payment_status": "Registered"
+        "payment_status": "Registered & Active"
     })
-    return f"### ✨ Welcome to AccAstroForge, {u_name}!\nYour account has been created successfully with **{u_email}**. You can now explore all Vedic astrology and horoscope services!"
+    
+    success_msg = f"### ✨ Welcome to AccAstroForge, {u_name}!\nYour account has been created and logged in successfully with **{u_email}**."
+    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Status: Active Member</span>"
+    wallet_box = "₹ 0.00"
+    history_box = "• Account Registered Successfully<br>• Initial Wallet: ₹0.00"
+    
+    return success_msg, profile_box, wallet_box, history_box
 
 
 def run_daily_horoscope(sign):
@@ -439,7 +445,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT (CLEAN & SECURE HEADER + ACCURATE MOBILE NOTICE)
+# 5. CSS & JAVASCRIPT
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -529,7 +535,6 @@ div[role="tablist"] > button:last-child[aria-haspopup="true"],
     display: none !important;
 }
 
-/* OVERRIDE ACCORDION & POPUP WHITE BACKGROUNDS TO GLASS DARK */
 .gr-accordion, .accordion, div[data-testid="accordion"], fieldset {
     background: rgba(14, 5, 35, 0.95) !important;
     backdrop-filter: blur(18px) !important;
@@ -551,7 +556,6 @@ div[role="tablist"] > button:last-child[aria-haspopup="true"],
     font-size: 1.05rem !important;
 }
 
-/* OVERRIDE BUTTON COLORS TO ACCENT PURPLE/GOLD */
 button.primary, button.gr-button-primary, .gr-button-primary {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
@@ -561,7 +565,6 @@ button.primary, button.gr-button-primary, .gr-button-primary {
     border-radius: 12px !important;
 }
 
-/* HIGH CONTRAST LABELS & PLACEHOLDERS */
 label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span {
     color: #fde047 !important;
     font-weight: 600 !important;
@@ -591,7 +594,6 @@ input:focus, textarea:focus, select:focus {
     outline: none !important;
 }
 
-/* FIX RADIO BUTTON WHITE BOXES TO DARK THEME */
 .gr-radio label, 
 .gr-radio label span, 
 div[data-testid="radio"] label, 
@@ -672,11 +674,11 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
 
         # EXACT 10 MAIN SERVICE TABS
         with gr.Tabs() as main_tabs:
-            # TAB 1: DASHBOARD (WITH ACCURATE MOBILE VIEW NOTICE DISCLAIMER)
+            # TAB 1: DASHBOARD (DYNAMIC USER PROFILE & WALLET & ORDER HISTORY)
             with gr.TabItem("👤 DASHBOARD"):
                 gr.Markdown("### 👤 User Profile, Wallet & Order History")
                 
-                # UPDATED PRECISE MOBILE VIEW NOTICE DISCLAIMER
+                # PRECISE MOBILE VIEW NOTICE DISCLAIMER
                 gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1.5px dashed #f1c40f; padding: 12px 18px; border-radius: 12px; margin: 10px 0 15px 0; text-align: center; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.15); backdrop-filter: blur(5px);">
                     <p style="color: #f39c12; font-size: 0.88rem; font-weight: 600; margin: 0; line-height: 1.5; letter-spacing: 0.3px;">
@@ -685,12 +687,29 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-                gr.HTML("""
-                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
-                    <h4 style="color: #fde047; margin-bottom: 5px;">💳 AccAstroForge Wallet Balance: <span style="color: #4ade80;">₹ 0.00</span></h4>
-                    <p style="color: #f3e8ff; font-size: 0.85rem;">Use credits for instant unlocking of Kundali, Life Reports, and Astrology Consultations.</p>
+                with gr.Row():
+                    with gr.Column():
+                        user_profile_display = gr.HTML("""
+                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                            <h4 style="color: #fde047; margin-bottom: 8px;">👤 Active User Session</h4>
+                            <p style="color: #ffffff; font-size: 0.95rem;" id="session-status">Guest User (Please Sign Up / Login)</p>
+                        </div>
+                        """)
+                    with gr.Column():
+                        wallet_balance_display = gr.HTML("""
+                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                            <h4 style="color: #fde047; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80;" id="wallet-val">₹ 0.00</span></h4>
+                            <p style="color: #f3e8ff; font-size: 0.8rem;">Use credits for instant unlocking of reports.</p>
+                        </div>
+                        """)
+
+                order_history_display = gr.HTML("""
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <h4 style="color: #fde047; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+                    <p style="color: #cbd5e1; font-size: 0.85rem;" id="history-content">No previous orders found for current guest session. Please register or login.</p>
                 </div>
                 """)
+
                 with gr.Row():
                     topup_amount = gr.Radio(choices=["100", "250", "500", "1000"], value="250", label="Select Topup Amount (₹)")
                     topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
@@ -831,7 +850,11 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
                 signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
                 signup_output = gr.Markdown()
-                signup_btn.click(fn=handle_manual_signup, inputs=[signup_name, signup_email, signup_pass], outputs=[signup_output])
+                signup_btn.click(
+                    fn=handle_manual_signup, 
+                    inputs=[signup_name, signup_email, signup_pass], 
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
+                )
 
         signup_state = gr.State(value=False)
         manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")

@@ -81,7 +81,6 @@ def get_base64(file_path):
 
 logo_b64 = get_base64(logo_path)
 
-# HEADER ELEMENT (SIGN UP BUTTON REMOVED FROM TOP & PLACED IN DASHBOARD)
 if logo_b64:
     logo_src = "data:image/png;base64," + logo_b64
     logo_element = f"""
@@ -667,7 +666,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
 
         # EXACT 10 MAIN SERVICE TABS
         with gr.Tabs() as main_tabs:
-            # TAB 1: DASHBOARD (WITH SIGN-UP BUTTON MOVED NEXT TO ACTIVE USER SESSION)
+            # TAB 1: DASHBOARD
             with gr.TabItem("👤 DASHBOARD"):
                 gr.Markdown("### 👤 User Profile, Wallet & Order History")
                 
@@ -701,6 +700,16 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                         </div>
                         """)
 
+                # MODAL / POPUP FOR MANUAL SIGNUP (MOVED RIGHT BELOW USER SESSION CARDS)
+                with gr.Group(visible=False) as signup_group:
+                    with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
+                        with gr.Row():
+                            signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                            signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
+                        signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
+                        signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
+                        signup_output = gr.Markdown()
+
                 order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
                     <h4 style="color: #fde047; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
@@ -713,6 +722,13 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
+
+                # Connect signup action
+                signup_btn.click(
+                    fn=handle_manual_signup, 
+                    inputs=[signup_name, signup_email, signup_pass], 
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
+                )
 
             # TAB 2: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -839,26 +855,12 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # MODAL / POPUP FOR MANUAL SIGNUP (DARK STYLED GLASS)
-        with gr.Group(visible=False) as signup_group:
-            with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
-                with gr.Row():
-                    signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                    signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
-                signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
-                signup_output = gr.Markdown()
-                signup_btn.click(
-                    fn=handle_manual_signup, 
-                    inputs=[signup_name, signup_email, signup_pass], 
-                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
-                )
-
+        # HIDDEN TRIGGER FOR SIGNUP
         signup_state = gr.State(value=False)
         manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")
         manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
 
-        # SECRET ADMIN PORTAL
+        # SECRET ADMIN PORTAL (KEPT AT THE VERY BOTTOM AS REQUESTED)
         with gr.Group(visible=False) as admin_group:
             with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
                 secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")

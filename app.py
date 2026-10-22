@@ -89,7 +89,7 @@ if logo_b64:
             <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
             <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
         </div>
-        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%); color: #000; border: 2px solid #ffffff; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(253, 224, 71, 0.8); transition: all 0.3s ease;">
+        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); transition: all 0.3s ease;">
             📝 SIGN UP
         </button>
     </div>
@@ -101,7 +101,7 @@ else:
             <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
             <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
         </div>
-        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%); color: #000; border: 2px solid #ffffff; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(253, 224, 71, 0.8); transition: all 0.3s ease;">
+        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); transition: all 0.3s ease;">
             📝 SIGN UP
         </button>
     </div>
@@ -435,7 +435,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT (HIGH CONTRAST & CLEAR LABELS)
+# 5. CSS & JAVASCRIPT (STRICT DARK THEME & NO WHITE BOXES)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -525,6 +525,38 @@ div[role="tablist"] > button:last-child[aria-haspopup="true"],
     display: none !important;
 }
 
+/* OVERRIDE ACCORDION & POPUP WHITE BACKGROUNDS TO GLASS DARK */
+.gr-accordion, .accordion, div[data-testid="accordion"], fieldset {
+    background: rgba(14, 5, 35, 0.95) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    border: 1px solid rgba(244, 114, 182, 0.6) !important;
+    border-radius: 16px !important;
+    padding: 15px !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+}
+
+.gr-accordion button, .accordion button, .label-wrap {
+    background: transparent !important;
+    color: #fde047 !important;
+    font-family: 'Cinzel', serif !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
+}
+
+/* OVERRIDE BUTTON COLORS TO ACCENT PURPLE/GOLD (NO BRIGHT ORANGE) */
+button.primary, button.gr-button-primary, .gr-button-primary {
+    background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #fde047 !important;
+    box-shadow: 0 4px 15px rgba(219, 39, 119, 0.6) !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+}
+
 /* HIGH CONTRAST LABELS & PLACEHOLDERS FOR READABILITY */
 label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span {
     color: #fde047 !important;
@@ -555,6 +587,23 @@ input:focus, textarea:focus, select:focus {
     outline: none !important;
 }
 
+/* FIX RADIO BUTTON WHITE BOXES TO DARK THEME */
+.gr-radio label, 
+.gr-radio label span, 
+div[data-testid="radio"] label, 
+div[data-testid="radio"] label span,
+.gr-radio input[type="radio"] + span,
+label.gr-radio-label span,
+.gr-form fieldset label span {
+    color: #ffffff !important;
+    background: rgba(22, 10, 48, 0.9) !important;
+    border: 1px solid rgba(244, 114, 182, 0.5) !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+}
+
 .gr-file, .file-preview, .gr-file div, .gr-file span, .file-preview * {
     background: rgba(18, 8, 42, 0.95) !important;
     color: #fde047 !important;
@@ -564,20 +613,6 @@ input:focus, textarea:focus, select:focus {
 .gr-file a, .file-name {
     color: #fde047 !important;
     font-weight: 700 !important;
-}
-
-/* STRICT TEXT COLOR OVERRIDE FOR RADIO BOX INNER TEXT */
-.gr-radio label, 
-.gr-radio label span, 
-div[data-testid="radio"] label, 
-div[data-testid="radio"] label span,
-.gr-radio input[type="radio"] + span,
-label.gr-radio-label span,
-.gr-form fieldset label span {
-    color: #000000 !important;
-    font-weight: 800 !important;
-    font-size: 0.95rem !important;
-    text-shadow: none !important;
 }
 
 h1, h2, h3, h4, h5, h6, 
@@ -773,7 +808,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # MODAL / POPUP FOR MANUAL SIGNUP
+        # MODAL / POPUP FOR MANUAL SIGNUP (DARK STYLED GLASS)
         with gr.Group(visible=False) as signup_group:
             with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
                 with gr.Row():

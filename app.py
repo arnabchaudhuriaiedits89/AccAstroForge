@@ -87,14 +87,9 @@ if logo_b64:
     <div class="header-container" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
         <div style="display: flex; align-items: center; gap: 12px;">
             <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
-            <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 0.75rem; color: #fde047; font-weight: 600; letter-spacing: 1px;">VEDIC ASTROLOGY PORTAL</span>
-                <span style="font-size: 0.65rem; color: #a78bfa;">accastroforge.in</span>
-            </div>
         </div>
         <div style="display: flex; align-items: center; gap: 15px;">
-            <div style="display: flex; align-items: center; gap: 6px; background: rgba(18, 8, 42, 0.9); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.5);">
-                <span style="font-size: 0.75rem; color: #fde047; font-weight: 600;">Admin:</span>
+            <div style="display: flex; align-items: center; background: rgba(18, 8, 42, 0.9); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.5);">
                 <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
             </div>
             <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); transition: all 0.3s ease; white-space: nowrap;">
@@ -444,7 +439,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT (STRICT DESKTOP 10-TAB UNTOUCHED & MOBILE RESPONSIVE)
+# 5. CSS & JAVASCRIPT (CLEAN & SECURE HEADER)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -491,7 +486,6 @@ div[data-testid="block"], .block, .wrap, .contain {
     box-shadow: none !important;
 }
 
-/* DESKTOP TABLIST STYLING (KEEPING ALL 10 TABS VISIBLE ON LAPTOP) */
 div[role="tablist"] {
     display: flex !important;
     flex-wrap: nowrap !important;
@@ -659,15 +653,6 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
 #manual-signup-trigger, #real-hidden-trigger {
     display: none !important;
 }
-
-/* MOBILE SPECIFIC MEDIA QUERY TO KEEP ADMIN DOT ACCESSIBLE WITHOUT BREAKING DESKTOP */
-@media (max-width: 768px) {
-    .header-container {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 12px !important;
-    }
-}
 """
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
@@ -685,7 +670,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # EXACT 10 MAIN SERVICE TABS (EXACTLY AS DESKTOP PREFERS)
+        # EXACT 10 MAIN SERVICE TABS
         with gr.Tabs() as main_tabs:
             # TAB 1: DASHBOARD
             with gr.TabItem("👤 DASHBOARD"):

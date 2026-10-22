@@ -84,24 +84,35 @@ logo_b64 = get_base64(logo_path)
 if logo_b64:
     logo_src = "data:image/png;base64," + logo_b64
     logo_element = f"""
-    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
-            <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
+    <div style="display: flex; flex-direction: column; width: 100%; gap: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 0.75rem; color: #fde047; font-weight: 600; letter-spacing: 1px;">VEDIC ASTROLOGY PORTAL</span>
+                    <span style="font-size: 0.65rem; color: #a78bfa;">accastroforge.in</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 6px; background: rgba(18, 8, 42, 0.9); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.5);">
+                    <span style="font-size: 0.75rem; color: #fde047; font-weight: 600;">Admin:</span>
+                    <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
+                </div>
+                <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); transition: all 0.3s ease; white-space: nowrap;">
+                    📝 SIGN UP
+                </button>
+            </div>
         </div>
-        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); transition: all 0.3s ease;">
-            📝 SIGN UP
-        </button>
     </div>
     """
 else:
     logo_element = """
-    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
-            <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
+            <span style="font-size: 24px; font-weight: 800; color: #fbcfe8; font-family: 'Cinzel', serif;">AccAstroForge</span>
+            <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
         </div>
-        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); transition: all 0.3s ease;">
+        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6);">
             📝 SIGN UP
         </button>
     </div>
@@ -435,7 +446,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT (STRICT DARK THEME & NO WHITE BOXES)
+# 5. CSS & JAVASCRIPT (STRICT MOBILE-FRIENDLY & RESPONSIVE)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -484,33 +495,30 @@ div[data-testid="block"], .block, .wrap, .contain {
 
 div[role="tablist"] {
     display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
+    flex-wrap: wrap !important;
     width: 100% !important;
-    gap: 2px !important;
-    padding: 4px 2px !important;
-    background: rgba(10, 3, 25, 0.9) !important;
+    gap: 3px !important;
+    padding: 6px !important;
+    background: rgba(10, 3, 25, 0.95) !important;
     border-radius: 12px !important;
     border: 1px solid rgba(244, 114, 182, 0.4) !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
 }
 
 button[role="tab"] {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    background: rgba(18, 8, 42, 0.9) !important;
+    flex: 1 1 18% !important;
+    min-width: 85px !important;
+    background: rgba(18, 8, 42, 0.95) !important;
     border: 1px solid rgba(244, 114, 182, 0.45) !important;
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.62rem !important;
+    font-size: 0.65rem !important;
     border-radius: 8px !important;
-    padding: 6px 1px !important;
-    margin: 0 !important;
-    white-space: nowrap !important;
-    text-overflow: ellipsis !important;
-    overflow: hidden !important;
+    padding: 8px 4px !important;
+    margin: 1px !important;
     text-align: center !important;
+    white-space: nowrap !important;
 }
 
 button[role="tab"][aria-selected="true"] {
@@ -547,7 +555,7 @@ div[role="tablist"] > button:last-child[aria-haspopup="true"],
     font-size: 1.05rem !important;
 }
 
-/* OVERRIDE BUTTON COLORS TO ACCENT PURPLE/GOLD (NO BRIGHT ORANGE) */
+/* OVERRIDE BUTTON COLORS TO ACCENT PURPLE/GOLD */
 button.primary, button.gr-button-primary, .gr-button-primary {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
@@ -557,7 +565,7 @@ button.primary, button.gr-button-primary, .gr-button-primary {
     border-radius: 12px !important;
 }
 
-/* HIGH CONTRAST LABELS & PLACEHOLDERS FOR READABILITY */
+/* HIGH CONTRAST LABELS & PLACEHOLDERS */
 label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span {
     color: #fde047 !important;
     font-weight: 600 !important;
@@ -654,19 +662,20 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     with gr.Column():
         with gr.Row():
-            with gr.Column(scale=8, min_width=300):
+            with gr.Column(scale=12, min_width=300):
                 gr.HTML(f"<div>{logo_element}</div>")
-            with gr.Column(scale=4, min_width=350):
-                gr.HTML(f"""
-                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                    <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
-                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
-                    <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
-                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
-                </div>
-                """)
+        
+        with gr.Row():
+            gr.HTML(f"""
+            <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 12px; align-items: center; justify-content: center; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.5); flex-wrap: wrap;">
+                <span style="font-size: 0.85rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
+                <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #ea4335; padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; font-weight: 600;">Google</a>
+                <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff; background: #1877f2; padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; font-weight: 600;">Facebook</a>
+                <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff; background: #1da1f2; padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; font-weight: 600;">Twitter</a>
+            </div>
+            """)
 
-        # EXACT 10 MAIN SERVICE TABS (EXCLUDING SIGN UP TO PREVENT 3-DOT OVERFLOW)
+        # EXACT 10 MAIN SERVICE TABS (RESPONSIVE GRID WRAP FOR MOBILE)
         with gr.Tabs() as main_tabs:
             # TAB 1: DASHBOARD
             with gr.TabItem("👤 DASHBOARD"):

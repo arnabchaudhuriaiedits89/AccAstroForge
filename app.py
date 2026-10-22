@@ -36,11 +36,6 @@ TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "VlVoTTA2WEFJNzdTWlp5X2llV186
 TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "pwm4ty1VPp6SswUy4pwmKlNNEvhI4P6axeNibIbxwNla7lzZSH")
 TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
 
-# INSTAGRAM CREDENTIALS FROM NOTEPAD
-INSTAGRAM_CLIENT_ID = os.getenv("INSTAGRAM_CLIENT_ID", "904674332731217")
-INSTAGRAM_CLIENT_SECRET = os.getenv("INSTAGRAM_CLIENT_SECRET", "c3d105b8932ef3bff7a804d142480a0")
-INSTAGRAM_REDIRECT_URI = "https://accastroforge.in/auth/instagram/callback"
-
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 except Exception:
@@ -298,9 +293,6 @@ def get_paywall_html(service_name, price, user_name="User"):
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
-
-# DIRECT INSTAGRAM OAUTH ENDPOINT USING INSTAGRAM APP ID & REDIRECT URI
-INSTAGRAM_OAUTH_URL = f"https://api.instagram.com/oauth/authorize?client_id={INSTAGRAM_CLIENT_ID}&redirect_uri={INSTAGRAM_REDIRECT_URI}&scope=user_profile,user_media&response_type=code"
 
 
 def run_daily_horoscope(sign):
@@ -607,11 +599,10 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 gr.HTML(f"""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                     <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
-                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
-                    <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
-                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
-                    <a href="{INSTAGRAM_OAUTH_URL}" target="_blank" style="color: #fff; background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Instagram</a>
-                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #7c3aed; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: 700; border: 1px solid #fde047;">📝 Sign Up</a>
+                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
+                    <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
+                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
+                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #7c3aed; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: 700; border: 1px solid #fde047;">📝 Sign Up</a>
                 </div>
                 """)
 
@@ -743,7 +734,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <p style="font-size: 0.85rem; color: #ddd;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter/Instagram login is stored securely and never shared with third parties.</p>
+                    <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047;">📧 Support Contact & Official Handles</h4>
                     <p style="font-size: 0.85rem; color: #ddd; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047; font-weight: 700;">support@accastroforge.in</a></p>
@@ -751,6 +742,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
                         <li style="color: #fef08a; font-size: 0.9rem;">🌐 <span style="color: #fde047; font-weight: 700;">Twitter (X):</span> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://x.com/AccAstroForge</a></li>
                         <li style="color: #fef08a; font-size: 0.9rem;">📸 <span style="color: #fde047; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
+                        <li style="color: #fef08a; font-size: 0.9rem;">🌀 <span style="color: #fde047; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
                         <li style="color: #fef08a; font-size: 0.9rem;">📘 <span style="color: #fde047; font-weight: 700;">Facebook:</span> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.facebook.com/accastroforge/</a></li>
                     </ul>
                 </div>

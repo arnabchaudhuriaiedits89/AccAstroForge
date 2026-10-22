@@ -84,16 +84,26 @@ logo_b64 = get_base64(logo_path)
 if logo_b64:
     logo_src = "data:image/png;base64," + logo_b64
     logo_element = f"""
-    <div style="display: flex; align-items: center; gap: 10px;">
-        <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
-        <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
+            <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
+        </div>
+        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%); color: #000; border: 2px solid #ffffff; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(253, 224, 71, 0.8); transition: all 0.3s ease;">
+            📝 SIGN UP
+        </button>
     </div>
     """
 else:
     logo_element = """
-    <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
-        <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
+            <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
+        </div>
+        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%); color: #000; border: 2px solid #ffffff; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(253, 224, 71, 0.8); transition: all 0.3s ease;">
+            📝 SIGN UP
+        </button>
     </div>
     """
 
@@ -493,7 +503,7 @@ button[role="tab"] {
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.60rem !important;
+    font-size: 0.62rem !important;
     border-radius: 8px !important;
     padding: 6px 1px !important;
     margin: 0 !important;
@@ -601,7 +611,7 @@ div[data-testid="markdown"] p, div[data-testid="markdown"] span {
     background: transparent !important;
 }
 
-#real-hidden-trigger {
+#manual-signup-trigger, #real-hidden-trigger {
     display: none !important;
 }
 """
@@ -621,7 +631,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        # RE-ARRANGED TABS WITH DASHBOARD & SIGN UP PROMINENTLY PLACED
+        # EXACT 10 MAIN SERVICE TABS (EXCLUDING SIGN UP TO PREVENT 3-DOT OVERFLOW)
         with gr.Tabs() as main_tabs:
             # TAB 1: DASHBOARD
             with gr.TabItem("👤 DASHBOARD"):
@@ -638,19 +648,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
-            # TAB 2: SIGN UP (MANUAL REGISTRATION)
-            with gr.TabItem("📝 SIGN UP"):
-                gr.Markdown("### 📝 Create Your AccAstroForge Account (Manual Registration)")
-                gr.HTML("<p style='color: #f3e8ff; font-size: 0.9rem; margin-bottom: 15px;'>Enter your details below to register your account securely on our platform.</p>")
-                with gr.Row():
-                    signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                    signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
-                signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
-                signup_output = gr.Markdown()
-                signup_btn.click(fn=handle_manual_signup, inputs=[signup_name, signup_email, signup_pass], outputs=[signup_output])
-
-            # TAB 3: LIFE PREDICTION
+            # TAB 2: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
                 gr.Markdown("### 🌌 Vedic Astrology & Deep Life Forecast")
                 with gr.Row():
@@ -672,7 +670,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
 
-            # TAB 4: HOROSCOPE
+            # TAB 3: HOROSCOPE
             with gr.TabItem("☀️ HOROSCOPE"):
                 gr.Markdown("### 🔮 Daily Zodiac Predictions (Free)")
                 zodiac_sign = gr.Dropdown(choices=ZODIAC_SIGNS, value="Aries (Mesha)", label="Select Zodiac Sign")
@@ -680,7 +678,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_horoscope = gr.Markdown()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            # TAB 5: MATCHING
+            # TAB 4: MATCHING
             with gr.TabItem("❤️ MATCHING"):
                 gr.Markdown("### 💍 Vedic Compatibility & Guna Milan")
                 with gr.Row():
@@ -694,7 +692,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_matching_paywall = gr.HTML()
                 submit_matching.click(fn=run_kundali_matching, inputs=[boy_name, boy_dob, girl_name, girl_dob], outputs=[output_matching, output_matching_paywall])
 
-            # TAB 6: GEMSTONES
+            # TAB 5: GEMSTONES
             with gr.TabItem("💎 GEMSTONES"):
                 gr.Markdown("### 🧿 Lucky Gemstones & Cosmic Remedies")
                 with gr.Row():
@@ -705,7 +703,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 7: KUNDALI & BIRTH PDF
+            # TAB 6: KUNDALI & BIRTH PDF
             with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
                 gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
@@ -721,7 +719,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
-            # TAB 8: NUMEROLOGY
+            # TAB 7: NUMEROLOGY
             with gr.TabItem("🔢 NUMEROLOGY"):
                 gr.Markdown("### 🔢 Numerology Check")
                 with gr.Row():
@@ -732,7 +730,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_num_paywall = gr.HTML()
                 submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
-            # TAB 9: PANCHANG
+            # TAB 8: PANCHANG
             with gr.TabItem("📅 PANCHANG"):
                 gr.Markdown("### 📅 Vedic Panchang & Shubh Muhurat")
                 with gr.Row():
@@ -744,7 +742,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            # TAB 10: AI ASSISTANT
+            # TAB 9: AI ASSISTANT
             with gr.TabItem("🤖 AI ASSISTANT"):
                 gr.Markdown("### 🤖 Ask Your Personal AI Astrologer")
                 ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
@@ -752,7 +750,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            # TAB 11: LEGAL & POLICIES
+            # TAB 10: LEGAL & POLICIES
             with gr.TabItem("⚖️ LEGAL"):
                 gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""
@@ -774,6 +772,21 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     </ul>
                 </div>
                 """)
+
+        # MODAL / POPUP FOR MANUAL SIGNUP
+        with gr.Group(visible=False) as signup_group:
+            with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
+                with gr.Row():
+                    signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                    signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
+                signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
+                signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
+                signup_output = gr.Markdown()
+                signup_btn.click(fn=handle_manual_signup, inputs=[signup_name, signup_email, signup_pass], outputs=[signup_output])
+
+        signup_state = gr.State(value=False)
+        manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")
+        manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
 
         # SECRET ADMIN PORTAL
         with gr.Group(visible=False) as admin_group:

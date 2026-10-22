@@ -439,7 +439,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT (CLEAN & SECURE HEADER)
+# 5. CSS & JAVASCRIPT (CLEAN & SECURE HEADER + MOBILE NOTICE)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -672,9 +672,19 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
 
         # EXACT 10 MAIN SERVICE TABS
         with gr.Tabs() as main_tabs:
-            # TAB 1: DASHBOARD
+            # TAB 1: DASHBOARD (WITH MOBILE VIEW NOTICE DISCLAIMER)
             with gr.TabItem("👤 DASHBOARD"):
                 gr.Markdown("### 👤 User Profile, Wallet & Order History")
+                
+                # MOBILE VIEW NOTICE DISCLAIMER ADDED HERE
+                gr.HTML("""
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1.5px dashed #f1c40f; padding: 12px 18px; border-radius: 12px; margin: 10px 0 15px 0; text-align: center; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.15); backdrop-filter: blur(5px);">
+                    <p style="color: #f39c12; font-size: 0.88rem; font-weight: 600; margin: 0; line-height: 1.5; letter-spacing: 0.3px;">
+                        💡 <b style="color: #ffffff; text-transform: uppercase;">Mobile View Notice:</b> If you are trying to access the site through mobile version, then kindly follow through the extreme right side of the page where you can find three dot marks (<span style="color: #fff; font-weight: bold; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">...</span>) and from the dot marks you will get a drop down through which you can access or browse other options.
+                    </p>
+                </div>
+                """)
+
                 gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
                     <h4 style="color: #fde047; margin-bottom: 5px;">💳 AccAstroForge Wallet Balance: <span style="color: #4ade80;">₹ 0.00</span></h4>
@@ -806,7 +816,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
                         <li style="color: #fef08a; font-size: 0.9rem;">🌐 <span style="color: #fde047; font-weight: 700;">Twitter (X):</span> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://x.com/AccAstroForge</a></li>
                         <li style="color: #fef08a; font-size: 0.9rem;">📸 <span style="color: #fde047; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
-                        <li style="color: #fef08a; font-size: 0.9rem;">🌀 <span style="color: #fde047; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
+                        <li style="color: #fef08a; font-weight: 0.9rem;">🌀 <span style="color: #fde047; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
                         <li style="color: #fef08a; font-size: 0.9rem;">📘 <span style="color: #fde047; font-weight: 700;">Facebook:</span> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.facebook.com/accastroforge/</a></li>
                     </ul>
                 </div>

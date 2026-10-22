@@ -725,7 +725,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            # TAB 10: LEGAL & POLICIES (SUPPORT EMAIL INCLUDED)
+            # TAB 10: LEGAL & POLICIES (SUPPORT EMAIL & OFFICIAL SOCIAL HANDLES INCLUDED)
             with gr.TabItem("⚖️ LEGAL"):
                 gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""
@@ -736,8 +736,14 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     <h4 style="color: #fde047;">🔒 Privacy Policy & Data Deletion</h4>
                     <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
-                    <h4 style="color: #fde047;">📧 Support Contact</h4>
-                    <p style="font-size: 0.85rem; color: #ddd;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047; font-weight: 700;">support@accastroforge.in</a></p>
+                    <h4 style="color: #fde047;">📧 Support Contact & Official Handles</h4>
+                    <p style="font-size: 0.85rem; color: #ddd; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047; font-weight: 700;">support@accastroforge.in</a></p>
+                    <p style="font-size: 0.85rem; color: #ddd;">Connect with us on our official social platforms:</p>
+                    <ul style="list-style-type: none; padding-left: 0; margin-top: 6px; line-height: 1.8;">
+                        <li>🌐 <b>Twitter (X):</b> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8; font-weight: 600; text-decoration: underline;">https://x.com/AccAstroForge</a></li>
+                        <li>📸 <b>Instagram:</b> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6; font-weight: 600; text-decoration: underline;">https://www.instagram.com/accastroforge/</a></li>
+                        <li>📘 <b>Facebook:</b> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa; font-weight: 600; text-decoration: underline;">https://www.facebook.com/accastroforge/</a></li>
+                    </ul>
                 </div>
                 """)
 

@@ -81,6 +81,7 @@ def get_base64(file_path):
 
 logo_b64 = get_base64(logo_path)
 
+# HEADER ELEMENT (SIGN UP BUTTON REMOVED FROM TOP & PLACED IN DASHBOARD)
 if logo_b64:
     logo_src = "data:image/png;base64," + logo_b64
     logo_element = f"""
@@ -88,13 +89,8 @@ if logo_b64:
         <div style="display: flex; align-items: center; gap: 12px;">
             <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
         </div>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div style="display: flex; align-items: center; background: rgba(18, 8, 42, 0.9); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.5);">
-                <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
-            </div>
-            <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); transition: all 0.3s ease; white-space: nowrap;">
-                📝 SIGN UP
-            </button>
+        <div style="display: flex; align-items: center; background: rgba(18, 8, 42, 0.9); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.5);">
+            <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
         </div>
     </div>
     """
@@ -105,9 +101,6 @@ else:
             <span style="font-size: 24px; font-weight: 800; color: #fbcfe8; font-family: 'Cinzel', serif;">AccAstroForge</span>
             <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
         </div>
-        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6);">
-            📝 SIGN UP
-        </button>
     </div>
     """
 
@@ -674,7 +667,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
 
         # EXACT 10 MAIN SERVICE TABS
         with gr.Tabs() as main_tabs:
-            # TAB 1: DASHBOARD (DYNAMIC USER PROFILE & WALLET & ORDER HISTORY)
+            # TAB 1: DASHBOARD (WITH SIGN-UP BUTTON MOVED NEXT TO ACTIVE USER SESSION)
             with gr.TabItem("👤 DASHBOARD"):
                 gr.Markdown("### 👤 User Profile, Wallet & Order History")
                 
@@ -690,23 +683,28 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 with gr.Row():
                     with gr.Column():
                         user_profile_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
-                            <h4 style="color: #fde047; margin-bottom: 8px;">👤 Active User Session</h4>
-                            <p style="color: #ffffff; font-size: 0.95rem;" id="session-status">Guest User (Please Sign Up / Login)</p>
+                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h4 style="color: #fde047; margin-bottom: 4px;">👤 Active User Session</h4>
+                                <p style="color: #ffffff; font-size: 0.95rem; margin: 0;" id="session-status">Guest User (Please Sign Up / Login)</p>
+                            </div>
+                            <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
+                                📝 SIGN UP
+                            </button>
                         </div>
                         """)
                     with gr.Column():
                         wallet_balance_display = gr.HTML("""
                         <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
                             <h4 style="color: #fde047; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80;" id="wallet-val">₹ 0.00</span></h4>
-                            <p style="color: #f3e8ff; font-size: 0.8rem;">Use credits for instant unlocking of reports.</p>
+                            <p style="color: #f3e8ff; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
                         </div>
                         """)
 
                 order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
                     <h4 style="color: #fde047; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
-                    <p style="color: #cbd5e1; font-size: 0.85rem;" id="history-content">No previous orders found for current guest session. Please register or login.</p>
+                    <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0;" id="history-content">No previous orders found for current guest session. Please register or login.</p>
                 </div>
                 """)
 

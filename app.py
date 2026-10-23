@@ -31,10 +31,9 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# OFFICIAL TWITTER AUTHENTICATION QUICK LOGIN
-TWITTER_CLIENT_ID = "Vy1ke1RKM1pjQWFQbzF1b1VPTGc6MTpjaQ"
-TWITTER_CLIENT_SECRET = "ap6gCWmf05A9fcu7w6mKqKbyMkT1M_wry7uzRjSdtaPhQ1aXBj"
-TWITTER_OAUTH_URL = f"https://api.twitter.com/oauth/authenticate?oauth_consumer_key={TWITTER_CLIENT_ID}"
+# OFFICIAL TWITTER AUTHENTICATION QUICK LOGIN (OAUTH 1.0a)
+TWITTER_CONSUMER_KEY = "kxnk3Dpw8UV4PH56L4UkQkHQL"
+TWITTER_OAUTH_URL = f"https://api.twitter.com/oauth/authenticate?oauth_consumer_key={TWITTER_CONSUMER_KEY}"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))

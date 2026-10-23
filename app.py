@@ -5,6 +5,7 @@ import os
 import io
 import random
 import requests
+import urllib.parse
 import gradio as gr
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -299,8 +300,9 @@ def get_paywall_html(service_name, price, user_name="User"):
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
-# ROBUST TWITTER OAUTH URL WITH CORRECT SCOPES & STATE
-TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state"
+# FIXED & ROBUST TWITTER OAUTH URL WITH CORRECT ENCODING & PKCE CHALLENGE
+twitter_scope_str = urllib.parse.quote("tweet.read users.read")
+TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope={twitter_scope_str}&state=state&code_challenge=challenge&code_challenge_method=plain"
 
 
 def handle_twitter_callback(code=None, state=None):

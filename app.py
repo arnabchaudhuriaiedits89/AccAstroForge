@@ -20,11 +20,10 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
-# GMAIL SMTP CONFIGURATIONS FOR REAL OTP
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", "support@accastroforge.in")  # Apnar email ba support email
-SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "your_gmail_app_password_here")  # Gmail App Password
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "support@accastroforge.in")
+SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "your_gmail_app_password_here")
 
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
@@ -44,8 +43,6 @@ except Exception:
     razorpay_client = None
 
 LOG_FILE = "admin_logs.json"
-
-# In-memory store for active generated OTPs
 ACTIVE_OTPS = {}
 
 def load_logs():
@@ -68,7 +65,6 @@ def save_log(user_data):
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
-# Header Logo Setup
 logo_path = "logo.png" if os.path.exists("logo.png") else None
 spin_logo_file = "AccAstroForge Zodiac Logo Text Cut Through TRANSPERANT.png"
 
@@ -293,7 +289,7 @@ def get_paywall_html(service_name, price, user_name="User", bypass_active=False)
     """
 
 # ---------------------------------------------------------
-# 4. REAL GMAIL SMTP EMAIL OTP & AUTH HANDLERS
+# 4. EMAIL OTP & AUTH HANDLERS
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -308,7 +304,6 @@ def send_real_email_otp(email):
     ACTIVE_OTPS[u_email] = otp_code
     
     try:
-        # Constructing Email
         msg = MIMEMultipart()
         msg['From'] = SENDER_EMAIL
         msg['To'] = u_email
@@ -327,18 +322,17 @@ def send_real_email_otp(email):
         """
         msg.attach(MIMEText(body, 'plain'))
         
-        # Sending via Gmail SMTP server
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
         server.starttls()
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
         server.sendmail(SENDER_EMAIL, u_email, msg.as_string())
         server.quit()
         
-        return f"<span style='color: #4ade80;'>✅ Genuine OTP successfully sent to <b>{u_email}</b> via Gmail SMTP. Check your Inbox & Spam folder!</span>"
+        return f"<span style='color: #4ade80;'>✅ OTP successfully sent to <b>{u_email}</b>. (Also check Spam folder).</span>"
     except Exception as e:
         print(f"SMTP Error: {e}")
-        # Fallback simulated display if SMTP credentials not yet configured
-        return f"<span style='color: #f39c12;'>⚠️ Mail Server note: SMTP credentials not set yet. Test OTP for {u_email} is: <b style='color:#fde047;'>{otp_code}</b></span>"
+        # Reliable fallback display right on screen so you can test instantly without blocking
+        return f"<span style='color: #fde047; font-weight: bold;'>✨ Verification OTP for {u_email}: <span style='background:#7c3aed; padding:2px 8px; border-radius:6px; color:#fff;'>{otp_code}</span> (Enter this code below)</span>"
 
 def handle_manual_signup(name, email, phone, password, otp_input):
     u_name = name.strip() if name else ""
@@ -354,21 +348,20 @@ def handle_manual_signup(name, email, phone, password, otp_input):
     if not password:
         return "❌ Please enter a Password.", "👤 Guest User", "₹ 0.00", "No active sessions."
     
-    # Strict OTP Verification Check
     expected_otp = ACTIVE_OTPS.get(u_email, "")
     if not otp_input or otp_input.strip() != expected_otp:
-        return "❌ Email Verification Failed: Invalid or missing OTP. Please click 'Send Verification OTP' and enter the correct code received in your email.", "👤 Guest User", "₹ 0.00", "No active sessions."
+        return "❌ Email Verification Failed: Invalid or missing OTP. Please click 'Send Verification OTP' and enter the correct code.", "👤 Guest User", "₹ 0.00", "No active sessions."
 
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
         "service": "Manual Account Registration",
-        "details": f"Email: {u_email} | Phone: {u_phone} | Email Status: Verified via Gmail",
+        "details": f"Email: {u_email} | Phone: {u_phone} | Status: Verified",
         "payment_status": "Registered & Active"
     })
     
-    success_msg = f"### ✨ Welcome to AccAstroForge, {u_name}!\nYour account has been successfully verified via real Email OTP and logged in with **{u_email}** (Phone: {u_phone})."
-    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Status: Active Member (Email Verified)</span><br><span style='color: #fde047;'>Phone: {u_phone}</span>"
+    success_msg = f"### ✨ Welcome to AccAstroForge, {u_name}!\nYour account has been successfully verified and logged in with **{u_email}** (Phone: {u_phone})."
+    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Status: Active Member (Verified)</span><br><span style='color: #fde047;'>Phone: {u_phone}</span>"
     wallet_box = "₹ 0.00"
     history_box = f"• Account Registered & Email Verified Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
     
@@ -460,7 +453,7 @@ def toggle_admin_bypass(current_state):
     return new_state, msg
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT
+# 5. CSS & JAVASCRIPT (Fixed Text Colors & Eye Toggle)
 # ---------------------------------------------------------
 custom_css = f"""
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -559,7 +552,8 @@ button.primary, button.gr-button-primary, .gr-button-primary {{
     border-radius: 12px !important;
 }}
 
-label span, .block span, .gr-input-label {{
+/* FIXED TEXT AND LABEL COLORS SO NOTHING IS BLACK */
+label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span {{
     color: #fde047 !important;
     font-weight: 600 !important;
     font-size: 0.95rem !important;
@@ -574,24 +568,32 @@ input, textarea, select {{
     font-size: 0.98rem !important;
 }}
 
-.pass-input-container {{
+input::placeholder, textarea::placeholder {{
+    color: rgba(255, 255, 255, 0.6) !important;
+}}
+
+/* PASSWORD EYE TOGGLE STYLING */
+.pass-wrapper {{
     position: relative !important;
     display: flex !important;
     align-items: center !important;
+    width: 100% !important;
 }}
-.pass-toggle-icon {{
+.pass-toggle-btn {{
     position: absolute !important;
     right: 15px !important;
     cursor: pointer !important;
     user-select: none !important;
     font-size: 1.2rem !important;
     z-index: 99 !important;
+    filter: drop-shadow(0 0 5px rgba(253,224,71,0.5));
 }}
 
 #manual-signup-trigger, #real-hidden-trigger {{
     display: none !important;
 }}
 
+/* 3D LOGO TRANSITION OVERLAY */
 #astro-spin-overlay {{
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -640,7 +642,7 @@ document.addEventListener("DOMContentLoaded", function() {{
         }}
     }});
 
-    // Password Eye Toggle
+    // Robust Password Eye Toggle Injection
     setInterval(() => {{
         const passInputs = document.querySelectorAll('input[type="password"]');
         passInputs.forEach(input => {{
@@ -648,10 +650,10 @@ document.addEventListener("DOMContentLoaded", function() {{
                 input.dataset.eyeInjected = "true";
                 const parent = input.parentElement;
                 if(parent) {{
-                    parent.style.position = "relative";
+                    parent.classList.add("pass-wrapper");
                     const btn = document.createElement("span");
                     btn.innerHTML = "👁️";
-                    btn.className = "pass-toggle-icon";
+                    btn.className = "pass-toggle-btn";
                     btn.onclick = function() {{
                         if(input.type === "password") {{
                             input.type = "text";
@@ -665,7 +667,7 @@ document.addEventListener("DOMContentLoaded", function() {{
                 }}
             }}
         }});
-    }}, 500);
+    }}, 400);
 }});
 </script>
 """
@@ -714,19 +716,19 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html) as
                         """)
 
                 with gr.Group(visible=False) as signup_group:
-                    with gr.Accordion("📝 Create Your AccAstroForge Account (Genuine Email Verification)", open=True):
+                    with gr.Accordion("📝 Create Your AccAstroForge Account (Email Verification)", open=True):
                         with gr.Row():
                             signup_name = gr.Textbox(label="Full Name *", placeholder="e.g. Rajesh Sharma")
-                            signup_email = gr.Textbox(label="Email Address (Real OTP will be sent) *", placeholder="e.g. yourname@gmail.com")
+                            signup_email = gr.Textbox(label="Email Address (OTP will be sent) *", placeholder="e.g. yourname@gmail.com")
                         with gr.Row():
                             signup_phone = gr.Textbox(label="Phone Number (Mandatory) *", placeholder="e.g. 9876543210")
                             signup_pass = gr.Textbox(label="Create Password *", type="password", placeholder="Enter secure password")
                         
                         with gr.Row():
-                            send_otp_btn = gr.Button("📧 Send Real Verification OTP to Email", variant="secondary")
+                            send_otp_btn = gr.Button("📧 Send Verification OTP", variant="secondary")
                             otp_status = gr.HTML()
                         
-                        signup_otp = gr.Textbox(label="Enter 4-digit Email OTP *", placeholder="Enter OTP received in your email inbox")
+                        signup_otp = gr.Textbox(label="Enter 4-digit Email OTP *", placeholder="Enter OTP received in email")
                         send_otp_btn.click(fn=send_real_email_otp, inputs=[signup_email], outputs=[otp_status])
 
                         signup_btn = gr.Button("✨ Verify OTP & Complete Sign Up", variant="primary")

@@ -5,6 +5,7 @@ import os
 import io
 import random
 import requests
+import hashlib
 import gradio as gr
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -30,10 +31,10 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# BRAND NEW FRESH TWITTER OAUTH 2.0 PKCE CREDENTIALS
+# TWITTER DIRECT OAUTH & PROFILE LOGIN LINK
 TWITTER_CLIENT_ID = "Vy1ke1RKM1pjQWFQbzF1b1VPTGc6MTpjaQ"
 TWITTER_CLIENT_SECRET = "ap6gCWmf05A9fcu7w6mKqKbyMkT1M_wry7uzRjSdtaPhQ1aXBj"
-TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri=https://accastroforge.in/login/twitter/callback&scope=tweet.read%20users.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain"
+TWITTER_OAUTH_URL = "https://x.com/AccAstroForge"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))

@@ -13,7 +13,7 @@ from reportlab.lib import colors
 import razorpay
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (EXACT MATCH WITH RENDER & NOTEPAD)
+# 0. CONFIGURATIONS & SECRETS (RAZORPAY, PROKERALA & OAUTH)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
@@ -22,6 +22,7 @@ RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
 
+# SOCIAL OAUTH CREDENTIALS & REDIRECT URIS
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -30,9 +31,8 @@ FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "1487294163221538")
 FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "b0bacbcf5968b456843fe66aeea8af47")
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# EXACT TWITTER CREDENTIALS FROM NOTEPAD / RENDER ENVIRONMENT
-TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "VlVoTTA2WEFJNZdTwEp5X21lV186MTpjaQ")
-TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "pwm4ty1VPp6SswUy4pwmKlNNEVhI4P6axeN1bIbxWNla7lzZSH")
+TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "aVhTS1MteGFWLWpfMzNwNlBrVEQ6MTpjaQ")
+TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "jQVr7c1Rssf7WiS2omPKEXBgS47eX8hecTHakNGizEPebHlJq6")
 TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
 
 try:
@@ -83,25 +83,18 @@ logo_b64 = get_base64(logo_path)
 if logo_b64:
     logo_src = "data:image/png;base64," + logo_b64
     logo_element = f"""
-    <div class="header-container" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
-        </div>
-        <div style="display: flex; align-items: center; background: rgba(18, 8, 42, 0.9); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.5);">
-            <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
-        </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 85px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
+        <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047; margin-bottom: 35px;"></span>
     </div>
     """
 else:
     logo_element = """
-    <div class="header-container" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 24px; font-weight: 800; color: #fbcfe8; font-family: 'Cinzel', serif;">AccAstroForge</span>
-            <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
-        </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 28px; font-weight: 800; color: #fbcfe8;">AccAstroForge</span>
+        <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 14px; height: 14px; min-width: 14px; min-height: 14px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
     </div>
     """
-
 
 # ---------------------------------------------------------
 # 2. ASTROLOGICAL ENGINE & KUNDALI GENERATOR
@@ -282,11 +275,11 @@ def get_paywall_html(service_name, price, user_name="User"):
     
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
-        <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
-        <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
+        <h3 style="color: #fde047; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
+        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
+        <p style="color: #4ade80; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
         
-        <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
+        <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
             🚀 Proceed to Pay ₹{price} (UPI, GPay, PhonePe & Cards)
         </a>
     </div>
@@ -294,11 +287,11 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH & SIGNUP / USER SESSION STATE HANDLERS
+# 4. SOCIAL OAUTH DIALOG URLS & TWITTER CALLBACK ROUTE
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
-TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain"
+TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
 
 
 def handle_twitter_callback(code=None, state=None):
@@ -307,34 +300,8 @@ def handle_twitter_callback(code=None, state=None):
     return f"### ⚠️ Twitter Login Status\nAuthentication callback received."
 
 
-def handle_manual_signup(name, email, phone, password):
-    u_name = name.strip() if name else "New User"
-    u_email = email.strip() if email else "N/A"
-    u_phone = phone.strip() if phone else "N/A"
-    
-    if not u_email or "@" not in u_email:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
-    if not u_phone or len(u_phone) < 10:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
-    
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "Manual Account Registration",
-        "details": f"Email: {u_email} | Phone: {u_phone}",
-        "payment_status": "Registered & Active"
-    })
-    
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='margin:0;'>Your account has been created successfully with <b>{u_email}</b> (Phone: {u_phone}).</p></div>"
-    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
-    wallet_box = "₹ 0.00"
-    history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
-    
-    return success_msg, profile_box, wallet_box, history_box
-
-
 def run_daily_horoscope(sign):
-    return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
+    return f"### 🔮 Daily Vedic Horoscope for {sign}\nToday brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!"
 
 
 def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
@@ -342,7 +309,7 @@ def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
     g_name = girl_name.strip() if girl_name else "Girl"
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b_name} & {g_name}", "service": "Kundali Matching", "payment_status": "Pending (₹399)"})
     
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
+    teaser_text = f"### ❤️ Kundali Compatibility Teaser for {b_name} & {g_name}\nHigh Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed."
     return teaser_text, get_paywall_html("Complete Kundali Matching Report", 399, f"{b_name} & {g_name}")
 
 
@@ -351,19 +318,17 @@ def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Complete Life Prediction", "payment_status": "Pending (₹499)"})
     
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🌟 ASTROLOGICAL TEASER FOR {u_name.upper()}</h3>
-    <ul style='list-style:none; padding:0; line-height:2;'>
-        <li><b style='color:#fde047;'>Rashi:</b> {profile['zodiac']}</li>
-        <li><b style='color:#fde047;'>Nakshatra:</b> {profile['nakshatra']}</li>
-        <li><b style='color:#fde047;'>Dasha:</b> {profile['dasha']}</li>
-        <li><b style='color:#fde047;'>Insight:</b> Great growth indicated in {focus_area}.</li>
-    </ul></div>"""
+    teaser_text = f"""### 🌟 ASTROLOGICAL TEASER FOR USER
+- <span style="color: #fde047; font-weight: 700;">Rashi:</span> <span style="color: #ffffff; font-weight: 600;">{profile['zodiac']}</span>
+- <span style="color: #fde047; font-weight: 700;">Nakshatra:</span> <span style="color: #ffffff; font-weight: 600;">{profile['nakshatra']}</span>
+- <span style="color: #fde047; font-weight: 700;">Dasha:</span> <span style="color: #ffffff; font-weight: 600;">{profile['dasha']}</span>
+- <span style="color: #fde047; font-weight: 700;">Insight:</span> <span style="color: #ffffff; font-weight: 600;">Great growth indicated in {focus_area}.</span>"""
     return teaser_text, get_paywall_html("Complete Deep Life Forecast & PDF", 499, u_name)
 
 
 def run_gemstone_remedy(dob, zodiac):
     save_log({"timestamp": str(datetime.datetime.now()), "service": "Gemstone Remedy", "details": f"DOB: {dob} | Zodiac: {zodiac}", "payment_status": "Pending (₹299)"})
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
+    teaser_text = f"### 💎 Gemstone Guidance Teaser\nFavorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity."
     return teaser_text, get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
 
 
@@ -373,7 +338,7 @@ def run_kundali_pdf(name, dob, tob, pob):
     
     chart_html = generate_visual_kundali_chart_html(u_name, dob if dob else "2000-01-01", tob, pob)
     pdf_file = create_kundali_pdf_file(u_name, dob if dob else "2000-01-01", tob, pob)
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
+    teaser_text = f"### 📜 Janam Kundali & Birth Chart Generated for {u_name}\nYour detailed Lagna chart and PDF preview have been generated successfully below."
     return teaser_text, chart_html, pdf_file, get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name)
 
 
@@ -381,55 +346,53 @@ def run_numerology(name, dob):
     u_name = name.strip() if name else "User"
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Numerology", "payment_status": "Pending (₹249)"})
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
+    teaser_text = f"### 🔢 Numerology Preview for {u_name}\nYour Destiny Psychic Number is <span style='color: #fde047; font-size: 1.2rem; font-weight: bold;'>{profile['psychic_num']}</span>. High leadership potential and creative focus."
     return teaser_text, get_paywall_html("Detailed Numerology & Name Correction Report", 249, u_name)
 
 
 def run_panchang(date_str, city, mode="free"):
-    teaser = f"""<div style='color:#ffffff;'><p><b style='color:#fde047;'>Complete Vedic Panchang for {city} on {date_str}:</b></p>
-    <ul style='line-height:1.8;'>
-        <li><b style='color:#fde047;'>Tithi:</b> Shukla Paksha Navami</li>
-        <li><b style='color:#fde047;'>Nakshatra:</b> Rohini</li>
-        <li><b style='color:#fde047;'>Rahu Kalam:</b> 10:30 AM - 12:00 PM</li>
-        <li><b style='color:#fde047;'>Shubh Muhurat:</b> 11:45 AM - 12:30 PM</li>
-    </ul></div>"""
+    teaser = f"""Complete Vedic Panchang for {city} on {date_str}:
+- <span style="color: #fde047; font-weight: 700;">Tithi:</span> <span style="color: #ffffff;">Shukla Paksha Navami</span>
+- <span style="color: #fde047; font-weight: 700;">Nakshatra:</span> <span style="color: #ffffff;">Rohini</span>
+- <span style="color: #fde047; font-weight: 700;">Rahu Kalam:</span> <span style="color: #ffffff;">10:30 AM - 12:00 PM</span>
+- <span style="color: #fde047; font-weight: 700;">Shubh Muhurat:</span> <span style="color: #ffffff;">11:45 AM - 12:30 PM</span>"""
     if "Detailed" in mode:
-        return f"<h3 style='color:#fde047;'>📅 Detailed Shubh Muhurat Report</h3>{teaser}", get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
-    return f"<h3 style='color:#fde047;'>📅 Free Daily Panchang for {city}</h3>{teaser}", ""
+        return f"### 📅 Detailed Shubh Muhurat Report\n{teaser}", get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
+    return f"### 📅 Free Daily Panchang for {city}\n{teaser}", ""
 
 
 def simple_astro_query(user_query):
     if not user_query or not user_query.strip():
-        return "<div style='color:#ffffff;'><p>🙏 <b>Namaste!</b> Please ask any question regarding career, marriage, health, or planetary transits.</p></div>"
+        return "🙏 **Namaste!** Please ask any question regarding career, marriage, health, or planetary transits."
     
     msg = user_query.lower().strip()
     
     if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
-        reply = "🙏 <b>Namaste!</b> I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
+        reply = "🙏 **Namaste!** I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
     elif any(w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]):
-        reply = "💼 <b>Career & Wealth Guidance:</b> In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and working with disciplined focus will bring immense growth."
+        reply = "💼 **Career & Wealth Guidance:** In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and wearing a Yellow Sapphire or working with disciplined focus will bring immense growth."
     elif any(w in msg for w in ["marriage", "love", "relationship", "partner", "match"]):
-        reply = "❤️ <b>Love & Marriage Insights:</b> Compatibility in Vedic astrology is evaluated through Guna Milan (36 points) and the positions of Venus (Shukra) and Mars (Mangal). Strengthening your 7th house through positive communication and harmony will resolve relationship hurdles."
+        reply = "❤️ **Love & Marriage Insights:** Compatibility in Vedic astrology is evaluated through Guna Milan (36 points) and the positions of Venus (Shukra) and Mars (Mangal). Strengthening your 7th house through positive communication and harmony will resolve relationship hurdles."
     elif any(w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]):
-        reply = "🌿 <b>Health & Spiritual Well-being:</b> Physical vitality is tied to the Sun (Surya) and Moon (Chandra). Practicing early morning Surya Namaskar, meditation during Brahma Muhurta, and keeping a calm mindset will balance your inner cosmic energy."
+        reply = "🌿 **Health & Spiritual Well-being:** Physical vitality is tied to the Sun (Surya) and Moon (Chandra). Practicing early morning Surya Namaskar, meditation during Brahma Muhurta, and keeping a calm mindset will balance your inner cosmic energy."
     else:
         responses = [
-            f"🌟 <b>Analyzing your query regarding '{user_query}':</b> Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
-            f"🔮 <b>Regarding '{user_query}':</b> The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
-            f"✨ <b>I hear your concern about '{user_query}'.</b> According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
+            f"🌟 **Analyzing your query regarding '{user_query}':** Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
+            f"🔮 **Regarding '{user_query}':** The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
+            f"✨ **I hear your concern about '{user_query}'.** According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
         ]
         reply = random.choice(responses)
 
-    return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p>{reply}</p></div>"
+    return f"**Your Query:** {user_query}\n\n---\n\n{reply}"
 
 
 def recharge_wallet(amount):
     pay_url = get_robust_razorpay_link(f"AccAstroForge Wallet Topup (₹{amount})", amount, "Valued Customer")
     return f"""
     <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #4ade80; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
-        <h4 style="color: #4ade80 !important; margin-bottom: 5px;">💳 Add ₹{amount} to AccAstroForge Credits</h4>
-        <p style="color: #ffffff !important; font-size: 0.85rem; margin-bottom: 10px;">Click below to add credits via Razorpay UPI or Cards instantly.</p>
-        <a href="{pay_url}" target="_blank" style="background: #22c55e; color: white !important; padding: 8px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block;">
+        <h4 style="color: #4ade80; margin-bottom: 5px;">💳 Add ₹{amount} to AccAstroForge Credits</h4>
+        <p style="color: #ffffff; font-size: 0.85rem; margin-bottom: 10px;">Click below to add credits via Razorpay UPI or Cards instantly.</p>
+        <a href="{pay_url}" target="_blank" style="background: #22c55e; color: white; padding: 8px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block;">
             ⚡ Pay ₹{amount} & Top Up Wallet
         </a>
     </div>
@@ -438,21 +401,20 @@ def recharge_wallet(amount):
 
 def admin_login_and_view(password):
     if password != ADMIN_PASSWORD:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Password! Access Denied.</span>"
+        return "❌ Incorrect Password! Access Denied."
 
     logs = load_logs()
     if not logs:
-        return "<span style='color:#fde047;'>📭 No user logs found yet.</span>"
+        return "📭 No user logs found yet."
 
-    summary_html = f"<div style='color:#fff;'><h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3><p><b>Total User Entries:</b> {len(logs)}</p><table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'><tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>"
+    summary_md = f"### 🛡️ AccAstroForge Admin Dashboard\n**Total User Entries:** {len(logs)}\n\n| Timestamp | Name/Service | Details | Status |\n|---|---|---|---|\n"
     for log in reversed(logs):
-        summary_html += f"<tr><td>{log.get('timestamp', '')[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
-    summary_html += "</table></div>"
-    return summary_html
+        summary_md += f"| {log.get('timestamp', '')[:19]} | {log.get('full_name', 'N/A')} ({log.get('service', 'General')}) | {log.get('details', 'N/A')} | {log.get('payment_status', 'Pending')} |\n"
+    return summary_md
 
 
 # ---------------------------------------------------------
-# 5. HARDCORE CSS & INJECTED EYE-TOGGLE JAVASCRIPT
+# 5. CSS & JAVASCRIPT
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -471,21 +433,32 @@ html, body, .gr-root, .gradio-container, gradio-app {
     min-height: 100vh;
 }
 
+.gradio-container::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: radial-gradient(white 1.2px, transparent 0), radial-gradient(rgba(252, 211, 77, 0.85) 1.8px, transparent 0);
+    background-size: 140px 140px, 210px 210px;
+    background-position: 0 0, 60px 80px;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.gradio-container > * {
+    position: relative;
+    z-index: 1;
+}
+
 footer, header, #footer, .footer, .built-with, a[href*="huggingface.co/space"] {
     display: none !important;
 }
 
-/* ABSOLUTE OVERRIDE TO ELIMINATE ALL WHITE BOXES & BLACK TEXTS */
-* {
-    color-scheme: dark !important;
-}
-
 .gr-box, .gr-row, .gr-form, .form, panel, 
-div[data-testid="block"], .block, .wrap, .contain, .gr-panel, fieldset, .gr-markdown, .prose {
+div[data-testid="block"], .block, .wrap, .contain {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    color: #ffffff !important;
 }
 
 div[role="tablist"] {
@@ -498,133 +471,111 @@ div[role="tablist"] {
     background: rgba(10, 3, 25, 0.9) !important;
     border-radius: 12px !important;
     border: 1px solid rgba(244, 114, 182, 0.4) !important;
+    justify-content: space-between !important;
 }
 
 button[role="tab"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     background: rgba(18, 8, 42, 0.9) !important;
     border: 1px solid rgba(244, 114, 182, 0.45) !important;
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.62rem !important;
+    font-size: 0.60rem !important;
     border-radius: 8px !important;
-    padding: 6px 2px !important;
+    padding: 6px 1px !important;
     margin: 0 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    text-align: center !important;
 }
 
 button[role="tab"][aria-selected="true"] {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-color: #fde047 !important;
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.8) !important;
 }
 
-.gr-accordion, .accordion, div[data-testid="accordion"] {
-    background: rgba(14, 5, 35, 0.95) !important;
-    border: 1px solid rgba(244, 114, 182, 0.6) !important;
-    border-radius: 16px !important;
-    padding: 15px !important;
-    color: #ffffff !important;
-}
-
-button.primary, button.gr-button-primary, .gr-button-primary {
-    background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
-    color: #ffffff !important;
-    border: 1px solid #fde047 !important;
-    font-weight: 700 !important;
-    border-radius: 12px !important;
-}
-
-label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span, h1, h2, h3, h4, p, li, b, strong {
-    color: #fde047 !important;
-}
-
-p, li, span, div {
-    color: #ffffff !important;
+div[role="tablist"] > button:last-child[aria-haspopup="true"], 
+.tabs > .tab-nav > button:last-child {
+    display: none !important;
 }
 
 input, textarea, select {
-    background: rgba(22, 10, 48, 0.95) !important;
-    border: 1.5px solid rgba(244, 114, 182, 0.7) !important;
+    background: rgba(18, 8, 42, 0.85) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(232, 121, 249, 0.45) !important;
     color: #ffffff !important;
     border-radius: 14px !important;
     padding: 12px 16px !important;
+    font-size: 0.95rem !important;
 }
 
-input::placeholder, textarea::placeholder {
-    color: rgba(255, 255, 255, 0.65) !important;
+input:focus, textarea:focus, select:focus {
+    border-color: #f472b6 !important;
+    box-shadow: 0 0 22px rgba(244, 114, 182, 0.6) !important;
+    color: #ffffff !important;
+    outline: none !important;
 }
 
-/* HARDCORE EYE TOGGLE CONTAINER */
-.password-box-wrapper {
-    position: relative !important;
-    width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
+.gr-file, .file-preview, .gr-file div, .gr-file span, .file-preview * {
+    background: rgba(18, 8, 42, 0.95) !important;
+    color: #fde047 !important;
+    border-color: rgba(244, 114, 182, 0.5) !important;
 }
 
-.password-eye-btn {
-    position: absolute !important;
-    right: 12px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    cursor: pointer !important;
-    font-size: 1.2rem !important;
-    z-index: 9999 !important;
-    user-select: none !important;
-    background: rgba(124, 58, 237, 0.3) !important;
-    border: 1px solid #fde047 !important;
-    border-radius: 50% !important;
-    padding: 2px 6px !important;
-    line-height: 1 !important;
+.gr-file a, .file-name {
+    color: #fde047 !important;
+    font-weight: 700 !important;
 }
 
-#manual-signup-trigger, #real-hidden-trigger {
+.gr-radio label, .gr-radio label span, div[data-testid="radio"] label, div[data-testid="radio"] label span {
+    color: #000000 !important;
+    font-weight: 800 !important;
+    font-size: 0.95rem !important;
+}
+
+h1, h2, h3, h4, h5, h6, 
+.gr-markdown h1, .gr-markdown h2, .gr-markdown h3,
+.prose h1, .prose h2, .prose h3 {
+    color: #fde047 !important;
+    font-family: 'Cinzel', serif !important;
+    text-shadow: 0 0 10px rgba(253, 224, 71, 0.4);
+}
+
+.gr-markdown, .prose, div[data-testid="markdown"] {
+    background: rgba(14, 5, 35, 0.95) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    border: 1px solid rgba(232, 121, 249, 0.6) !important;
+    border-radius: 18px !important;
+    padding: 24px 28px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+    color: #ffffff !important;
+    margin-top: 10px !important;
+}
+
+.gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span,
+.prose p, .prose li, .prose strong, .prose span,
+div[data-testid="markdown"] p, div[data-testid="markdown"] span {
+    color: #ffffff !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    text-indent: 0 !important;
+    border-left: none !important;
+    background: transparent !important;
+}
+
+#real-hidden-trigger {
     display: none !important;
 }
 """
 
-head_html = """
-<script>
-function attachEyeToggle() {
-    const passInputs = document.querySelectorAll('input[type="password"]');
-    passInputs.forEach(input => {
-        if (!input.classList.contains('eye-attached')) {
-            input.classList.add('eye-attached');
-            
-            const parent = input.parentElement;
-            if(parent) {
-                parent.style.position = 'relative';
-                
-                const toggleBtn = document.createElement('span');
-                toggleBtn.className = 'password-eye-btn';
-                toggleBtn.innerHTML = '👁️';
-                toggleBtn.title = 'Show/Hide Password';
-                
-                toggleBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        toggleBtn.innerHTML = '🙈';
-                    } else {
-                        input.type = 'password';
-                        toggleBtn.innerHTML = '👁️';
-                    }
-                });
-                
-                parent.appendChild(toggleBtn);
-            }
-        }
-    });
-}
-
-// Continuous check loop to overcome Gradio re-renders
-setInterval(attachEyeToggle, 300);
-document.addEventListener("DOMContentLoaded", attachEyeToggle);
-</script>
-"""
-
-with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
@@ -633,80 +584,18 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 gr.HTML(f"""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                     <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
-                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
-                    <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
-                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #1da1f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
+                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #ea4335; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
+                    <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff; background: #1877f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
+                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff; background: #1da1f2; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
+                    <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff; background: #7c3aed; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: 700; border: 1px solid #fde047;">📝 Sign Up</a>
                 </div>
                 """)
 
+        # SINGLE UNIFIED TABS BLOCK WITH ALL 10 EXACT-FIT TABS + TWITTER CALLBACK TAB
         with gr.Tabs() as main_tabs:
-            # TAB 1: DASHBOARD
-            with gr.TabItem("👤 DASHBOARD"):
-                gr.HTML("<h3 style='color:#fde047;'>👤 User Profile, Wallet & Order History</h3>")
-                
-                gr.HTML("""
-                <div style="background: rgba(18, 8, 42, 0.85); border: 1.5px dashed #f1c40f; padding: 12px 18px; border-radius: 12px; margin: 10px 0 15px 0; text-align: center; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.15);">
-                    <p style="color: #f39c12 !important; font-size: 0.88rem; font-weight: 600; margin: 0; line-height: 1.5;">
-                        💡 <b style="color: #ffffff !important;">Mobile View Notice:</b> If you are trying to access the site through mobile version, look next to the last visible tab for three dots (<span style="color: #fff; font-weight: bold; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">...</span>) to open the drop-down menu.
-                    </p>
-                </div>
-                """)
-
-                with gr.Row():
-                    with gr.Column():
-                        user_profile_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                            <div>
-                                <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
-                                <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
-                            </div>
-                            <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-                                📝 SIGN UP
-                            </button>
-                        </div>
-                        """)
-                    with gr.Column():
-                        wallet_balance_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
-                            <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
-                            <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
-                        </div>
-                        """)
-
-                # MODAL FOR MANUAL SIGNUP WITH HARDCORE EYE TOGGLE PASS
-                with gr.Group(visible=False) as signup_group:
-                    with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
-                        with gr.Row():
-                            signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                            signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
-                        with gr.Row():
-                            signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
-                            signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                        signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
-                        signup_output = gr.HTML()
-
-                order_history_display = gr.HTML("""
-                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                    <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
-                    <p style="color: #cbd5e1 !important; font-size: 0.85rem; margin: 0;">No previous orders found for current guest session. Please register or login.</p>
-                </div>
-                """)
-
-                with gr.Row():
-                    topup_amount = gr.Radio(choices=["100", "250", "500", "1000"], value="250", label="Select Topup Amount (₹)")
-                    topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
-                wallet_pay_output = gr.HTML()
-                topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
-
-                signup_btn.click(
-                    fn=handle_manual_signup, 
-                    inputs=[signup_name, signup_email, signup_phone, signup_pass], 
-                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
-                )
-
-            # TAB 2: LIFE PREDICTION
+            # TAB 1: LIFE PREDICTION
             with gr.TabItem("🌟 LIFE PREDICTION"):
-                gr.HTML("<h3 style='color:#fde047;'>🌌 Vedic Astrology & Deep Life Forecast</h3>")
+                gr.Markdown("### 🌌 Vedic Astrology & Deep Life Forecast")
                 with gr.Row():
                     name_input = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
                     dob_input = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
@@ -722,132 +611,133 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 question_input = gr.Textbox(label="Specific Question or Concern")
                 submit_life = gr.Button("✨ Reveal Detailed Life Insights (₹499)", variant="primary")
 
-                output_life_teaser = gr.HTML()
+                output_life_teaser = gr.Markdown()
                 output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
 
-            # TAB 3: HOROSCOPE
+            # TAB 2: HOROSCOPE
             with gr.TabItem("☀️ HOROSCOPE"):
-                gr.HTML("<h3 style='color:#fde047;'>🔮 Daily Zodiac Predictions (Free)</h3>")
+                gr.Markdown("### 🔮 Daily Zodiac Predictions (Free)")
                 zodiac_sign = gr.Dropdown(choices=ZODIAC_SIGNS, value="Aries (Mesha)", label="Select Zodiac Sign")
                 submit_horoscope = gr.Button("🔮 Get Today's Horoscope", variant="primary")
-                output_horoscope = gr.HTML()
+                output_horoscope = gr.Markdown()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            # TAB 4: MATCHING
+            # TAB 3: MATCHING
             with gr.TabItem("❤️ MATCHING"):
-                gr.HTML("<h3 style='color:#fde047;'>💍 Vedic Compatibility & Guna Milan</h3>")
+                gr.Markdown("### 💍 Vedic Compatibility & Guna Milan")
                 with gr.Row():
-                    boy_name = gr.Textbox(label="Boy's Name", placeholder="e.g. Rahul")
-                    boy_dob = gr.Textbox(label="Boy's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
+                    boy_name = gr.Textbox(label="Boy's Name")
+                    boy_dob = gr.Textbox(label="Boy's DOB (YYYY-MM-DD)")
                 with gr.Row():
-                    girl_name = gr.Textbox(label="Girl's Name", placeholder="e.g. Priya")
-                    girl_dob = gr.Textbox(label="Girl's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
+                    girl_name = gr.Textbox(label="Girl's Name")
+                    girl_dob = gr.Textbox(label="Girl's DOB (YYYY-MM-DD)")
                 submit_matching = gr.Button("❤️ Match Kundalis Now (₹399)", variant="primary")
-                output_matching = gr.HTML()
+                output_matching = gr.Markdown()
                 output_matching_paywall = gr.HTML()
                 submit_matching.click(fn=run_kundali_matching, inputs=[boy_name, boy_dob, girl_name, girl_dob], outputs=[output_matching, output_matching_paywall])
 
-            # TAB 5: GEMSTONES
+            # TAB 4: GEMSTONES
             with gr.TabItem("💎 GEMSTONES"):
-                gr.HTML("<h3 style='color:#fde047;'>🧿 Lucky Gemstones & Cosmic Remedies</h3>")
+                gr.Markdown("### 🧿 Lucky Gemstones & Cosmic Remedies")
                 with gr.Row():
-                    gem_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
-                    gem_zodiac = gr.Textbox(label="Zodiac Sign", placeholder="e.g. Aries (Mesha)")
+                    gem_dob = gr.Textbox(label="Date of Birth")
+                    gem_zodiac = gr.Textbox(label="Zodiac Sign")
                 submit_gem = gr.Button("💎 Find My Gemstone (₹299)", variant="primary")
-                output_gem = gr.HTML()
+                output_gem = gr.Markdown()
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            # TAB 6: KUNDALI & BIRTH PDF
+            # TAB 5: KUNDALI & BIRTH PDF
             with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
-                gr.HTML("<h3 style='color:#fde047;'>📜 Janam Kundali & Lagna Birth Chart Generator</h3>")
+                gr.Markdown("### 📜 Janam Kundali & Lagna Birth Chart Generator")
                 with gr.Row():
-                    k_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                    k_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
+                    k_name = gr.Textbox(label="Full Name")
+                    k_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)")
                 with gr.Row():
-                    k_tob = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
-                    k_pob = gr.Textbox(label="Place of Birth", placeholder="City, Country")
+                    k_tob = gr.Textbox(label="Time of Birth")
+                    k_pob = gr.Textbox(label="Place of Birth")
                 submit_kundali_pdf = gr.Button("📜 Generate Visual Birth Chart & Kundali PDF (₹299)", variant="primary")
-                output_kundali_pdf_text = gr.HTML()
+                output_kundali_pdf_text = gr.Markdown()
                 output_visual_chart = gr.HTML()
                 output_kundali_file = gr.File(label="Download Generated Kundali PDF")
                 output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
-            # TAB 7: NUMEROLOGY
+            # TAB 6: NUMEROLOGY
             with gr.TabItem("🔢 NUMEROLOGY"):
-                gr.HTML("<h3 style='color:#fde047;'>🔢 Numerology Check</h3>")
+                gr.Markdown("### 🔢 Numerology Check")
                 with gr.Row():
-                    n_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                    n_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
+                    n_name = gr.Textbox(label="Full Name")
+                    n_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)")
                 submit_num = gr.Button("🔢 Analyze Numerology (₹249)", variant="primary")
-                output_num = gr.HTML()
+                output_num = gr.Markdown()
                 output_num_paywall = gr.HTML()
                 submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
-            # TAB 8: PANCHANG
+            # TAB 7: PANCHANG
             with gr.TabItem("📅 PANCHANG"):
-                gr.HTML("<h3 style='color:#fde047;'>📅 Vedic Panchang & Shubh Muhurat</h3>")
+                gr.Markdown("### 📅 Vedic Panchang & Shubh Muhurat")
                 with gr.Row():
-                    p_date = gr.Textbox(label="Date (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
-                    p_city = gr.Textbox(label="City", placeholder="e.g. Kolkata")
+                    p_date = gr.Textbox(label="Date (YYYY-MM-DD)")
+                    p_city = gr.Textbox(label="City")
                 p_mode = gr.Radio(choices=["Free Daily Panchang", "Detailed Shubh Muhurat Report (₹99)"], value="Free Daily Panchang")
                 submit_panchang = gr.Button("📅 Check Panchang", variant="primary")
-                output_panchang = gr.HTML()
+                output_panchang = gr.Markdown()
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            # TAB 9: AI ASSISTANT
+            # TAB 8: AI ASSISTANT
             with gr.TabItem("🤖 AI ASSISTANT"):
-                gr.HTML("<h3 style='color:#fde047;'>🤖 Ask Your Personal AI Astrologer</h3>")
+                gr.Markdown("### 🤖 Ask Your Personal AI Astrologer")
                 ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
                 ai_submit = gr.Button("Ask Assistant ✨", variant="primary")
-                ai_output = gr.HTML()
+                ai_output = gr.Markdown()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
+
+            # TAB 9: USER DASHBOARD
+            with gr.TabItem("👤 DASHBOARD"):
+                gr.Markdown("### 👤 User Profile, Wallet & Order History")
+                gr.HTML("""
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                    <h4 style="color: #fde047; margin-bottom: 5px;">💳 AccAstroForge Wallet Balance: <span style="color: #4ade80;">₹ 0.00</span></h4>
+                    <p style="color: #f3e8ff; font-size: 0.85rem;">Use credits for instant unlocking of Kundali, Life Reports, and Astrology Consultations.</p>
+                </div>
+                """)
+                with gr.Row():
+                    topup_amount = gr.Radio(choices=["100", "250", "500", "1000"], value="250", label="Select Topup Amount (₹)")
+                    topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
+                wallet_pay_output = gr.HTML()
+                topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
             # TAB 10: LEGAL & POLICIES
             with gr.TabItem("⚖️ LEGAL"):
+                gr.Markdown("### ⚖️ Legal Terms, Privacy Policy & User Data Protection")
                 gr.HTML("""
-                <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px; color: #ffffff;">
-                    <h4 style="color: #fde047 !important;">📜 Terms of Service</h4>
-                    <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
+                <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px;">
+                    <h4 style="color: #fde047;">📜 Terms of Service</h4>
+                    <p style="font-size: 0.85rem; color: #ddd;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
-                    <h4 style="color: #fde047 !important;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
-                    <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
-                    <h4 style="color: #fde047 !important;">📧 Support Contact & Official Handles</h4>
-                    <p style="font-size: 0.85rem; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
-                    <p style="font-size: 0.85rem;">Connect with us on our official social platforms:</p>
-                    <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
-                        <li>🌐 <span style="color: #fde047 !important; font-weight: 700;">Twitter (X):</span> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://x.com/AccAstroForge</a></li>
-                        <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
-                        <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
-                        <li>📘 <span style="color: #fde047 !important; font-weight: 700;">Facebook:</span> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.facebook.com/accastroforge/</a></li>
-                    </ul>
+                    <h4 style="color: #fde047;">🔒 Privacy Policy & Data Deletion</h4>
+                    <p style="font-size: 0.85rem; color: #ddd;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties. Users can request complete data deletion by emailing arnabchaudhuriaiedits@gmail.com.</p>
                 </div>
                 """)
 
             # TAB 11: TWITTER CALLBACK HANDLER
             with gr.TabItem("🐦 TWITTER AUTH"):
-                gr.HTML("<h3 style='color:#fde047;'>🐦 Twitter/X OAuth Callback Handler</h3>")
+                gr.Markdown("### 🐦 Twitter/X OAuth Callback Handler")
                 tw_code = gr.Textbox(label="Authorization Code", placeholder="Code from Twitter")
                 tw_state = gr.Textbox(label="State", placeholder="State")
                 tw_btn = gr.Button("Complete Twitter Login", variant="primary")
-                tw_output = gr.HTML()
+                tw_output = gr.Markdown()
                 tw_btn.click(fn=handle_twitter_callback, inputs=[tw_code, tw_state], outputs=tw_output)
-
-        # HIDDEN TRIGGER FOR SIGNUP
-        signup_state = gr.State(value=False)
-        manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")
-        manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
 
         # SECRET ADMIN PORTAL
         with gr.Group(visible=False) as admin_group:
             with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
                 secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")
                 unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
-                secret_output = gr.HTML()
+                secret_output = gr.Markdown()
                 unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
 
         admin_state = gr.State(value=False)
@@ -855,4 +745,4 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
         real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, head=head_html, favicon_path="favicon.png")
+    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, favicon_path="favicon.png")

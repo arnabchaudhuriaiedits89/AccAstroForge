@@ -30,6 +30,11 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
+# BRAND NEW FRESH TWITTER OAUTH 2.0 CREDENTIALS
+TWITTER_CLIENT_ID = "Vy1ke1RKM1pjQWFQbzF1b1VPTGc6MTpjaQ"
+TWITTER_CLIENT_SECRET = "ap6gCWmf05A9fcu7w6mKqKbyMkT1M_wry7uzRjSdtaPhQ1aXBj"
+TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri=https://accastroforge.in/login/twitter/callback&scope=tweet.read%20users.read&state=state"
+
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 except Exception:
@@ -293,9 +298,6 @@ def get_paywall_html(service_name, price, user_name="User"):
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
-
-# FIRST NIGHT WORKING CLEAN TWITTER OAUTH URL
-TWITTER_OAUTH_URL = "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=VlVoTTA2WEFJNZdTwEp5X21lV186MTpjaQ&redirect_uri=https://accastroforge.in/login/twitter/callback&scope=tweet.read%20users.read&state=state"
 
 
 def handle_manual_signup(name, email, phone, password):

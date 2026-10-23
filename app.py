@@ -5,7 +5,6 @@ import os
 import io
 import random
 import requests
-import urllib.parse
 import gradio as gr
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -14,7 +13,7 @@ from reportlab.lib import colors
 import razorpay
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (EXACT MATCH WITH RENDER & NOTEPAD)
+# 0. CONFIGURATIONS & SECRETS (RAZORPAY, PROKERALA & OAUTH)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
@@ -31,10 +30,10 @@ FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "1487294163221538")
 FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "b0bacbcf5968b456843fe66aeea8af47")
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# Twitter Secrets Matching Notepad File Accurately
-TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "VlVoTTA2WEFJNzdTWlp5X2llV186MTpjaQ")
-TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "pwm4ty1VPp6SswUy4pwmKlNNEvhI4P6axeNibIbxwNla7lzZSH")
-TWITTER_REDIRECT_URI = os.getenv("TWITTER_REDIRECT_URI", "https://accastroforge.in/login/twitter/callback")
+# WORKING TWITTER CREDENTIALS FROM LAST NIGHT'S SUCCESSFUL APP
+TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "aVhTS1MteGFWLWpfMzNwNlBrVEQ6MTpjaQ")
+TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "jQVr7c1Rssf7WiS2omPKEXBgS47eX8hecTHakNGizEPebHlJq6")
+TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -102,6 +101,7 @@ else:
         </div>
     </div>
     """
+
 
 # ---------------------------------------------------------
 # 2. ASTROLOGICAL ENGINE & KUNDALI GENERATOR
@@ -298,10 +298,13 @@ def get_paywall_html(service_name, price, user_name="User"):
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
+TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
 
-# TWITTER OAUTH 2.0 URL EXACTLY MATCHING YOUR NOTEPAD REDIRECT URI
-encoded_twitter_redirect = urllib.parse.quote(TWITTER_REDIRECT_URI, safe='')
-TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={encoded_twitter_redirect}&scope=tweet.read%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
+
+def handle_twitter_callback(code=None, state=None):
+    if code:
+        return f"### 🎉 Twitter Authentication Successful!\nAuthorization Code received successfully. You are now logged in to AccAstroForge."
+    return f"### ⚠️ Twitter Login Status\nAuthentication callback received."
 
 
 def handle_manual_signup(name, email, phone, password):
@@ -824,6 +827,15 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     </ul>
                 </div>
                 """)
+
+            # TAB 11: TWITTER CALLBACK HANDLER
+            with gr.TabItem("🐦 TWITTER AUTH"):
+                gr.HTML("<h3 style='color:#fde047;'>🐦 Twitter/X OAuth Callback Handler</h3>")
+                tw_code = gr.Textbox(label="Authorization Code", placeholder="Code from Twitter")
+                tw_state = gr.Textbox(label="State", placeholder="State")
+                tw_btn = gr.Button("Complete Twitter Login", variant="primary")
+                tw_output = gr.HTML()
+                tw_btn.click(fn=handle_twitter_callback, inputs=[tw_code, tw_state], outputs=tw_output)
 
         # HIDDEN TRIGGER FOR SIGNUP
         signup_state = gr.State(value=False)

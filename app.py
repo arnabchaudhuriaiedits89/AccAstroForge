@@ -5,7 +5,6 @@ import os
 import io
 import random
 import requests
-import urllib.parse
 import gradio as gr
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -30,11 +29,6 @@ GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
 FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
-
-# TWITTER CREDENTIALS (HARDCODED TO BYPASS RENDER SECRET SYNC ISSUES)
-TWITTER_CLIENT_ID = "VlVoTTA2WEFJNZdTwEp5X21lV186MTpjaQ"
-TWITTER_CLIENT_SECRET = "pwm4ty1VPp6SswUy4pwmKlNNEVhI4P6axeN1bIbxWNla7lzZSH"
-TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -295,19 +289,13 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH & SIGNUP HANDLERS
+# 4. SOCIAL OAUTH & SIGNUP HANDLERS (GOOGLE, FACEBOOK & TWITTER)
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
-# CLEAN TWITTER URL
-TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state"
-
-
-def handle_twitter_callback(code=None, state=None):
-    if code:
-        return f"### 🎉 Twitter Authentication Successful!\nAuthorization Code received successfully. You are now logged in to AccAstroForge."
-    return f"### ⚠️ Twitter Login Status\nAuthentication callback received."
+# FIRST NIGHT WORKING CLEAN TWITTER OAUTH URL
+TWITTER_OAUTH_URL = "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=VlVoTTA2WEFJNZdTwEp5X21lV186MTpjaQ&redirect_uri=https://accastroforge.in/login/twitter/callback&scope=tweet.read%20users.read&state=state"
 
 
 def handle_manual_signup(name, email, phone, password):
@@ -816,14 +804,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     </ul>
                 </div>
                 """)
-
-            with gr.TabItem("🐦 TWITTER AUTH"):
-                gr.HTML("<h3 style='color:#fde047;'>🐦 Twitter/X OAuth Callback Handler</h3>")
-                tw_code = gr.Textbox(label="Authorization Code", placeholder="Code from Twitter")
-                tw_state = gr.Textbox(label="State", placeholder="State")
-                tw_btn = gr.Button("Complete Twitter Login", variant="primary")
-                tw_output = gr.HTML()
-                tw_btn.click(fn=handle_twitter_callback, inputs=[tw_code, tw_state], outputs=tw_output)
 
         signup_state = gr.State(value=False)
         manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")

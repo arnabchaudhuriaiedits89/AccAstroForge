@@ -14,26 +14,26 @@ from reportlab.lib import colors
 import razorpay
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS
+# 0. CONFIGURATIONS & SECRETS (HARDCODED FOR TESTING TWITTER LOGIN)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
-PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
-PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
+PROKERALA_CLIENT_ID = "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33"
+PROKERALA_CLIENT_SECRET = "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX"
 
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
+GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
 
-FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "1487294163221538")
-FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "b0bacbcf5968b456843fe66aeea8af47")
+FACEBOOK_APP_ID = "1487294163221538"
+FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# TWITTER SECRETS
-TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "VlVoTTA2WEFJNZdTwEp5X21lV186MTpjaQ")
-TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "pwm4ty1VPp6SswUy4pwmKlNNEVhI4P6axeN1bIbxWNla7lzZSH")
+# DIRECT HARDCODED TWITTER CREDENTIALS (EXACTLY AS FIRST WORKING NIGHT)
+TWITTER_CLIENT_ID = "VlVoTTA2WEFJNZdTwEp5X21lV186MTpjaQ"
+TWITTER_CLIENT_SECRET = "pwm4ty1VPp6SswUy4pwmKlNNEvhI4P6axeN1bIbxWNla7lzZSH"
 TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
 
 try:
@@ -300,9 +300,8 @@ def get_paywall_html(service_name, price, user_name="User"):
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
-# FIXED & ROBUST TWITTER OAUTH URL WITH CORRECT ENCODING & PKCE CHALLENGE
-twitter_scope_str = urllib.parse.quote("tweet.read users.read")
-TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope={twitter_scope_str}&state=state&code_challenge=challenge&code_challenge_method=plain"
+# DIRECT RAW TWITTER OAUTH URL (EXACTLY AS FIRST NIGHT WORKING FORMAT)
+TWITTER_OAUTH_URL = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=tweet.read%20users.read&state=state"
 
 
 def handle_twitter_callback(code=None, state=None):

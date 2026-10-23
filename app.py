@@ -439,7 +439,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. CSS & JAVASCRIPT (LOCKED DARK THEME - NO WHITE BOXES)
+# 5. CSS & JAVASCRIPT (LOCKED TEXT COLORS & EYE TOGGLE FIX)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -479,7 +479,6 @@ footer, header, #footer, .footer, .built-with, a[href*="huggingface.co/space"] {
     display: none !important;
 }
 
-/* OVERRIDE GRADIO WHITE CONTAINER BOXES STRICTLY */
 .gr-box, .gr-row, .gr-form, .form, panel, 
 div[data-testid="block"], .block, .wrap, .contain, .gr-panel {
     background: transparent !important;
@@ -547,10 +546,26 @@ button.primary, button.gr-button-primary, .gr-button-primary {
     border-radius: 12px !important;
 }
 
-label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span {
+/* FORCE ALL LABELS AND HEADERS TO BRIGHT GOLDEN/WHITE TO PREVENT BLACK TEXT */
+label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span, .prose h1, .prose h2, .prose h3, .gr-markdown h1, .gr-markdown h2, .gr-markdown h3 {
     color: #fde047 !important;
     font-weight: 600 !important;
-    font-size: 0.95rem !important;
+}
+
+/* FORCE MARKDOWN AND OUTPUT TEXTS TO WHITE */
+.gr-markdown, .prose, div[data-testid="markdown"], .gr-markdown p, .gr-markdown li, .gr-markdown strong, .gr-markdown span, .prose p, .prose li, .prose strong, .prose span, div[data-testid="markdown"] p, div[data-testid="markdown"] span {
+    color: #ffffff !important;
+    background: transparent !important;
+}
+
+.gr-markdown {
+    background: rgba(14, 5, 35, 0.95) !important;
+    backdrop-filter: blur(18px) !important;
+    border: 1px solid rgba(232, 121, 249, 0.6) !important;
+    border-radius: 18px !important;
+    padding: 24px 28px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+    margin-top: 10px !important;
 }
 
 input, textarea, select {
@@ -569,7 +584,7 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
-/* PASSWORD EYE TOGGLE STYLING */
+/* ROBUST PASSWORD EYE TOGGLE STYLING */
 .pass-wrapper {
     position: relative !important;
     display: flex !important;
@@ -599,23 +614,24 @@ document.addEventListener("DOMContentLoaded", function() {
         passInputs.forEach(input => {
             if (!input.dataset.eyeInjected) {
                 input.dataset.eyeInjected = "true";
-                const parent = input.parentElement;
-                if(parent) {
-                    parent.classList.add("pass-wrapper");
-                    const btn = document.createElement("span");
-                    btn.innerHTML = "👁️";
-                    btn.className = "pass-toggle-btn";
-                    btn.onclick = function() {
-                        if(input.type === "password") {
-                            input.type = "text";
-                            btn.innerHTML = "🙈";
-                        } else {
-                            input.type = "password";
-                            btn.innerHTML = "👁️";
-                        }
-                    };
-                    parent.appendChild(btn);
-                }
+                const wrapper = document.createElement("div");
+                wrapper.className = "pass-wrapper";
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+                
+                const btn = document.createElement("span");
+                btn.innerHTML = "👁️";
+                btn.className = "pass-toggle-btn";
+                btn.onclick = function() {
+                    if(input.type === "password") {
+                        input.type = "text";
+                        btn.innerHTML = "🙈";
+                    } else {
+                        input.type = "password";
+                        btn.innerHTML = "👁️";
+                    }
+                };
+                wrapper.appendChild(btn);
             }
         });
     }, 400);
@@ -644,7 +660,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
             with gr.TabItem("👤 DASHBOARD"):
                 gr.Markdown("### 👤 User Profile, Wallet & Order History")
                 
-                # PRECISE MOBILE VIEW NOTICE DISCLAIMER
                 gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1.5px dashed #f1c40f; padding: 12px 18px; border-radius: 12px; margin: 10px 0 15px 0; text-align: center; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.15); backdrop-filter: blur(5px);">
                     <p style="color: #f39c12; font-size: 0.88rem; font-weight: 600; margin: 0; line-height: 1.5; letter-spacing: 0.3px;">
@@ -699,7 +714,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
-                # Connect signup action
                 signup_btn.click(
                     fn=handle_manual_signup, 
                     inputs=[signup_name, signup_email, signup_phone, signup_pass], 
@@ -849,4 +863,4 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
         real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, favicon_path="favicon.png")
+    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, head=head_html, favicon_path="favicon.png")

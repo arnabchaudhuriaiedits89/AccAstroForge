@@ -44,26 +44,43 @@ except Exception:
     razorpay_client = None
 
 LOG_FILE = "admin_logs.json"
+USERS_FILE = "registered_users.json"
 
 
-def load_logs():
-    if not os.path.exists(LOG_FILE):
+def load_json_file(filename):
+    if not os.path.exists(filename):
         return []
     try:
-        with open(LOG_FILE, "r", encoding="utf-8") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return []
 
 
+def save_json_file(filename, data):
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error saving {filename}: {e}")
+
+
+def load_logs():
+    return load_json_file(LOG_FILE)
+
+
 def save_log(user_data):
     logs = load_logs()
     logs.append(user_data)
-    try:
-        with open(LOG_FILE, "w", encoding="utf-8") as f:
-            json.dump(logs, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        print(f"Error saving log: {e}")
+    save_json_file(LOG_FILE, logs)
+
+
+def load_users():
+    return load_json_file(USERS_FILE)
+
+
+def save_user_db(users_list):
+    save_json_file(USERS_FILE, users_list)
 
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -370,7 +387,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 5. SOCIAL OAUTH & SIGNUP HANDLERS
+# 5. SOCIAL OAUTH, UNIQUE REGISTRATION & SESSION MANAGEMENT
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -378,7 +395,7 @@ FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FA
 
 def handle_manual_signup(name, email, phone, password):
     u_name = name.strip() if name else "New User"
-    u_email = email.strip() if email else "N/A"
+    u_email = email.strip().lower() if email else "N/A"
     u_phone = phone.strip() if phone else "N/A"
 
     if not u_email or "@" not in u_email:
@@ -397,6 +414,18 @@ def handle_manual_signup(name, email, phone, password):
             "No active sessions.",
             ""
         )
+
+    # Check if email is already registered in DB
+    users = load_users()
+    for existing in users:
+        if existing.get("email") == u_email:
+            return (
+                f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Already Registered</h3><p style='margin:0;'>The email <b>{u_email}</b> is already registered in AccAstroForge. Please login or use a different email.</p></div>",
+                "👤 Guest User",
+                "₹ 0.00",
+                "Email already exists in system.",
+                ""
+            )
 
     otp_code = str(random.randint(100000, 999999))
     email_html = f"""
@@ -451,6 +480,17 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
             "Verification Failed"
         )
     
+    # Save to registered users database
+    users = load_users()
+    new_user = {
+        "name": u_name,
+        "email": u_email,
+        "phone": u_phone,
+        "verified_at": str(datetime.datetime.now())
+    }
+    users.append(new_user)
+    save_user_db(users)
+
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
@@ -462,14 +502,14 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
     success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Account Verified & Active!</h3><p style='margin:0;'>Welcome <b>{u_name}</b>! Your email <b>{u_email}</b> has been successfully verified.</p></div>"
     
     profile_box = f"""
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
             👤 <b>{u_name}</b> ({u_email})<br>
             <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
             <span style='color: #4ade80; font-weight:bold;'>Status: Active Member</span>
         </div>
-        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444; padding: 6px 14px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
-            🚪 Logout
+        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+            🚪 Logout / Switch Account
         </button>
     </div>
     """
@@ -487,7 +527,7 @@ def handle_logout():
             <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
         </div>
         <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-            📝 SIGN UP
+            📝 SIGN UP / SWITCH
         </button>
     </div>
     """
@@ -503,7 +543,7 @@ def handle_logout():
         <p style="color: #cbd5e1 !important; font-size: 0.85rem; margin: 0;">No previous orders found for current guest session. Please register or login.</p>
     </div>
     """
-    logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or login again anytime.</p></div>"
+    logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or switch accounts anytime.</p></div>"
     
     return logout_msg, guest_profile, guest_wallet, guest_history
 
@@ -703,10 +743,26 @@ def admin_login_and_view(password):
         return "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Password! Access Denied.</span>"
 
     logs = load_logs()
-    if not logs:
-        return "<span style='color:#fde047;'>📭 No user logs found yet.</span>"
+    users = load_users()
+    
+    summary_html = f"""
+    <div style='color:#fff;'>
+        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3>
+        <p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>
+        
+        <h4 style='color:#4ade80; margin-top:15px;'>📋 Registered Users Database</h4>
+        <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; margin-bottom:20px;' border='1'>
+            <tr style='background:#5b21b6; color:#fff;'><th>Name</th><th>Email</th><th>Phone</th><th>Verified At</th></tr>
+    """
+    for u in reversed(users):
+        summary_html += f"<tr><td>{u.get('name', '')}</td><td>{u.get('email', '')}</td><td>{u.get('phone', '')}</td><td>{u.get('verified_at', '')[:19]}</td></tr>"
+    summary_html += "</table>"
 
-    summary_html = f"<div style='color:#fff;'><h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3><p><b>Total User Entries:</b> {len(logs)}</p><table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'><tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>"
+    summary_html += f"""
+        <h4 style='color:#fde047; margin-top:15px;'>📜 System Activity Logs</h4>
+        <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'>
+            <tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>
+    """
     for log in reversed(logs):
         summary_html += f"<tr><td>{log.get('timestamp', '')[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
     summary_html += "</table></div>"
@@ -714,7 +770,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & WORKING EYE-TOGGLE JAVASCRIPT
+# 6. HARDCORE CSS & PERSISTENT SESSION JAVASCRIPT
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -923,7 +979,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                                 <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
                             </div>
                             <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-                                📝 SIGN UP
+                                📝 SIGN UP / SWITCH
                             </button>
                         </div>
                         """)
@@ -1288,4 +1344,11 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
         )
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, head=head_html, favicon_path="favicon.png")
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=10000,
+        ssr_mode=False,
+        css=custom_css,
+        head=head_html,
+        favicon_path="favicon.png"
+    )

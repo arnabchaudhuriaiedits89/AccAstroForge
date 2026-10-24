@@ -22,8 +22,8 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
-PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
-PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
+PROKERALA_CLIENT_ID = "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33"
+PROKERALA_CLIENT_SECRET = "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX"
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
@@ -33,8 +33,21 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# BREVO EMAIL OTP API CONFIG (Allows 300 Free Emails / Day)
-BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+# OFFICIAL TWITTER OAUTH 2.0 DIRECT QUICK LOGIN
+TWITTER_CLIENT_ID = "Vy1ke1RKM1pjQWFQbzF1b1VPTGc6MTpjaQ"
+TWITTER_CLIENT_SECRET = "ap6gCWmf05A9fcu7w6mKqKbyMkT1M_wry7uzRjSdtaPhQ1aXBj"
+TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
+
+TWITTER_OAUTH_URL = (
+    f"https://x.com/i/oauth2/authorize?"
+    f"response_type=code"
+    f"&client_id={TWITTER_CLIENT_ID}"
+    f"&redirect_uri={TWITTER_REDIRECT_URI}"
+    f"&scope=users.read%20tweet.read%20offline.access"
+    f"&state=security_state_active"
+    f"&code_challenge=challenge_secure_xyz"
+    f"&code_challenge_method=plain"
+)
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -42,7 +55,6 @@ except Exception:
     razorpay_client = None
 
 LOG_FILE = "admin_logs.json"
-OTP_STORAGE = {}  # Temporary storage for active OTPs
 
 
 def load_logs():
@@ -87,7 +99,7 @@ if logo_b64:
     logo_element = f"""
     <div class="header-container" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
         <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="{logo_src}" alt="AccAstroForge Logo" id="brand-logo-3d" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important; transition: all 0.5s ease;">
+            <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
         </div>
         <div style="display: flex; align-items: center; background: rgba(18, 8, 42, 0.9); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.5);">
             <span id="secret-admin-dot" title="Admin Trigger" onclick="document.querySelector('#real-hidden-trigger').click()" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; background: radial-gradient(circle, #fde047 0%, #d97706 100%); border: 1.5px solid #fef08a; border-radius: 50%; display: inline-block; cursor: pointer; box-shadow: 0 0 12px #fde047;"></span>
@@ -103,46 +115,6 @@ else:
         </div>
     </div>
     """
-
-
-# ---------------------------------------------------------
-# 1. BREVO EMAIL OTP DISPATCH ENGINE
-# ---------------------------------------------------------
-def send_email_otp_via_brevo(user_email, otp_code):
-    if not BREVO_API_KEY:
-        print(f"[OTP DEV SIMULATION] Verification OTP for {user_email} is: {otp_code}")
-        return True, "OTP simulated in backend log. (Add BREVO_API_KEY env secret for live email delivery)"
-    
-    url = "https://api.brevo.com/v3/smtp/email"
-    headers = {
-        "accept": "application/json",
-        "api-key": BREVO_API_KEY,
-        "content-type": "application/json"
-    }
-    payload = {
-        "sender": {"name": "AccAstroForge Security", "email": "support@accastroforge.in"},
-        "to": [{"email": user_email}],
-        "subject": f"Your AccAstroForge Verification OTP Code: {otp_code}",
-        "htmlContent": f"""
-        <div style='background:#0b031d; padding:25px; border-radius:12px; color:#ffffff; font-family:sans-serif; border:1px solid #7c3aed;'>
-            <h2 style='color:#fde047; text-align:center;'>✨ AccAstroForge Verification</h2>
-            <p style='font-size:1.05rem;'>Namaste,</p>
-            <p>Your 6-digit One-Time Password (OTP) for account registration is:</p>
-            <div style='background:linear-gradient(135deg, #7c3aed, #db2777); text-align:center; padding:15px; border-radius:8px; font-size:2rem; font-weight:bold; letter-spacing:6px; color:#ffffff; margin:20px 0;'>
-                {otp_code}
-            </div>
-            <p style='color:#cbd5e1; font-size:0.85rem;'>This OTP is valid for 10 minutes. Do not share it with anyone.</p>
-        </div>
-        """
-    }
-    try:
-        res = requests.post(url, json=payload, headers=headers, timeout=8)
-        if res.status_code in [200, 201]:
-            return True, "Verification OTP successfully sent to your Gmail inbox!"
-        else:
-            return False, f"Brevo API error: {res.text}"
-    except Exception as e:
-        return False, f"Failed to send email: {str(e)}"
 
 
 # ---------------------------------------------------------
@@ -336,31 +308,13 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH & SIGNUP HANDLERS
+# 4. SOCIAL OAUTH & SIGNUP HANDLERS (GOOGLE, FACEBOOK & TWITTER)
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
 
-def request_signup_otp(email, phone):
-    u_email = email.strip() if email else ""
-    u_phone = phone.strip() if phone else ""
-    
-    if not u_email or "@" not in u_email:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>"
-    if not u_phone or len(u_phone) < 10:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>"
-    
-    otp = str(random.randint(100000, 999999))
-    OTP_STORAGE[u_email] = otp
-    
-    success, msg = send_email_otp_via_brevo(u_email, otp)
-    if success:
-        return f"<div style='color:#4ade80; font-weight:bold;'>📩 {msg} Check inbox of {u_email}.</div>"
-    return f"<div style='color:#ef4444; font-weight:bold;'>❌ {msg}</div>"
-
-
-def handle_manual_signup_with_otp(name, email, phone, password, entered_otp):
+def handle_manual_signup(name, email, phone, password):
     u_name = name.strip() if name else "New User"
     u_email = email.strip() if email else "N/A"
     u_phone = phone.strip() if phone else "N/A"
@@ -370,22 +324,18 @@ def handle_manual_signup_with_otp(name, email, phone, password, entered_otp):
     if not u_phone or len(u_phone) < 10:
         return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
     
-    saved_otp = OTP_STORAGE.get(u_email)
-    if saved_otp and entered_otp.strip() != saved_otp and BREVO_API_KEY:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Email OTP! Please check your Gmail and try again.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
-    
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
-        "service": "Manual Account Registration (OTP Verified)",
+        "service": "Manual Account Registration",
         "details": f"Email: {u_email} | Phone: {u_phone}",
         "payment_status": "Registered & Active"
     })
     
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='margin:0;'>Your account has been verified & created successfully with <b>{u_email}</b> (Phone: {u_phone}).</p></div>"
-    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Verified Member</span>"
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='margin:0;'>Your account has been created successfully with <b>{u_email}</b> (Phone: {u_phone}).</p></div>"
+    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
     wallet_box = "₹ 0.00"
-    history_box = f"• Account Verified & Registered<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
+    history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
     
     return success_msg, profile_box, wallet_box, history_box
 
@@ -509,7 +459,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. HARDCORE CSS & INJECTED 3D SPINNING JS ENGINE
+# 5. HARDCORE CSS & INJECTED EYE-TOGGLE JAVASCRIPT
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -566,48 +516,12 @@ button[role="tab"] {
     border-radius: 8px !important;
     padding: 6px 2px !important;
     margin: 0 !important;
-    transition: all 0.3s ease;
 }
 
 button[role="tab"][aria-selected="true"] {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-color: #fde047 !important;
-}
-
-#logo-3d-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(5, 1, 20, 0.85);
-    backdrop-filter: blur(8px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-#logo-3d-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.spinner-3d-logo {
-    width: 120px;
-    height: 120px;
-    animation: spin3D 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    filter: drop-shadow(0 0 25px rgba(244, 114, 182, 0.9));
-}
-
-@keyframes spin3D {
-    0% { transform: rotateY(0deg) scale(0.8); }
-    50% { transform: rotateY(180deg) scale(1.2); }
-    100% { transform: rotateY(360deg) scale(0.8); }
 }
 
 .gr-accordion, .accordion, div[data-testid="accordion"] {
@@ -675,10 +589,6 @@ input::placeholder, textarea::placeholder {
 """
 
 head_html = """
-<div id="logo-3d-overlay">
-    <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/logo.png" class="spinner-3d-logo" alt="Spinning Logo">
-</div>
-
 <script>
 function attachEyeToggle() {
     const passInputs = document.querySelectorAll('input[type="password"]');
@@ -713,34 +623,8 @@ function attachEyeToggle() {
     });
 }
 
-function attach3DTabSpinTransition() {
-    const tabs = document.querySelectorAll('button[role="tab"]');
-    const overlay = document.getElementById('logo-3d-overlay');
-    
-    tabs.forEach(tab => {
-        if (!tab.classList.contains('spin-attached')) {
-            tab.classList.add('spin-attached');
-            tab.addEventListener('click', function() {
-                if (overlay) {
-                    overlay.classList.add('active');
-                    setTimeout(() => {
-                        overlay.classList.remove('active');
-                    }, 450);
-                }
-            });
-        }
-    });
-}
-
-setInterval(() => {
-    attachEyeToggle();
-    attach3DTabSpinTransition();
-}, 300);
-
-document.addEventListener("DOMContentLoaded", () => {
-    attachEyeToggle();
-    attach3DTabSpinTransition();
-});
+setInterval(attachEyeToggle, 300);
+document.addEventListener("DOMContentLoaded", attachEyeToggle);
 </script>
 """
 
@@ -755,6 +639,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
                     <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
                     <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
+                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #1da1f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
                 </div>
                 """)
 
@@ -792,22 +677,14 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                         """)
 
                 with gr.Group(visible=False) as signup_group:
-                    with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration & Email Verification)", open=True):
+                    with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
                         with gr.Row():
                             signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
                             signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
                         with gr.Row():
                             signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
                             signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                        
-                        with gr.Row():
-                            send_otp_btn = gr.Button("📩 Send Email OTP Verification Code", variant="secondary")
-                            signup_otp_input = gr.Textbox(label="Enter 6-Digit Email OTP", placeholder="e.g. 584920")
-                        
-                        otp_status_msg = gr.HTML()
-                        send_otp_btn.click(fn=request_signup_otp, inputs=[signup_email, signup_phone], outputs=[otp_status_msg])
-
-                        signup_btn = gr.Button("✨ Verify OTP & Complete Registration", variant="primary")
+                        signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
                         signup_output = gr.HTML()
 
                 order_history_display = gr.HTML("""
@@ -824,8 +701,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
                 signup_btn.click(
-                    fn=handle_manual_signup_with_otp, 
-                    inputs=[signup_name, signup_email, signup_phone, signup_pass, signup_otp_input], 
+                    fn=handle_manual_signup, 
+                    inputs=[signup_name, signup_email, signup_phone, signup_pass], 
                     outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
                 )
 
@@ -930,12 +807,13 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
+                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">📧 Support Contact & Official Handles</h4>
                     <p style="font-size: 0.85rem; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
                     <p style="font-size: 0.85rem;">Connect with us on our official social platforms:</p>
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
+                        <li>🌐 <span style="color: #fde047 !important; font-weight: 700;">Twitter (X):</span> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://x.com/AccAstroForge</a></li>
                         <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
                         <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
                         <li>📘 <span style="color: #fde047 !important; font-weight: 700;">Facebook:</span> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.facebook.com/accastroforge/</a></li>
@@ -960,11 +838,27 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
 
 
 # ---------------------------------------------------------
-# 6. FASTAPI ENGINE INTEGRATION
+# 6. FASTAPI ENGINE INTEGRATION WITH OAUTH CALLBACK ROUTE
 # ---------------------------------------------------------
 app = FastAPI()
 
-# Mount Gradio Application onto FastAPI app root with favicon restored
+# Fast-API Handler for Twitter OAuth Redirect Callback
+@app.get("/login/twitter/callback")
+async def twitter_callback(request: Request):
+    code = request.query_params.get("code")
+    if code:
+        # Save Twitter Callback Authorization Code to Logs
+        save_log({
+            "timestamp": str(datetime.datetime.now()),
+            "full_name": "Twitter User Session",
+            "service": "Twitter OAuth Login",
+            "details": f"Auth Code: {code[:15]}...",
+            "payment_status": "Authenticated"
+        })
+    # Redirect back to main website root after authorization
+    return RedirectResponse(url="/")
+
+# Mount Gradio Application onto FastAPI app root with favicon preserved
 app = gr.mount_gradio_app(app, demo, path="/", favicon_path="favicon.png")
 
 if __name__ == "__main__":

@@ -1288,11 +1288,4 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
         )
 
 if __name__ == "__main__":
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=10000,
-        ssr_mode=False,
-        css=custom_css,
-        head=head_html,
-        favicon_path="favicon.png"
-    )
+    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, head=head_html, favicon_path="favicon.png")

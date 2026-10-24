@@ -643,7 +643,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & BULLETPROOF EYE-TOGGLE JAVASCRIPT
+# 6. HARDCORE CSS & GUARANTEED EYE-TOGGLE JAVASCRIPT
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -793,27 +793,22 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
-.password-box-wrapper {
-    position: relative !important;
-    width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-}
-
+/* EYE TOGGLE BUTTON STYLING */
 .password-eye-btn {
     position: absolute !important;
-    right: 12px !important;
+    right: 15px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     cursor: pointer !important;
-    font-size: 1.2rem !important;
-    z-index: 9999 !important;
+    font-size: 1.25rem !important;
+    z-index: 99999 !important;
     user-select: none !important;
-    background: rgba(124, 58, 237, 0.3) !important;
+    background: rgba(124, 58, 237, 0.4) !important;
     border: 1px solid #fde047 !important;
     border-radius: 50% !important;
-    padding: 2px 6px !important;
+    padding: 3px 7px !important;
     line-height: 1 !important;
+    display: inline-block !important;
 }
 
 #manual-signup-trigger, #real-hidden-trigger {
@@ -827,39 +822,44 @@ head_html = """
 </div>
 
 <script>
-function attachEyeToggle() {
-    const passInputs = document.querySelectorAll('input[type="password"]');
-    passInputs.forEach(input => {
+function initEyeToggle() {
+    const inputs = document.querySelectorAll('input[type="password"], input[data-testid="textbox"][type="password"]');
+    inputs.forEach(input => {
         let parent = input.parentElement;
         if (parent) {
-            if (!parent.classList.contains('password-box-wrapper')) {
-                parent.classList.add('password-box-wrapper');
-            }
             parent.style.setProperty('position', 'relative', 'important');
             
             if (!parent.querySelector('.password-eye-btn')) {
-                const toggleBtn = document.createElement('span');
-                toggleBtn.className = 'password-eye-btn';
-                toggleBtn.innerHTML = '👁️';
-                toggleBtn.title = 'Show/Hide Password';
-                toggleBtn.style.cssText = "position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; cursor: pointer !important; font-size: 1.2rem !important; z-index: 9999 !important; user-select: none !important; background: rgba(124, 58, 237, 0.3) !important; border: 1px solid #fde047 !important; border-radius: 50% !important; padding: 2px 6px !important; line-height: 1 !important;";
+                const eyeBtn = document.createElement('span');
+                eyeBtn.className = 'password-eye-btn';
+                eyeBtn.innerHTML = '👁️';
+                eyeBtn.title = 'Show/Hide Password';
                 
-                toggleBtn.addEventListener('click', function(e) {
+                eyeBtn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
+                eyeBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     if (input.type === 'password') {
                         input.type = 'text';
-                        toggleBtn.innerHTML = '🙈';
+                        eyeBtn.innerHTML = '🙈';
                     } else {
                         input.type = 'password';
-                        toggleBtn.innerHTML = '👁️';
+                        eyeBtn.innerHTML = '👁️';
                     }
                 });
-                parent.appendChild(toggleBtn);
+
+                parent.appendChild(eyeBtn);
             }
         }
     });
 }
+
+// Continuous check every 200ms to guarantee insertion as soon as DOM loads
+setInterval(initEyeToggle, 200);
 
 let spinnerTimer = null;
 function trigger3DLogoOverlay(duration = 2800) {
@@ -893,7 +893,7 @@ const nativeKillObserver = new MutationObserver(() => {
         el.style.setProperty('opacity', '0', 'important');
         trigger3DLogoOverlay(2500);
     });
-    attachEyeToggle();
+    initEyeToggle();
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -901,13 +901,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (overlay) {
         overlay.style.setProperty('display', 'none', 'important');
     }
-    attachEyeToggle();
+    initEyeToggle();
     nativeKillObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
 });
-
-setInterval(() => {
-    attachEyeToggle();
-}, 150);
 </script>
 """
 

@@ -26,9 +26,6 @@ BREVO_API_KEY = os.getenv(
     "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",
 )
 
-PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
-PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
-
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -52,7 +49,6 @@ DB_FILE = "accastroforge.db"
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    # Users Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,7 +58,6 @@ def init_db():
             verified_at TEXT
         )
     """)
-    # Logs Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS admin_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +71,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Initialize DB on App startup
 init_db()
 
 def load_users():
@@ -183,7 +177,7 @@ else:
 
 
 # ---------------------------------------------------------
-# 2. EMAIL & OTP SENDER FUNCTION (SECURE HTTP API)
+# 2. EMAIL & OTP SENDER FUNCTION (CORRECTED SENDER EMAIL)
 # ---------------------------------------------------------
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
@@ -193,13 +187,14 @@ def send_brevo_email(to_email, user_name, subject, html_content):
         "content-type": "application/json",
     }
     payload = {
-        "sender": {"name": "AccAstroForge", "email": "support@accastroforge.in"},
+        "sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"},
         "to": [{"email": to_email, "name": user_name}],
         "subject": subject,
         "htmlContent": html_content,
     }
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
+        print(f"Brevo API Response: {response.status_code}, {response.text}")
         return response.status_code in [200, 201, 202]
     except Exception as e:
         print(f"Email error exception: {e}")
@@ -473,7 +468,6 @@ def handle_manual_signup(name, email, phone, password):
             ""
         )
 
-    # Persistent SQLite Uniqueness Check
     users = load_users()
     for existing in users:
         if existing.get("email") == u_email:
@@ -538,7 +532,6 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
             "Verification Failed"
         )
     
-    # Save user into SQLite Permanent DB
     save_user_db_single(u_name, u_email, u_phone)
 
     save_log({

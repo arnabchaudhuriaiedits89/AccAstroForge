@@ -369,7 +369,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 5. SOCIAL OAUTH & SIGNUP HANDLERS (WITH OTP & LOGOUT)
+# 5. SOCIAL OAUTH & SIGNUP HANDLERS (WITH PERMANENT OTP & LOGOUT)
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -386,7 +386,6 @@ def handle_manual_signup(name, email, phone, password):
             "👤 Guest User",
             "₹ 0.00",
             "No active sessions.",
-            gr.update(visible=False),
             ""
         )
     if not u_phone or len(u_phone) < 10:
@@ -395,7 +394,6 @@ def handle_manual_signup(name, email, phone, password):
             "👤 Guest User",
             "₹ 0.00",
             "No active sessions.",
-            gr.update(visible=False),
             ""
         )
 
@@ -424,7 +422,7 @@ def handle_manual_signup(name, email, phone, password):
     })
 
     if email_sent:
-        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it below.</p></div>"
+        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it in the box below.</p></div>"
     else:
         success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but email sending failed. Please check email address.</p></div>"
 
@@ -432,7 +430,7 @@ def handle_manual_signup(name, email, phone, password):
     wallet_box = "₹ 0.00"
     history_box = f"• OTP Verification Sent to: {u_email}<br>• Phone: {u_phone}"
 
-    return success_msg, profile_box, wallet_box, history_box, gr.update(visible=True), otp_code
+    return success_msg, profile_box, wallet_box, history_box, otp_code
 
 
 def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
@@ -498,7 +496,7 @@ def handle_logout():
     """
     logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or login again anytime.</p></div>"
     
-    return logout_msg, guest_profile, guest_wallet, guest_history, gr.update(visible=False)
+    return logout_msg, guest_profile, guest_wallet, guest_history
 
 
 def run_daily_horoscope(sign):
@@ -930,7 +928,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
 
                 with gr.Group(visible=False) as signup_group:
                     with gr.Accordion(
-                        "📝 Create Your AccAstroForge Account (Manual Registration)",
+                        "📝 Create Your AccAstroForge Account & Verify OTP",
                         open=True,
                     ):
                         with gr.Row():
@@ -950,18 +948,18 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                                 placeholder="Enter secure password",
                             )
                         signup_btn = gr.Button(
-                            "✨ Register & Send Verification OTP", variant="primary"
+                            "✨ 1. Register & Send Verification OTP to Email", variant="primary"
                         )
                         signup_output = gr.HTML()
 
-                        with gr.Row(visible=False) as otp_box_row:
+                        with gr.Row():
                             user_otp_input = gr.Textbox(
                                 label="Enter 6-Digit Email OTP",
                                 placeholder="e.g. 123456",
                                 max_lines=1
                             )
                             verify_otp_btn = gr.Button(
-                                "🔑 Verify OTP & Activate Account", variant="primary"
+                                "🔑 2. Verify OTP & Activate Account", variant="primary"
                             )
 
                 order_history_display = gr.HTML("""
@@ -991,7 +989,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                         user_profile_display,
                         wallet_balance_display,
                         order_history_display,
-                        otp_box_row,
                         otp_state
                     ],
                 )
@@ -1256,8 +1253,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 signup_output,
                 user_profile_display,
                 wallet_balance_display,
-                order_history_display,
-                otp_box_row
+                order_history_display
             ]
         )
 

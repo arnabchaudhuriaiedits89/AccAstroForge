@@ -645,20 +645,23 @@ function attachEyeToggle() {
     });
 }
 
+function triggerSpinOverlay() {
+    const overlay = document.getElementById('logo-3d-overlay');
+    if (overlay) {
+        overlay.classList.add('active');
+        setTimeout(() => {
+            overlay.classList.remove('active');
+        }, 650);
+    }
+}
+
 function attach3DTabSpinTransition() {
     const tabs = document.querySelectorAll('button[role="tab"]');
-    const overlay = document.getElementById('logo-3d-overlay');
-    
     tabs.forEach(tab => {
         if (!tab.classList.contains('spin-attached')) {
             tab.classList.add('spin-attached');
             tab.addEventListener('click', function() {
-                if (overlay) {
-                    overlay.classList.add('active');
-                    setTimeout(() => {
-                        overlay.classList.remove('active');
-                    }, 450);
-                }
+                triggerSpinOverlay();
             });
         }
     });
@@ -667,7 +670,7 @@ function attach3DTabSpinTransition() {
 setInterval(() => {
     attachEyeToggle();
     attach3DTabSpinTransition();
-}, 300);
+}, 250);
 
 document.addEventListener("DOMContentLoaded", () => {
     attachEyeToggle();
@@ -691,7 +694,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 """)
 
         with gr.Tabs() as main_tabs:
-            with gr.TabItem("👤 DASHBOARD"):
+            tab_dashboard = gr.TabItem("👤 DASHBOARD")
+            with tab_dashboard:
                 gr.HTML("<h3 style='color:#fde047;'>👤 User Profile, Wallet & Order History</h3>")
                 
                 gr.HTML("""
@@ -753,7 +757,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
                 )
 
-            with gr.TabItem("🌟 LIFE PREDICTION"):
+            tab_life = gr.TabItem("🌟 LIFE PREDICTION")
+            with tab_life:
                 gr.HTML("<h3 style='color:#fde047;'>🌌 Vedic Astrology & Deep Life Forecast</h3>")
                 with gr.Row():
                     name_input = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
@@ -774,14 +779,16 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
 
-            with gr.TabItem("☀️ HOROSCOPE"):
+            tab_horoscope = gr.TabItem("☀️ HOROSCOPE")
+            with tab_horoscope:
                 gr.HTML("<h3 style='color:#fde047;'>🔮 Daily Zodiac Predictions (Free)</h3>")
                 zodiac_sign = gr.Dropdown(choices=ZODIAC_SIGNS, value="Aries (Mesha)", label="Select Zodiac Sign")
                 submit_horoscope = gr.Button("🔮 Get Today's Horoscope", variant="primary")
                 output_horoscope = gr.HTML()
                 submit_horoscope.click(fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope)
 
-            with gr.TabItem("❤️ MATCHING"):
+            tab_matching = gr.TabItem("❤️ MATCHING")
+            with tab_matching:
                 gr.HTML("<h3 style='color:#fde047;'>💍 Vedic Compatibility & Guna Milan</h3>")
                 with gr.Row():
                     boy_name = gr.Textbox(label="Boy's Name", placeholder="e.g. Rahul")
@@ -794,7 +801,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 output_matching_paywall = gr.HTML()
                 submit_matching.click(fn=run_kundali_matching, inputs=[boy_name, boy_dob, girl_name, girl_dob], outputs=[output_matching, output_matching_paywall])
 
-            with gr.TabItem("💎 GEMSTONES"):
+            tab_gemstones = gr.TabItem("💎 GEMSTONES")
+            with tab_gemstones:
                 gr.HTML("<h3 style='color:#fde047;'>🧿 Lucky Gemstones & Cosmic Remedies</h3>")
                 with gr.Row():
                     gem_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
@@ -804,7 +812,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
-            with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
+            tab_kundali_pdf = gr.TabItem("📜 KUNDALI & BIRTH PDF")
+            with tab_kundali_pdf:
                 gr.HTML("<h3 style='color:#fde047;'>📜 Janam Kundali & Lagna Birth Chart Generator</h3>")
                 with gr.Row():
                     k_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
@@ -819,7 +828,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
-            with gr.TabItem("🔢 NUMEROLOGY"):
+            tab_numerology = gr.TabItem("🔢 NUMEROLOGY")
+            with tab_numerology:
                 gr.HTML("<h3 style='color:#fde047;'>🔢 Numerology Check</h3>")
                 with gr.Row():
                     n_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
@@ -829,7 +839,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 output_num_paywall = gr.HTML()
                 submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
-            with gr.TabItem("📅 PANCHANG"):
+            tab_panchang = gr.TabItem("📅 PANCHANG")
+            with tab_panchang:
                 gr.HTML("<h3 style='color:#fde047;'>📅 Vedic Panchang & Shubh Muhurat</h3>")
                 with gr.Row():
                     p_date = gr.Textbox(label="Date (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
@@ -840,14 +851,16 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
-            with gr.TabItem("🤖 AI ASSISTANT"):
+            tab_ai = gr.TabItem("🤖 AI ASSISTANT")
+            with tab_ai:
                 gr.HTML("<h3 style='color:#fde047;'>🤖 Ask Your Personal AI Astrologer</h3>")
                 ai_input = gr.Textbox(label="Type your query (e.g., career, marriage, health)", placeholder="e.g. How is my career looking for next year?")
                 ai_submit = gr.Button("Ask Assistant ✨", variant="primary")
                 ai_output = gr.HTML()
                 ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            with gr.TabItem("⚖️ LEGAL"):
+            tab_legal = gr.TabItem("⚖️ LEGAL")
+            with tab_legal:
                 gr.HTML("""
                 <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px; color: #ffffff;">
                     <h4 style="color: #fde047 !important;">📜 Terms of Service</h4>
@@ -866,6 +879,11 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     </ul>
                 </div>
                 """)
+
+        # Add select event listeners to all tabs to trigger spin overlay natively
+        all_tabs = [tab_dashboard, tab_life, tab_horoscope, tab_matching, tab_gemstones, tab_kundali_pdf, tab_numerology, tab_panchang, tab_ai, tab_legal]
+        for t in all_tabs:
+            t.select(fn=None, _js="() => { triggerSpinOverlay(); }")
 
         signup_state = gr.State(value=False)
         manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")

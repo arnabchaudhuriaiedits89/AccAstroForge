@@ -61,10 +61,7 @@ def save_log(user_data):
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
-# Transparent Zodiac Logo File uploaded on GitHub
-3D_SPIN_LOGO_FILE = "AccAstroForge Zodiac Logo Text Cut Through TRANSPERANT.png"
-
-logo_path = 3D_SPIN_LOGO_FILE if os.path.exists(3D_SPIN_LOGO_FILE) else ("logo.png" if os.path.exists("logo.png") else None)
+logo_path = "logo.png" if os.path.exists("logo.png") else None
 
 
 def get_base64(file_path):

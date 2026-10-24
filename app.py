@@ -830,27 +830,33 @@ head_html = """
 function attachEyeToggle() {
     const passInputs = document.querySelectorAll('input[type="password"]');
     passInputs.forEach(input => {
-        const parent = input.parentElement;
-        if(parent && !parent.querySelector('.password-eye-btn')) {
-            parent.style.position = 'relative';
-            const toggleBtn = document.createElement('span');
-            toggleBtn.className = 'password-eye-btn';
-            toggleBtn.innerHTML = '👁️';
-            toggleBtn.title = 'Show/Hide Password';
-            toggleBtn.style.cssText = "position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; cursor: pointer !important; font-size: 1.2rem !important; z-index: 9999 !important; user-select: none !important; background: rgba(124, 58, 237, 0.3) !important; border: 1px solid #fde047 !important; border-radius: 50% !important; padding: 2px 6px !important; line-height: 1 !important;";
+        let parent = input.parentElement;
+        if (parent) {
+            if (!parent.classList.contains('password-box-wrapper')) {
+                parent.classList.add('password-box-wrapper');
+            }
+            parent.style.setProperty('position', 'relative', 'important');
             
-            toggleBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    toggleBtn.innerHTML = '🙈';
-                } else {
-                    input.type = 'password';
-                    toggleBtn.innerHTML = '👁️';
-                }
-            });
-            parent.appendChild(toggleBtn);
+            if (!parent.querySelector('.password-eye-btn')) {
+                const toggleBtn = document.createElement('span');
+                toggleBtn.className = 'password-eye-btn';
+                toggleBtn.innerHTML = '👁️';
+                toggleBtn.title = 'Show/Hide Password';
+                toggleBtn.style.cssText = "position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; cursor: pointer !important; font-size: 1.2rem !important; z-index: 9999 !important; user-select: none !important; background: rgba(124, 58, 237, 0.3) !important; border: 1px solid #fde047 !important; border-radius: 50% !important; padding: 2px 6px !important; line-height: 1 !important;";
+                
+                toggleBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        toggleBtn.innerHTML = '🙈';
+                    } else {
+                        input.type = 'password';
+                        toggleBtn.innerHTML = '👁️';
+                    }
+                });
+                parent.appendChild(toggleBtn);
+            }
         }
     });
 }
@@ -901,7 +907,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 setInterval(() => {
     attachEyeToggle();
-}, 300);
+}, 150);
 </script>
 """
 

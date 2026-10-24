@@ -7,7 +7,7 @@ import random
 import requests
 import hashlib
 import gradio as gr
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, RedirectResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -33,21 +33,11 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# OFFICIAL TWITTER OAUTH 2.0 DIRECT QUICK LOGIN
+# TWITTER OAUTH 2.0 CONFIGS
 TWITTER_CLIENT_ID = "Vy1ke1RKM1pjQWFQbzF1b1VPTGc6MTpjaQ"
 TWITTER_CLIENT_SECRET = "ap6gCWmf05A9fcu7w6mKqKbyMkT1M_wry7uzRjSdtaPhQ1aXBj"
 TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
-
-TWITTER_OAUTH_URL = (
-    f"https://x.com/i/oauth2/authorize?"
-    f"response_type=code"
-    f"&client_id={TWITTER_CLIENT_ID}"
-    f"&redirect_uri={TWITTER_REDIRECT_URI}"
-    f"&scope=users.read%20tweet.read%20offline.access"
-    f"&state=security_state_active"
-    f"&code_challenge=challenge_secure_xyz"
-    f"&code_challenge_method=plain"
-)
+TWITTER_OAUTH_URL = f"https://x.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=users.read%20tweet.read%20offline.access&state=security_state_active&code_challenge=challenge_secure_xyz&code_challenge_method=plain"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -308,7 +298,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH & SIGNUP HANDLERS (GOOGLE, FACEBOOK & TWITTER)
+# 4. SOCIAL OAUTH & SIGNUP HANDLERS
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -628,6 +618,9 @@ document.addEventListener("DOMContentLoaded", attachEyeToggle);
 </script>
 """
 
+# ---------------------------------------------------------
+# 6. GRADIO INTERFACE BUILD
+# ---------------------------------------------------------
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
     with gr.Column():
         with gr.Row():
@@ -838,28 +831,58 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
 
 
 # ---------------------------------------------------------
-# 6. FASTAPI ENGINE INTEGRATION WITH OAUTH CALLBACK ROUTE
+# 7. FASTAPI WRAPPER & TWITTER OAUTH CALLBACK ROUTE
 # ---------------------------------------------------------
 app = FastAPI()
 
-# Fast-API Handler for Twitter OAuth Redirect Callback
 @app.get("/login/twitter/callback")
-async def twitter_callback(request: Request):
-    code = request.query_params.get("code")
+def twitter_callback(code: str = None, state: str = None, error: str = None):
+    if error:
+        return HTMLResponse(content=f"<h3>Twitter Authentication Error: {error}</h3><p><a href='/'>Return to AccAstroForge</a></p>")
+    
     if code:
-        # Save Twitter Callback Authorization Code to Logs
-        save_log({
-            "timestamp": str(datetime.datetime.now()),
-            "full_name": "Twitter User Session",
-            "service": "Twitter OAuth Login",
-            "details": f"Auth Code: {code[:15]}...",
-            "payment_status": "Authenticated"
-        })
-    # Redirect back to main website root after authorization
+        # Token Exchange with Twitter OAuth 2.0 Engine
+        token_url = "https://api.x.com/2/oauth2/token"
+        payload = {
+            "code": code,
+            "grant_type": "authorization_code",
+            "client_id": TWITTER_CLIENT_ID,
+            "redirect_uri": TWITTER_REDIRECT_URI,
+            "code_verifier": "challenge_secure_xyz"
+        }
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        
+        try:
+            res = requests.post(token_url, data=payload, headers=headers, auth=(TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET))
+            if res.status_code == 200:
+                token_data = res.json()
+                access_token = token_data.get("access_token")
+                
+                # Fetch User Details
+                user_res = requests.get("https://api.x.com/2/users/me", headers={"Authorization": f"Bearer {access_token}"})
+                if user_res.status_code == 200:
+                    user_info = user_res.json().get("data", {})
+                    x_username = user_info.get("username", "Twitter User")
+                    x_name = user_info.get("name", x_username)
+                    
+                    save_log({
+                        "timestamp": str(datetime.datetime.now()),
+                        "full_name": x_name,
+                        "service": "Twitter OAuth Quick Login",
+                        "details": f"Handle: @{x_username}",
+                        "payment_status": "Active Session"
+                    })
+        except Exception as e:
+            print(f"Twitter OAuth Exchange Exception: {e}")
+
+    # Redirect back seamlessly to main website homepage
     return RedirectResponse(url="/")
 
-# Mount Gradio Application onto FastAPI app root with favicon preserved
-app = gr.mount_gradio_app(app, demo, path="/", favicon_path="favicon.png")
+
+# Mount Gradio Application onto FastAPI app root
+app = gr.mount_gradio_app(app, demo, path="/")
 
 if __name__ == "__main__":
     import uvicorn

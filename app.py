@@ -416,7 +416,7 @@ def handle_manual_signup(name, email, phone, password):
   save_log({
       "timestamp": str(datetime.datetime.now()),
       "full_name": u_name,
-      "service": "Manual Account Registration with Brevo OTP",
+      "service": "Manual Account Registration with OTP",
       "details": (
           f"Email: {u_email} | Phone: {u_phone} | OTP Sent: {email_sent}"
       ),
@@ -426,9 +426,9 @@ def handle_manual_signup(name, email, phone, password):
   })
 
   if email_sent:
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 Verification OTP Sent!</h3><p style='margin:0;'>An OTP has been successfully sent to <b>{u_email}</b> via Brevo. Please check your inbox/spam.</p></div>"
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 Verification OTP Sent!</h3><p style='margin:0;'>An OTP has been successfully sent to <b>{u_email}</b>. Please check your inbox/spam.</p></div>"
   else:
-    success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Notice</h3><p style='margin:0;'>Account registered for <b>{u_email}</b>, but Brevo email delivery encountered an issue. Check API configuration.</p></div>"
+    success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Notice</h3><p style='margin:0;'>Account registered for <b>{u_email}</b>, but email delivery encountered an issue. Check configuration.</p></div>"
 
   profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Pending Verification</span>"
   wallet_box = "₹ 0.00"
@@ -643,7 +643,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & ABSOLUTE GRADIO SPINNER KILLER (WITH 3D TRANSPARENT LOGO)
+# 6. HARDCORE CSS & BULLETPROOF EYE-TOGGLE JAVASCRIPT
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -821,7 +821,6 @@ input::placeholder, textarea::placeholder {
 }
 """
 
-# EXACT WORKING EYE-TOGGLE LOGIC FROM LAST NIGHT'S BACKUP SCRIPT
 head_html = """
 <div id="acc-3d-spinning-screen">
     <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" class="acc-spinning-logo-target" alt="AccAstroForge Spinning Logo">
@@ -831,17 +830,19 @@ head_html = """
 function attachEyeToggle() {
     const passInputs = document.querySelectorAll('input[type="password"]');
     passInputs.forEach(input => {
-        if (!input.classList.contains('eye-attached')) {
-            input.classList.add('eye-attached');
+        let parent = input.parentElement;
+        if (parent) {
+            if (!parent.classList.contains('password-box-wrapper')) {
+                parent.classList.add('password-box-wrapper');
+            }
+            parent.style.setProperty('position', 'relative', 'important');
             
-            const parent = input.parentElement;
-            if(parent) {
-                parent.style.position = 'relative';
-                
+            if (!parent.querySelector('.password-eye-btn')) {
                 const toggleBtn = document.createElement('span');
                 toggleBtn.className = 'password-eye-btn';
                 toggleBtn.innerHTML = '👁️';
                 toggleBtn.title = 'Show/Hide Password';
+                toggleBtn.style.cssText = "position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; cursor: pointer !important; font-size: 1.2rem !important; z-index: 9999 !important; user-select: none !important; background: rgba(124, 58, 237, 0.3) !important; border: 1px solid #fde047 !important; border-radius: 50% !important; padding: 2px 6px !important; line-height: 1 !important;";
                 
                 toggleBtn.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -854,7 +855,6 @@ function attachEyeToggle() {
                         toggleBtn.innerHTML = '👁️';
                     }
                 });
-                
                 parent.appendChild(toggleBtn);
             }
         }
@@ -905,7 +905,9 @@ document.addEventListener("DOMContentLoaded", () => {
     nativeKillObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
 });
 
-setInterval(attachEyeToggle, 300);
+setInterval(() => {
+    attachEyeToggle();
+}, 150);
 </script>
 """
 
@@ -963,8 +965,7 @@ with gr.Blocks(
 
         with gr.Group(visible=False) as signup_group:
           with gr.Accordion(
-              "📝 Create Your AccAstroForge Account (Manual Registration with"
-              " Brevo OTP)",
+              "📝 Create Your AccAstroForge Account",
               open=True,
           ):
             with gr.Row():
@@ -984,7 +985,7 @@ with gr.Blocks(
                   placeholder="Enter secure password",
               )
             signup_btn = gr.Button(
-                "✨ Complete Registration & Send OTP via Brevo", variant="primary"
+                "✨ Complete Registration & Send OTP", variant="primary"
             )
             signup_output = gr.HTML()
 

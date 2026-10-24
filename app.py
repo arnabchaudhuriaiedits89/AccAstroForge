@@ -369,7 +369,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 5. SOCIAL OAUTH & SIGNUP HANDLERS (WITH OTP LOGIC)
+# 5. SOCIAL OAUTH & SIGNUP HANDLERS (WITH OTP & LOGOUT)
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -453,11 +453,52 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
     })
     
     success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Account Verified & Active!</h3><p style='margin:0;'>Welcome <b>{u_name}</b>! Your email <b>{u_email}</b> has been successfully verified.</p></div>"
-    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #4ade80; font-weight:bold;'>Status: Active Member</span>"
+    
+    profile_box = f"""
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            👤 <b>{u_name}</b> ({u_email})<br>
+            <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member</span>
+        </div>
+        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444; padding: 6px 14px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+            🚪 Logout
+        </button>
+    </div>
+    """
     wallet_box = "₹ 0.00"
     history_box = f"• Registration & OTP Verification Complete<br>• Account Active<br>• Contact: {u_phone}"
 
     return success_msg, profile_box, wallet_box, history_box
+
+
+def handle_logout():
+    guest_profile = """
+    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
+            <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
+        </div>
+        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
+            📝 SIGN UP
+        </button>
+    </div>
+    """
+    guest_wallet = """
+    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+        <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
+        <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
+    </div>
+    """
+    guest_history = """
+    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+        <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+        <p style="color: #cbd5e1 !important; font-size: 0.85rem; margin: 0;">No previous orders found for current guest session. Please register or login.</p>
+    </div>
+    """
+    logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or login again anytime.</p></div>"
+    
+    return logout_msg, guest_profile, guest_wallet, guest_history, gr.update(visible=False)
 
 
 def run_daily_horoscope(sign):
@@ -790,7 +831,7 @@ input::placeholder, textarea::placeholder {
     line-height: 1 !important;
 }
 
-#manual-signup-trigger, #real-hidden-trigger {
+#manual-signup-trigger, #real-hidden-trigger, #logout-trigger {
     display: none !important;
 }
 """
@@ -835,9 +876,7 @@ document.addEventListener("DOMContentLoaded", attachEyeToggle);
 </script>
 """
 
-with gr.Blocks(
-    title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css
-) as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     otp_state = gr.State(value="")
     
     with gr.Column():
@@ -1207,6 +1246,19 @@ with gr.Blocks(
             fn=lambda vis: (not vis, gr.update(visible=not vis)),
             inputs=[signup_state],
             outputs=[signup_state, signup_group],
+        )
+
+        logout_trigger = gr.Button("Trigger Logout", elem_id="logout-trigger")
+        logout_trigger.click(
+            fn=handle_logout,
+            inputs=[],
+            outputs=[
+                signup_output,
+                user_profile_display,
+                wallet_balance_display,
+                order_history_display,
+                otp_box_row
+            ]
         )
 
         with gr.Group(visible=False) as admin_group:

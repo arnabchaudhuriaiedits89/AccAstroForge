@@ -124,9 +124,9 @@ else:
 
 
 # ---------------------------------------------------------
-# 2. EMAIL & OTP SENDER FUNCTION (USING BREVO HTTP API)
+# 2. EMAIL & OTP SENDER FUNCTION (SECURE HTTP API)
 # ---------------------------------------------------------
-def send_brevo_email(to_email, user_name, subject, html_content):
+def send_secure_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {
         "accept": "application/json",
@@ -134,14 +134,13 @@ def send_brevo_email(to_email, user_name, subject, html_content):
         "content-type": "application/json",
     }
     payload = {
-        "sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"},
+        "sender": {"name": "AccAstroForge", "email": "support@accpixelforge.in"},
         "to": [{"email": to_email, "name": user_name}],
         "subject": subject,
         "htmlContent": html_content,
     }
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
-        print(f"Brevo API Response Status: {response.status_code}, Body: {response.text}")
         return response.status_code in [200, 201, 202]
     except Exception as e:
         print(f"Email error exception: {e}")
@@ -387,7 +386,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 5. STRICT AUTH, UNIQUE REGISTRATION, LOGIN & PERSISTENT SESSION
+# 5. AUTH, UNIQUE REGISTRATION, LOGIN & CLEAN LOGS
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -415,7 +414,6 @@ def handle_manual_signup(name, email, phone, password):
             ""
         )
 
-    # Strict Uniqueness Check: If already registered, block duplicate signup/OTP
     users = load_users()
     for existing in users:
         if existing.get("email") == u_email:
@@ -439,26 +437,26 @@ def handle_manual_signup(name, email, phone, password):
     </div>
     """
 
-    email_sent = send_brevo_email(
+    email_sent = send_secure_email(
         u_email, u_name, "AccAstroForge Account Verification OTP", email_html
     )
 
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
-        "service": "Manual Account Registration (Brevo API)",
+        "service": "Secure Account Registration",
         "details": f"Email: {u_email} | Phone: {u_phone} | OTP Generated: {otp_code}",
-        "payment_status": "OTP Dispatched via Brevo" if email_sent else "Email Failed",
+        "payment_status": "OTP Dispatched Successfully" if email_sent else "Email Failed",
     })
 
     if email_sent:
-        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b> via Brevo API. Please check your Inbox / Spam folder and enter it below.</p></div>"
+        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it below.</p></div>"
     else:
-        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but Brevo API dispatch failed. Check API limits or key.</p></div>"
+        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but dispatch failed.</p></div>"
 
     profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #fde047;'>Status: Pending Verification</span>"
     wallet_box = "₹ 0.00"
-    history_box = f"• Brevo API OTP Sent to: {u_email}<br>• Phone: {u_phone}"
+    history_box = f"• Secure OTP Dispatched to: {u_email}<br>• Phone: {u_phone}"
 
     return success_msg, profile_box, wallet_box, history_box, otp_code
 
@@ -480,7 +478,6 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
             "Verification Failed"
         )
     
-    # Save newly verified user to persistent database
     users = load_users()
     exists = any(u.get("email") == u_email.strip().lower() for u in users)
     if not exists:
@@ -828,7 +825,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & HIGH CONTRAST LABEL FIX
+# 6. HARDCORE CSS & CLEAN UI STYLING
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -909,7 +906,6 @@ button.primary, button.gr-button-primary, .gr-button-primary {
     border-radius: 12px !important;
 }
 
-/* HIGH CONTRAST LABELS FIX FOR VISIBILITY */
 label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span, h1, h2, h3, h4, p, li, b, strong {
     color: #fde047 !important;
     font-weight: 600 !important;

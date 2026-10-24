@@ -513,15 +513,15 @@ button[role="tab"][aria-selected="true"] {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(5, 1, 20, 0.9);
-    backdrop-filter: blur(10px);
+    background: rgba(3, 0, 20, 0.92);
+    backdrop-filter: blur(12px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 99999999;
+    z-index: 999999999;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease-in-out;
+    transition: opacity 0.2s ease-in-out;
 }
 
 #logo-3d-overlay.active {
@@ -530,16 +530,16 @@ button[role="tab"][aria-selected="true"] {
 }
 
 .spinner-3d-logo {
-    width: 180px;
-    height: 180px;
-    animation: spin3D 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    filter: drop-shadow(0 0 35px rgba(244, 114, 182, 0.95));
+    width: 190px;
+    height: 190px;
+    animation: spin3D 0.65s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    filter: drop-shadow(0 0 40px rgba(244, 114, 182, 1));
 }
 
 @keyframes spin3D {
-    0% { transform: rotateY(0deg) scale(0.7); }
-    50% { transform: rotateY(180deg) scale(1.3); }
-    100% { transform: rotateY(360deg) scale(0.7); }
+    0% { transform: rotateY(0deg) scale(0.6); }
+    50% { transform: rotateY(180deg) scale(1.35); }
+    100% { transform: rotateY(360deg) scale(0.6); }
 }
 
 .gr-accordion, .accordion, div[data-testid="accordion"] {
@@ -645,33 +645,40 @@ function attachEyeToggle() {
     });
 }
 
-function showSpinOverlay() {
+function triggerSpinAnimation() {
     const overlay = document.getElementById('logo-3d-overlay');
     if (overlay) {
         overlay.classList.add('active');
         setTimeout(() => {
             overlay.classList.remove('active');
-        }, 700);
+        }, 800);
     }
 }
 
-// Master Global Click Interceptor for all Tabs & Buttons
-document.addEventListener('click', function(e) {
-    const target = e.target.closest('button, [role="tab"], a');
-    if (target) {
-        // If it's a tab or action button, trigger the 3D spin overlay
-        if (target.getAttribute('role') === 'tab' || target.classList.contains('gr-button') || target.tagName === 'BUTTON' || target.tagName === 'A') {
-            showSpinOverlay();
+// Ultra-Robust Event Listener for Tabs & Action Buttons
+function setupTabInterceptors() {
+    const allTabsOrButtons = document.querySelectorAll('button, [role="tab"], a');
+    allTabsOrButtons.forEach(elem => {
+        if (!elem.hasAttribute('data-spin-bound')) {
+            elem.setAttribute('data-spin-bound', 'true');
+            elem.addEventListener('mousedown', function() {
+                triggerSpinAnimation();
+            });
+            elem.addEventListener('click', function() {
+                triggerSpinAnimation();
+            });
         }
-    }
-}, true);
+    });
+}
 
 setInterval(() => {
     attachEyeToggle();
-}, 300);
+    setupTabInterceptors();
+}, 200);
 
 document.addEventListener("DOMContentLoaded", () => {
     attachEyeToggle();
+    setupTabInterceptors();
 });
 </script>
 """

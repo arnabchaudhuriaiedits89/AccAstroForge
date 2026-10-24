@@ -513,15 +513,15 @@ button[role="tab"][aria-selected="true"] {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(5, 1, 20, 0.85);
-    backdrop-filter: blur(8px);
+    background: rgba(5, 1, 20, 0.9);
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 999999;
+    z-index: 99999999;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s ease-in-out;
 }
 
 #logo-3d-overlay.active {
@@ -530,16 +530,16 @@ button[role="tab"][aria-selected="true"] {
 }
 
 .spinner-3d-logo {
-    width: 140px;
-    height: 140px;
-    animation: spin3D 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    filter: drop-shadow(0 0 25px rgba(244, 114, 182, 0.9));
+    width: 180px;
+    height: 180px;
+    animation: spin3D 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    filter: drop-shadow(0 0 35px rgba(244, 114, 182, 0.95));
 }
 
 @keyframes spin3D {
-    0% { transform: rotateY(0deg) scale(0.8); }
-    50% { transform: rotateY(180deg) scale(1.2); }
-    100% { transform: rotateY(360deg) scale(0.8); }
+    0% { transform: rotateY(0deg) scale(0.7); }
+    50% { transform: rotateY(180deg) scale(1.3); }
+    100% { transform: rotateY(360deg) scale(0.7); }
 }
 
 .gr-accordion, .accordion, div[data-testid="accordion"] {
@@ -645,36 +645,33 @@ function attachEyeToggle() {
     });
 }
 
-function triggerSpinOverlay() {
+function showSpinOverlay() {
     const overlay = document.getElementById('logo-3d-overlay');
     if (overlay) {
         overlay.classList.add('active');
         setTimeout(() => {
             overlay.classList.remove('active');
-        }, 600);
+        }, 700);
     }
 }
 
-function attach3DTabSpinTransition() {
-    const tabs = document.querySelectorAll('button[role="tab"]');
-    tabs.forEach(tab => {
-        if (!tab.classList.contains('spin-attached')) {
-            tab.classList.add('spin-attached');
-            tab.addEventListener('click', function() {
-                triggerSpinOverlay();
-            });
+// Master Global Click Interceptor for all Tabs & Buttons
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('button, [role="tab"], a');
+    if (target) {
+        // If it's a tab or action button, trigger the 3D spin overlay
+        if (target.getAttribute('role') === 'tab' || target.classList.contains('gr-button') || target.tagName === 'BUTTON' || target.tagName === 'A') {
+            showSpinOverlay();
         }
-    });
-}
+    }
+}, true);
 
 setInterval(() => {
     attachEyeToggle();
-    attach3DTabSpinTransition();
-}, 200);
+}, 300);
 
 document.addEventListener("DOMContentLoaded", () => {
     attachEyeToggle();
-    attach3DTabSpinTransition();
 });
 </script>
 """

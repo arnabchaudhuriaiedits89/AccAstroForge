@@ -33,12 +33,6 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-# OFFICIAL TWITTER DIRECT OAUTH 2.0 QUICK LOGIN (10015.io standard)
-TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID", "Vy1ke1RKM1pjQWFQbzF1b1VPTGc6MTpjaQ")
-TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET", "ap6gCWmf05A9fcu7w6mKqKbyMkT1M_wry7uzRjSdtaPhQ1aXBj")
-TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
-TWITTER_OAUTH_URL = f"https://x.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=users.read%20tweet.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain"
-
 # BREVO EMAIL OTP API CONFIG (Allows 300 Free Emails / Day)
 BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
 
@@ -116,7 +110,6 @@ else:
 # ---------------------------------------------------------
 def send_email_otp_via_brevo(user_email, otp_code):
     if not BREVO_API_KEY:
-        # Fallback for dev mode / when API key is pending
         print(f"[OTP DEV SIMULATION] Verification OTP for {user_email} is: {otp_code}")
         return True, "OTP simulated in backend log. (Add BREVO_API_KEY env secret for live email delivery)"
     
@@ -377,7 +370,6 @@ def handle_manual_signup_with_otp(name, email, phone, password, entered_otp):
     if not u_phone or len(u_phone) < 10:
         return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
     
-    # OTP Verification step
     saved_otp = OTP_STORAGE.get(u_email)
     if saved_otp and entered_otp.strip() != saved_otp and BREVO_API_KEY:
         return "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Email OTP! Please check your Gmail and try again.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
@@ -583,7 +575,6 @@ button[role="tab"][aria-selected="true"] {
     border-color: #fde047 !important;
 }
 
-/* 3D LOGO TRANSITION OVERLAY STYLES */
 #logo-3d-overlay {
     position: fixed;
     top: 0;
@@ -764,7 +755,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
                     <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
                     <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
-                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #1da1f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
                 </div>
                 """)
 
@@ -940,13 +930,12 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
+                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">📧 Support Contact & Official Handles</h4>
                     <p style="font-size: 0.85rem; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
                     <p style="font-size: 0.85rem;">Connect with us on our official social platforms:</p>
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
-                        <li>🌐 <span style="color: #fde047 !important; font-weight: 700;">Twitter (X):</span> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://x.com/AccAstroForge</a></li>
                         <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
                         <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
                         <li>📘 <span style="color: #fde047 !important; font-weight: 700;">Facebook:</span> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.facebook.com/accastroforge/</a></li>
@@ -971,93 +960,12 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
 
 
 # ---------------------------------------------------------
-# 6. FASTAPI ENGINE INTEGRATION & TWITTER OAUTH 2.0 CALLBACK
+# 6. FASTAPI ENGINE INTEGRATION
 # ---------------------------------------------------------
 app = FastAPI()
 
-@app.get("/login/twitter/callback", response_class=HTMLResponse)
-async def twitter_callback(request: Request, code: str = None, state: str = None):
-    if not code:
-        return """
-        <html><body style="background:#030014; color:#ef4444; font-family:sans-serif; text-align:center; padding-top:100px;">
-            <h2>❌ Twitter Authentication Cancelled or Failed</h2>
-            <p>Authorization code not received from X (Twitter).</p>
-            <a href="/" style="color:#fde047;">Return to AccAstroForge Home</a>
-        </body></html>
-        """
-    
-    # 10015.io Token Exchange Flow
-    token_url = "https://api.twitter.com/2/oauth2/token"
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Basic " + base64.b64encode(f"{TWITTER_CLIENT_ID}:{TWITTER_CLIENT_SECRET}".encode()).decode()
-    }
-    data = {
-        "code": code,
-        "grant_type": "authorization_code",
-        "client_id": TWITTER_CLIENT_ID,
-        "redirect_uri": TWITTER_REDIRECT_URI,
-        "code_verifier": "challenge"
-    }
-    
-    try:
-        token_res = requests.post(token_url, data=data, headers=headers, timeout=10)
-        token_json = token_res.json()
-        
-        if "access_token" in token_json:
-            acc_token = token_json["access_token"]
-            # Fetch User Profile from Twitter API v2
-            user_res = requests.get("https://api.twitter.com/2/users/me", headers={"Authorization": f"Bearer {acc_token}"})
-            user_data = user_res.json().get("data", {})
-            twitter_handle = user_data.get("username", "TwitterUser")
-            twitter_id = user_data.get("id", "N/A")
-            
-            save_log({
-                "timestamp": str(datetime.datetime.now()),
-                "full_name": f"Twitter: @{twitter_handle}",
-                "service": "Twitter Quick Login",
-                "details": f"Twitter ID: {twitter_id}",
-                "payment_status": "Authenticated"
-            })
-            
-            return f"""
-            <html><body style="background:#030014; color:#ffffff; font-family:sans-serif; text-align:center; padding-top:100px;">
-                <div style="background:rgba(18,8,42,0.9); border:2px solid #38bdf8; padding:30px; border-radius:16px; max-width:500px; margin:0 auto;">
-                    <h2 style="color:#38bdf8;">🎉 Twitter Login Successful!</h2>
-                    <p style="font-size:1.1rem;">Welcome back, <b>@{twitter_handle}</b>!</p>
-                    <p style="color:#4ade80;">Redirecting you back to AccAstroForge Dashboard...</p>
-                    <script>
-                        setTimeout(() => {{ window.location.href = "/"; }}, 2000);
-                    </script>
-                </div>
-            </body></html>
-            """
-    except Exception as e:
-        print(f"Twitter OAuth Exchange Exception: {e}")
-
-    # Fallback response for active OAuth session
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": "Twitter User",
-        "service": "Twitter Quick Login",
-        "details": f"Code: {code[:10]}...",
-        "payment_status": "Authenticated"
-    })
-    
-    return """
-    <html><body style="background:#030014; color:#ffffff; font-family:sans-serif; text-align:center; padding-top:100px;">
-        <div style="background:rgba(18,8,42,0.9); border:2px solid #38bdf8; padding:30px; border-radius:16px; max-width:500px; margin:0 auto;">
-            <h2 style="color:#38bdf8;">🎉 Twitter Login Successful!</h2>
-            <p>Your X (Twitter) profile has been verified.</p>
-            <script>
-                setTimeout(() => { window.location.href = "/"; }, 1500);
-            </script>
-        </div>
-    </body></html>
-    """
-
-# Mount Gradio Application onto FastAPI app root
-app = gr.mount_gradio_app(app, demo, path="/")
+# Mount Gradio Application onto FastAPI app root with favicon restored
+app = gr.mount_gradio_app(app, demo, path="/", favicon_path="favicon.png")
 
 if __name__ == "__main__":
     import uvicorn

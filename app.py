@@ -55,6 +55,7 @@ def init_db():
             name TEXT,
             email TEXT UNIQUE,
             phone TEXT,
+            password TEXT,
             verified_at TEXT
         )
     """)
@@ -177,7 +178,7 @@ else:
 
 
 # ---------------------------------------------------------
-# 2. EMAIL & OTP SENDER FUNCTION (CORRECTED SENDER EMAIL)
+# 2. EMAIL & OTP SENDER FUNCTION (VERIFIED SENDER)
 # ---------------------------------------------------------
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
@@ -194,7 +195,6 @@ def send_brevo_email(to_email, user_name, subject, html_content):
     }
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
-        print(f"Brevo API Response: {response.status_code}, {response.text}")
         return response.status_code in [200, 201, 202]
     except Exception as e:
         print(f"Email error exception: {e}")
@@ -521,7 +521,8 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
             "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>⚠️ No OTP generated yet! Please click '1. Register & Send Verification OTP' first.</div>",
             f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: No OTP</span>",
             "₹ 0.00",
-            "Verification Pending"
+            "Verification Pending",
+            ""
         )
 
     if not user_entered_otp or str(user_entered_otp).strip() != str(generated_otp).strip():
@@ -529,7 +530,8 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
             "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>❌ Invalid OTP Code! Please check your email and try again.</div>",
             f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: Invalid OTP</span>",
             "₹ 0.00",
-            "Verification Failed"
+            "Verification Failed",
+            ""
         )
     
     save_user_db_single(u_name, u_email, u_phone)
@@ -558,8 +560,9 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
     """
     wallet_box = "₹ 0.00"
     history_box = f"• Registration & OTP Verification Complete<br>• Account Active<br>• Contact: {u_phone}"
+    session_token = f"{u_email}|{u_name}|{u_phone}"
 
-    return success_msg, profile_box, wallet_box, history_box
+    return success_msg, profile_box, wallet_box, history_box, session_token
 
 
 def handle_login(login_email, login_pass):
@@ -569,7 +572,8 @@ def handle_login(login_email, login_pass):
             "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email.</span>",
             "👤 Guest User",
             "₹ 0.00",
-            "No active sessions."
+            "No active sessions.",
+            ""
         )
     
     users = load_users()
@@ -584,7 +588,8 @@ def handle_login(login_email, login_pass):
             f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Account Not Found</h3><p style='margin:0;'>The email <b>{l_email}</b> is not registered. Please sign up first.</p></div>",
             "👤 Guest User",
             "₹ 0.00",
-            "Login failed: Account not found."
+            "Login failed: Account not found.",
+            ""
         )
         
     u_name = matched_user.get("name", "User")
@@ -614,8 +619,9 @@ def handle_login(login_email, login_pass):
     """
     wallet_box = "₹ 0.00"
     history_box = f"• Member Login Successful<br>• Account Active<br>• Contact: {u_phone}"
+    session_token = f"{l_email}|{u_name}|{u_phone}"
     
-    return success_msg, profile_box, wallet_box, history_box
+    return success_msg, profile_box, wallet_box, history_box, session_token
 
 
 def handle_logout():
@@ -644,7 +650,46 @@ def handle_logout():
     """
     logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or switch accounts anytime.</p></div>"
     
-    return logout_msg, guest_profile, guest_wallet, guest_history
+    return logout_msg, guest_profile, guest_wallet, guest_history, ""
+
+
+def restore_session_from_token(token):
+    if not token or "|" not in token:
+        return gr.update(), gr.update(), gr.update()
+    try:
+        parts = token.split("|")
+        u_email = parts[0]
+        u_name = parts[1]
+        u_phone = parts[2] if len(parts) > 2 else "N/A"
+        
+        profile_box = f"""
+        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                👤 <b>{u_name}</b> ({u_email})<br>
+                <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
+                <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Persistent Session)</span>
+            </div>
+            <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                🚪 Logout / Switch Account
+            </button>
+        </div>
+        """
+        wallet_box = """
+        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+            <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
+            <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
+        </div>
+        """
+        history_box = f"""
+        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+            <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Active Persistent Session Restored<br>• Email: {u_email}<br>• Phone: {u_phone}</p>
+        </div>
+        """
+        return profile_box, wallet_box, history_box
+    except Exception as e:
+        print(f"Session restoration error: {e}")
+        return gr.update(), gr.update(), gr.update()
 
 
 def run_daily_horoscope(sign):
@@ -869,7 +914,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & HIGH CONTRAST STYLING
+# 6. HARDCORE CSS & PERSISTENT SESSION LOCALSTORAGE
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -994,7 +1039,7 @@ input::placeholder, textarea::placeholder {
     line-height: 1 !important;
 }
 
-#manual-signup-trigger, #real-hidden-trigger, #logout-trigger {
+#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn {
     display: none !important;
 }
 """
@@ -1006,16 +1051,13 @@ function attachEyeToggle() {
     passInputs.forEach(input => {
         if (!input.classList.contains('eye-attached')) {
             input.classList.add('eye-attached');
-            
             const parent = input.parentElement;
             if(parent) {
                 parent.style.position = 'relative';
-                
                 const toggleBtn = document.createElement('span');
                 toggleBtn.className = 'password-eye-btn';
                 toggleBtn.innerHTML = '👁️';
                 toggleBtn.title = 'Show/Hide Password';
-                
                 toggleBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1027,20 +1069,42 @@ function attachEyeToggle() {
                         toggleBtn.innerHTML = '👁️';
                     }
                 });
-                
                 parent.appendChild(toggleBtn);
             }
         }
     });
 }
 
-setInterval(attachEyeToggle, 300);
-document.addEventListener("DOMContentLoaded", attachEyeToggle);
+function handlePersistentSession() {
+    const savedSession = localStorage.getItem('accastroforge_session');
+    if (savedSession) {
+        const hiddenInput = document.querySelector('#session-token-box input');
+        if (hiddenInput && hiddenInput.value !== savedSession) {
+            hiddenInput.value = savedSession;
+            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+            setTimeout(() => {
+                const syncBtn = document.querySelector('#session-sync-btn');
+                if (syncBtn) syncBtn.click();
+            }, 500);
+        }
+    }
+}
+
+setInterval(() => {
+    attachEyeToggle();
+    handlePersistentSession();
+}, 400);
+
+document.addEventListener("DOMContentLoaded", () => {
+    attachEyeToggle();
+    handlePersistentSession();
+});
 </script>
 """
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     otp_state = gr.State(value="")
+    session_token_state = gr.Textbox(value="", elem_id="session-token-box", visible=False)
     
     with gr.Column():
         with gr.Row():
@@ -1171,7 +1235,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                         signup_output,
                         user_profile_display,
                         wallet_balance_display,
-                        order_history_display
+                        order_history_display,
+                        session_token_state
                     ]
                 )
 
@@ -1182,7 +1247,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                         login_output,
                         user_profile_display,
                         wallet_balance_display,
-                        order_history_display
+                        order_history_display,
+                        session_token_state
                     ]
                 )
 
@@ -1435,8 +1501,24 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 signup_output,
                 user_profile_display,
                 wallet_balance_display,
-                order_history_display
+                order_history_display,
+                session_token_state
             ]
+        )
+
+        session_sync_btn = gr.Button("Sync Session", elem_id="session-sync-btn")
+        session_sync_btn.click(
+            fn=restore_session_from_token,
+            inputs=[session_token_state],
+            outputs=[user_profile_display, wallet_balance_display, order_history_display]
+        )
+
+        # Sync session token to browser localStorage on login/verify
+        session_token_state.change(
+            fn=None,
+            inputs=[session_token_state],
+            outputs=None,
+            js="(token) => { if(token) localStorage.setItem('accastroforge_session', token); else localStorage.removeItem('accastroforge_session'); }"
         )
 
         with gr.Group(visible=False) as admin_group:

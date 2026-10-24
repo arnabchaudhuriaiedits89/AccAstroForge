@@ -513,15 +513,15 @@ button[role="tab"][aria-selected="true"] {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(3, 0, 20, 0.94);
-    backdrop-filter: blur(14px);
+    background: rgba(3, 0, 20, 0.92);
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 999999999;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease-in-out;
+    transition: opacity 0.25s ease-in-out;
 }
 
 #logo-3d-overlay.active {
@@ -530,15 +530,15 @@ button[role="tab"][aria-selected="true"] {
 }
 
 .spinner-3d-logo {
-    width: 210px;
-    height: 210px;
-    animation: spin3D 0.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    filter: drop-shadow(0 0 45px rgba(244, 114, 182, 1));
+    width: 220px;
+    height: 220px;
+    animation: spin3D 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    filter: drop-shadow(0 0 50px rgba(244, 114, 182, 1));
 }
 
 @keyframes spin3D {
     0% { transform: rotateY(0deg) scale(0.6); }
-    50% { transform: rotateY(180deg) scale(1.4); }
+    50% { transform: rotateY(180deg) scale(1.35); }
     100% { transform: rotateY(360deg) scale(0.6); }
 }
 
@@ -645,7 +645,7 @@ function attachEyeToggle() {
     });
 }
 
-function showCustomSpinOverlay(duration = 1200) {
+function triggerSpinOverlay(duration = 1500) {
     const overlay = document.getElementById('logo-3d-overlay');
     if (overlay) {
         overlay.classList.add('active');
@@ -655,33 +655,13 @@ function showCustomSpinOverlay(duration = 1200) {
     }
 }
 
-// 1. Intercept all Clicks on Tabs and Submit Buttons immediately
+// Intercept all Tab clicks and Action button clicks to show 3D Spinning Logo
 document.addEventListener('click', function(e) {
     const target = e.target.closest('button, [role="tab"], a');
     if (target) {
-        showCustomSpinOverlay(1500);
+        triggerSpinOverlay(1800);
     }
 }, true);
-
-// 2. DOM Mutation Observer to capture Gradio's internal loading / processing states
-const observer = new MutationObserver((mutations) => {
-    for (let mutation of mutations) {
-        if (mutation.addedNodes.length > 0) {
-            mutation.addedNodes.forEach(node => {
-                if (node.nodeType === 1) {
-                    // Check if Gradio's loading spinner or progress bar appears
-                    if (node.classList && (node.classList.contains('loading') || node.classList.contains('progress-bar') || node.classList.contains('generating'))) {
-                        showCustomSpinOverlay(2000);
-                    } else if (node.querySelector && node.querySelector('.loading, .progress-bar, generating')) {
-                        showCustomSpinOverlay(2000);
-                    }
-                }
-            });
-        }
-    }
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
 
 setInterval(() => {
     attachEyeToggle();

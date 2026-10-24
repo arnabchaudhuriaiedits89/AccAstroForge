@@ -6,6 +6,7 @@ import io
 import random
 import requests
 import hashlib
+import sqlite3
 import gradio as gr
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -25,8 +26,8 @@ BREVO_API_KEY = os.getenv(
     "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",
 )
 
-PROKERALA_CLIENT_ID = "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33"
-PROKERALA_CLIENT_SECRET = "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX"
+PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID", "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33")
+PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET", "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX")
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
@@ -43,45 +44,103 @@ try:
 except Exception:
     razorpay_client = None
 
-LOG_FILE = "admin_logs.json"
-USERS_FILE = "registered_users.json"
+# ---------------------------------------------------------
+# 1. PERMANENT SQLITE DATABASE SYSTEM FOR RENDER DEPLOYMENT
+# ---------------------------------------------------------
+DB_FILE = "accastroforge.db"
 
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    # Users Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT UNIQUE,
+            phone TEXT,
+            verified_at TEXT
+        )
+    """)
+    # Logs Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admin_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            full_name TEXT,
+            service TEXT,
+            details TEXT,
+            payment_status TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
 
-def load_json_file(filename):
-    if not os.path.exists(filename):
-        return []
-    try:
-        with open(filename, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
-
-
-def save_json_file(filename, data):
-    try:
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        print(f"Error saving {filename}: {e}")
-
-
-def load_logs():
-    return load_json_file(LOG_FILE)
-
-
-def save_log(user_data):
-    logs = load_logs()
-    logs.append(user_data)
-    save_json_file(LOG_FILE, logs)
-
+# Initialize DB on App startup
+init_db()
 
 def load_users():
-    return load_json_file(USERS_FILE)
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, email, phone, verified_at FROM users")
+    rows = cursor.fetchall()
+    conn.close()
+    users = []
+    for r in rows:
+        users.append({"name": r[0], "email": r[1], "phone": r[2], "verified_at": r[3]})
+    return users
 
+def save_user_db_single(u_name, u_email, u_phone):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    now_str = str(datetime.datetime.now())
+    try:
+        cursor.execute(
+            "INSERT OR REPLACE INTO users (name, email, phone, verified_at) VALUES (?, ?, ?, ?)",
+            (u_name, u_email.lower(), u_phone, now_str)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"DB Error saving user: {e}")
+    finally:
+        conn.close()
 
-def save_user_db(users_list):
-    save_json_file(USERS_FILE, users_list)
+def load_logs():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT timestamp, full_name, service, details, payment_status FROM admin_logs")
+    rows = cursor.fetchall()
+    conn.close()
+    logs = []
+    for r in rows:
+        logs.append({
+            "timestamp": r[0],
+            "full_name": r[1],
+            "service": r[2],
+            "details": r[3],
+            "payment_status": r[4]
+        })
+    return logs
 
+def save_log(user_data):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status) VALUES (?, ?, ?, ?, ?)",
+            (
+                user_data.get("timestamp", str(datetime.datetime.now())),
+                user_data.get("full_name", "N/A"),
+                user_data.get("service", "General"),
+                user_data.get("details", "N/A"),
+                user_data.get("payment_status", "Pending")
+            )
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"DB Error saving log: {e}")
+    finally:
+        conn.close()
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
@@ -124,7 +183,7 @@ else:
 
 
 # ---------------------------------------------------------
-# 2. EMAIL & OTP SENDER FUNCTION (SECURE API)
+# 2. EMAIL & OTP SENDER FUNCTION (SECURE HTTP API)
 # ---------------------------------------------------------
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
@@ -414,7 +473,7 @@ def handle_manual_signup(name, email, phone, password):
             ""
         )
 
-    # Strict Uniqueness Check: If already registered, block duplicate signup/OTP
+    # Persistent SQLite Uniqueness Check
     users = load_users()
     for existing in users:
         if existing.get("email") == u_email:
@@ -479,18 +538,8 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
             "Verification Failed"
         )
     
-    # Save newly verified user to persistent database
-    users = load_users()
-    exists = any(u.get("email") == u_email.strip().lower() for u in users)
-    if not exists:
-        new_user = {
-            "name": u_name,
-            "email": u_email.strip().lower(),
-            "phone": u_phone,
-            "verified_at": str(datetime.datetime.now())
-        }
-        users.append(new_user)
-        save_user_db(users)
+    # Save user into SQLite Permanent DB
+    save_user_db_single(u_name, u_email, u_phone)
 
     save_log({
         "timestamp": str(datetime.datetime.now()),
@@ -827,7 +876,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & HIGH CONTRAST LABEL FIX
+# 6. HARDCORE CSS & HIGH CONTRAST STYLING
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -846,7 +895,7 @@ html, body, .gr-root, .gradio-container, gradio-app {
     min-height: 100vh;
 }
 
-footer, header, #footer, .footer, .built-with, a[href*="huggingface.co/space"] {
+footer, header, #footer, .footer, .built-with {
     display: none !important;
 }
 
@@ -908,7 +957,6 @@ button.primary, button.gr-button-primary, .gr-button-primary {
     border-radius: 12px !important;
 }
 
-/* HIGH CONTRAST LABELS FIX FOR VISIBILITY */
 label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span, h1, h2, h3, h4, p, li, b, strong {
     color: #fde047 !important;
     font-weight: 600 !important;

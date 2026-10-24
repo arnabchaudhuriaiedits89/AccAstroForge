@@ -107,7 +107,7 @@ else:
 
 
 # ---------------------------------------------------------
-# 2. EMAIL & OTP SENDER FUNCTION
+# 2. EMAIL & OTP SENDER FUNCTION (USING VERIFIED GMAIL SENDER)
 # ---------------------------------------------------------
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
@@ -117,16 +117,17 @@ def send_brevo_email(to_email, user_name, subject, html_content):
         "content-type": "application/json",
     }
     payload = {
-        "sender": {"name": "AccAstroForge", "email": "support@accastroforge.in"},
+        "sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"},
         "to": [{"email": to_email, "name": user_name}],
         "subject": subject,
         "htmlContent": html_content,
     }
     try:
         response = requests.post(url, json=payload, headers=headers)
-        return response.status_code == 201
+        print(f"Brevo API Response Status: {response.status_code}, Body: {response.text}")
+        return response.status_code in [200, 201, 202]
     except Exception as e:
-        print(f"Email error: {e}")
+        print(f"Email error exception: {e}")
         return False
 
 
@@ -369,7 +370,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 5. SOCIAL OAUTH & SIGNUP HANDLERS (WITH PERMANENT OTP & LOGOUT)
+# 5. SOCIAL OAUTH & SIGNUP HANDLERS
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -422,9 +423,9 @@ def handle_manual_signup(name, email, phone, password):
     })
 
     if email_sent:
-        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it in the box below.</p></div>"
+        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b> via Brevo (Verified Sender). Please check your Inbox / Spam folder and enter it below.</p></div>"
     else:
-        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but email sending failed. Please check email address.</p></div>"
+        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but email sending failed. Please check Brevo API limits.</p></div>"
 
     profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #fde047;'>Status: Pending Verification</span>"
     wallet_box = "₹ 0.00"
@@ -434,6 +435,14 @@ def handle_manual_signup(name, email, phone, password):
 
 
 def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
+    if not generated_otp:
+        return (
+            "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>⚠️ No OTP generated yet! Please click '1. Register & Send Verification OTP' first.</div>",
+            f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: No OTP</span>",
+            "₹ 0.00",
+            "Verification Pending"
+        )
+
     if not user_entered_otp or str(user_entered_otp).strip() != str(generated_otp).strip():
         return (
             "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>❌ Invalid OTP Code! Please check your email and try again.</div>",

@@ -441,7 +441,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. HARDCORE CSS & INJECTED 3D SPINNING JS ENGINE
+# 5. HARDCORE CSS & 3D SPINNING OVERLAY ENGINE (BG PROTECTED)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -645,7 +645,7 @@ function attachEyeToggle() {
     });
 }
 
-function triggerSpinOverlay(duration = 1500) {
+function triggerSpinOverlay(duration = 1800) {
     const overlay = document.getElementById('logo-3d-overlay');
     if (overlay) {
         overlay.classList.add('active');
@@ -655,11 +655,11 @@ function triggerSpinOverlay(duration = 1500) {
     }
 }
 
-// Intercept all Tab clicks and Action button clicks to show 3D Spinning Logo
+// Trigger 3D Spinning Logo on every Tab or Action Button click
 document.addEventListener('click', function(e) {
     const target = e.target.closest('button, [role="tab"], a');
     if (target) {
-        triggerSpinOverlay(1800);
+        triggerSpinOverlay(2000);
     }
 }, true);
 

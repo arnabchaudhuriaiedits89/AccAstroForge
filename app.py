@@ -369,7 +369,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 5. SOCIAL OAUTH & SIGNUP HANDLERS
+# 5. SOCIAL OAUTH & SIGNUP HANDLERS (WITH OTP LOGIC)
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -382,33 +382,80 @@ def handle_manual_signup(name, email, phone, password):
 
     if not u_email or "@" not in u_email:
         return (
-            "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a"
-            " valid email address.</span>",
+            "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>",
             "👤 Guest User",
             "₹ 0.00",
             "No active sessions.",
+            gr.update(visible=False),
+            ""
         )
     if not u_phone or len(u_phone) < 10:
         return (
-            "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a"
-            " valid 10-digit Phone Number.</span>",
+            "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>",
             "👤 Guest User",
             "₹ 0.00",
             "No active sessions.",
+            gr.update(visible=False),
+            ""
         )
+
+    otp_code = str(random.randint(100000, 999999))
+    email_html = f"""
+    <div style="background:#030014; color:#ffffff; padding:25px; border-radius:16px; font-family:'Poppins', sans-serif; border: 1px solid #7c3aed;">
+        <h2 style="color:#fde047; text-align:center;">✨ Welcome to AccAstroForge, {u_name}!</h2>
+        <p>Thank you for registering. Please use the verification code below to activate your account:</p>
+        <div style="text-align:center; margin: 20px 0;">
+            <span style="font-size:2rem; font-weight:bold; color:#4ade80; background:rgba(34,197,94,0.15); padding:10px 25px; border-radius:12px; letter-spacing:4px; border: 1px dashed #4ade80;">{otp_code}</span>
+        </div>
+        <p style="font-size:0.85rem; color:#cbd5e1; text-align:center;">If you did not request this, please ignore this email.</p>
+    </div>
+    """
+
+    email_sent = send_brevo_email(
+        u_email, u_name, "AccAstroForge Account Verification OTP", email_html
+    )
 
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
         "service": "Manual Account Registration",
-        "details": f"Email: {u_email} | Phone: {u_phone}",
-        "payment_status": "Registered & Active",
+        "details": f"Email: {u_email} | Phone: {u_phone} | OTP Generated: {otp_code}",
+        "payment_status": "OTP Dispatched" if email_sent else "Email Failed",
     })
 
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='margin:0;'>Your account has been created successfully with <b>{u_email}</b> (Phone: {u_phone}).</p></div>"
-    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
+    if email_sent:
+        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it below.</p></div>"
+    else:
+        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but email sending failed. Please check email address.</p></div>"
+
+    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #fde047;'>Status: Pending Verification</span>"
     wallet_box = "₹ 0.00"
-    history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
+    history_box = f"• OTP Verification Sent to: {u_email}<br>• Phone: {u_phone}"
+
+    return success_msg, profile_box, wallet_box, history_box, gr.update(visible=True), otp_code
+
+
+def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
+    if not user_entered_otp or str(user_entered_otp).strip() != str(generated_otp).strip():
+        return (
+            "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>❌ Invalid OTP Code! Please check your email and try again.</div>",
+            f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: Invalid OTP</span>",
+            "₹ 0.00",
+            "Verification Failed"
+        )
+    
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
+        "service": "OTP Verification Complete",
+        "details": f"Email Verified: {u_email}",
+        "payment_status": "Active & Verified Member"
+    })
+    
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Account Verified & Active!</h3><p style='margin:0;'>Welcome <b>{u_name}</b>! Your email <b>{u_email}</b> has been successfully verified.</p></div>"
+    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #4ade80; font-weight:bold;'>Status: Active Member</span>"
+    wallet_box = "₹ 0.00"
+    history_box = f"• Registration & OTP Verification Complete<br>• Account Active<br>• Contact: {u_phone}"
 
     return success_msg, profile_box, wallet_box, history_box
 
@@ -791,6 +838,8 @@ document.addEventListener("DOMContentLoaded", attachEyeToggle);
 with gr.Blocks(
     title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css
 ) as demo:
+    otp_state = gr.State(value="")
+    
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
@@ -862,9 +911,19 @@ with gr.Blocks(
                                 placeholder="Enter secure password",
                             )
                         signup_btn = gr.Button(
-                            "✨ Complete Manual Registration", variant="primary"
+                            "✨ Register & Send Verification OTP", variant="primary"
                         )
                         signup_output = gr.HTML()
+
+                        with gr.Row(visible=False) as otp_box_row:
+                            user_otp_input = gr.Textbox(
+                                label="Enter 6-Digit Email OTP",
+                                placeholder="e.g. 123456",
+                                max_lines=1
+                            )
+                            verify_otp_btn = gr.Button(
+                                "🔑 Verify OTP & Activate Account", variant="primary"
+                            )
 
                 order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
@@ -893,7 +952,20 @@ with gr.Blocks(
                         user_profile_display,
                         wallet_balance_display,
                         order_history_display,
+                        otp_box_row,
+                        otp_state
                     ],
+                )
+
+                verify_otp_btn.click(
+                    fn=verify_user_otp,
+                    inputs=[user_otp_input, otp_state, signup_name, signup_email, signup_phone],
+                    outputs=[
+                        signup_output,
+                        user_profile_display,
+                        wallet_balance_display,
+                        order_history_display
+                    ]
                 )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):

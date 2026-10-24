@@ -4,7 +4,9 @@ import json
 import os
 import io
 import random
-import requests
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import hashlib
 import gradio as gr
 from reportlab.lib.pagesizes import letter
@@ -20,10 +22,11 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
-BREVO_API_KEY = os.getenv(
-    "BREVO_API_KEY",
-    "xkeysib-3b5870a0e416523362c960e7e21bda89f7d0b2fa2133ac18d230048",
-)
+# GMAIL SMTP CONFIGURATIONS
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SENDER_EMAIL = "arnabchaudhuriaiedits@gmail.com"
+SENDER_APP_PASSWORD = "klnqbgzlxyitiiim"
 
 PROKERALA_CLIENT_ID = "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33"
 PROKERALA_CLIENT_SECRET = "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX"
@@ -107,27 +110,27 @@ else:
 
 
 # ---------------------------------------------------------
-# 2. EMAIL & OTP SENDER FUNCTION (USING VERIFIED GMAIL SENDER)
+# 2. GMAIL SMTP SECURE OTP SENDER FUNCTION
 # ---------------------------------------------------------
-def send_brevo_email(to_email, user_name, subject, html_content):
-    url = "https://api.brevo.com/v3/smtp/email"
-    headers = {
-        "accept": "application/json",
-        "api-key": BREVO_API_KEY,
-        "content-type": "application/json",
-    }
-    payload = {
-        "sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"},
-        "to": [{"email": to_email, "name": user_name}],
-        "subject": subject,
-        "htmlContent": html_content,
-    }
+def send_gmail_smtp_otp(to_email, user_name, subject, html_content):
     try:
-        response = requests.post(url, json=payload, headers=headers)
-        print(f"Brevo API Response Status: {response.status_code}, Body: {response.text}")
-        return response.status_code in [200, 201, 202]
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"AccAstroForge <{SENDER_EMAIL}>"
+        msg["To"] = to_email
+
+        html_part = MIMEText(html_content, "html", "utf-8")
+        msg.attach(html_part)
+
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_APP_PASSWORD)
+            server.sendmail(SENDER_EMAIL, to_email, msg.as_string())
+        
+        print(f"Gmail SMTP successfully sent email to {to_email}")
+        return True
     except Exception as e:
-        print(f"Email error exception: {e}")
+        print(f"Gmail SMTP error exception: {e}")
         return False
 
 
@@ -410,26 +413,26 @@ def handle_manual_signup(name, email, phone, password):
     </div>
     """
 
-    email_sent = send_brevo_email(
+    email_sent = send_gmail_smtp_otp(
         u_email, u_name, "AccAstroForge Account Verification OTP", email_html
     )
 
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
-        "service": "Manual Account Registration",
+        "service": "Manual Account Registration (Gmail SMTP)",
         "details": f"Email: {u_email} | Phone: {u_phone} | OTP Generated: {otp_code}",
-        "payment_status": "OTP Dispatched" if email_sent else "Email Failed",
+        "payment_status": "OTP Dispatched via Gmail" if email_sent else "Email Failed",
     })
 
     if email_sent:
-        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b> via Brevo (Verified Sender). Please check your Inbox / Spam folder and enter it below.</p></div>"
+        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b> via Gmail SMTP. Please check your Inbox / Spam folder and enter it below.</p></div>"
     else:
-        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but email sending failed. Please check Brevo API limits.</p></div>"
+        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but SMTP dispatch encountered an issue. Check server logs.</p></div>"
 
     profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #fde047;'>Status: Pending Verification</span>"
     wallet_box = "₹ 0.00"
-    history_box = f"• OTP Verification Sent to: {u_email}<br>• Phone: {u_phone}"
+    history_box = f"• Gmail SMTP OTP Sent to: {u_email}<br>• Phone: {u_phone}"
 
     return success_msg, profile_box, wallet_box, history_box, otp_code
 

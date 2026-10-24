@@ -517,7 +517,7 @@ button[role="tab"][aria-selected="true"] {
     pointer-events: none !important;
 }
 
-/* CUSTOM 3D SPINNING OVERLAY */
+/* CUSTOM 3D SPINNING OVERLAY WITH CORRECT FILENAME */
 #acc-3d-spinning-screen {
     position: fixed !important;
     top: 0 !important;
@@ -527,7 +527,7 @@ button[role="tab"][aria-selected="true"] {
     background: rgba(3, 0, 20, 0.94) !important;
     backdrop-filter: blur(14px) !important;
     -webkit-backdrop-filter: blur(14px) !important;
-    display: flex !important;
+    display: none !important;
     justify-content: center !important;
     align-items: center !important;
     z-index: 2147483647 !important;
@@ -537,6 +537,7 @@ button[role="tab"][aria-selected="true"] {
 }
 
 #acc-3d-spinning-screen.active {
+    display: flex !important;
     opacity: 1 !important;
     pointer-events: auto !important;
 }
@@ -658,36 +659,46 @@ function attachEyeToggle() {
 }
 
 let spinnerTimer = null;
-function trigger3DLogoOverlay(duration = 2800) {
+function trigger3DLogoOverlay(duration = 3000) {
     const overlay = document.getElementById('acc-3d-spinning-screen');
     if (overlay) {
+        overlay.style.setProperty('display', 'flex', 'important');
         overlay.classList.add('active');
         if (spinnerTimer) clearTimeout(spinnerTimer);
         spinnerTimer = setTimeout(() => {
             overlay.classList.remove('active');
+            setTimeout(() => {
+                if (!overlay.classList.contains('active')) {
+                    overlay.style.setProperty('display', 'none', 'important');
+                }
+            }, 200);
         }, duration);
     }
 }
 
-// 1. Intercept all Clicks on Tabs, Buttons and Links
+// 1. Intercept all Clicks on Tabs, Buttons, Links and Inputs
 document.addEventListener('click', function(e) {
-    const target = e.target.closest('button, [role="tab"], a, input[type="submit"]');
+    const target = e.target.closest('button, [role="tab"], a, input[type="submit"], .gr-button');
     if (target) {
         trigger3DLogoOverlay(3000);
     }
 }, true);
 
 // 2. MutationObserver to instantly hide Gradio's default spinners & trigger our 3D logo
-const nativeKillObserver = new MutationObserver((mutations) => {
+const nativeKillObserver = new MutationObserver(() => {
     const gradioSpinners = document.querySelectorAll('.generating, .loading, .progress-bar, [data-testid="status-tracker"]');
     gradioSpinners.forEach(el => {
         el.style.setProperty('display', 'none', 'important');
         el.style.setProperty('opacity', '0', 'important');
-        trigger3DLogoOverlay(2500);
+        trigger3DLogoOverlay(2800);
     });
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    const overlay = document.getElementById('acc-3d-spinning-screen');
+    if (overlay) {
+        overlay.style.setProperty('display', 'none', 'important');
+    }
     attachEyeToggle();
     nativeKillObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
 });
@@ -884,7 +895,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
                         <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
                         <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
-                        <li>📘 <span style="color: #fde047 !important; font-weight: 700;">Facebook:</span> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.facebook.com/accastroforge/</a></li>
                     </ul>
                 </div>
                 """)

@@ -124,9 +124,9 @@ else:
 
 
 # ---------------------------------------------------------
-# 2. EMAIL & OTP SENDER FUNCTION (SECURE HTTP API)
+# 2. EMAIL & OTP SENDER FUNCTION (SECURE API)
 # ---------------------------------------------------------
-def send_secure_email(to_email, user_name, subject, html_content):
+def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {
         "accept": "application/json",
@@ -134,7 +134,7 @@ def send_secure_email(to_email, user_name, subject, html_content):
         "content-type": "application/json",
     }
     payload = {
-        "sender": {"name": "AccAstroForge", "email": "support@accpixelforge.in"},
+        "sender": {"name": "AccAstroForge", "email": "support@accastroforge.in"},
         "to": [{"email": to_email, "name": user_name}],
         "subject": subject,
         "htmlContent": html_content,
@@ -386,7 +386,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 5. AUTH, UNIQUE REGISTRATION, LOGIN & CLEAN LOGS
+# 5. STRICT AUTH, UNIQUE REGISTRATION, LOGIN & PERSISTENT SESSION
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -414,6 +414,7 @@ def handle_manual_signup(name, email, phone, password):
             ""
         )
 
+    # Strict Uniqueness Check: If already registered, block duplicate signup/OTP
     users = load_users()
     for existing in users:
         if existing.get("email") == u_email:
@@ -437,7 +438,7 @@ def handle_manual_signup(name, email, phone, password):
     </div>
     """
 
-    email_sent = send_secure_email(
+    email_sent = send_brevo_email(
         u_email, u_name, "AccAstroForge Account Verification OTP", email_html
     )
 
@@ -478,6 +479,7 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
             "Verification Failed"
         )
     
+    # Save newly verified user to persistent database
     users = load_users()
     exists = any(u.get("email") == u_email.strip().lower() for u in users)
     if not exists:
@@ -825,7 +827,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & CLEAN UI STYLING
+# 6. HARDCORE CSS & HIGH CONTRAST LABEL FIX
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -906,6 +908,7 @@ button.primary, button.gr-button-primary, .gr-button-primary {
     border-radius: 12px !important;
 }
 
+/* HIGH CONTRAST LABELS FIX FOR VISIBILITY */
 label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span, h1, h2, h3, h4, p, li, b, strong {
     color: #fde047 !important;
     font-weight: 600 !important;

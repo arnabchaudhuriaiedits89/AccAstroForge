@@ -507,47 +507,51 @@ button[role="tab"][aria-selected="true"] {
     border-color: #fde047 !important;
 }
 
-/* HIDE GRADIO'S BUILT-IN SPINNERS COMPLETELY */
-.progress-bar, .loading, .spinner, svg.spinner, .generating-panel {
+/* HIDE GRADIO'S BUILT-IN SPINNERS & REVEALED LOADERS COMPLETELY */
+.progress-bar, .loading, .spinner, svg.spinner, .generating-panel, .generating, .meta-text, .eta-bar, div[data-testid="status-tracker"] {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    pointer-events: none !important;
 }
 
 /* CUSTOM 3D SPINNING OVERLAY */
-#acc-custom-spinner-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(3, 0, 20, 0.95);
-    backdrop-filter: blur(14px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 99999999999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease-in-out;
+#acc-3d-spinning-screen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(3, 0, 20, 0.94) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 2147483647 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s ease-in-out !important;
 }
 
-#acc-custom-spinner-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
+#acc-3d-spinning-screen.active {
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 
-.acc-spinning-logo-img {
-    width: 250px;
-    height: 250px;
-    animation: accSpin3D 0.65s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    filter: drop-shadow(0 0 60px rgba(244, 114, 182, 1));
+.acc-spinning-logo-target {
+    width: 250px !important;
+    height: 250px !important;
+    animation: acc3DSpinAnimation 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+    filter: drop-shadow(0 0 50px rgba(244, 114, 182, 1)) !important;
 }
 
-@keyframes accSpin3D {
-    0% { transform: rotateY(0deg) scale(0.6); }
-    50% { transform: rotateY(180deg) scale(1.4); }
-    100% { transform: rotateY(360deg) scale(0.6); }
+@keyframes acc3DSpinAnimation {
+    0% { transform: rotateY(0deg) scale(0.65); }
+    50% { transform: rotateY(180deg) scale(1.35); }
+    100% { transform: rotateY(360deg) scale(0.65); }
 }
 
 .gr-accordion, .accordion, div[data-testid="accordion"] {
@@ -615,8 +619,8 @@ input::placeholder, textarea::placeholder {
 """
 
 head_html = """
-<div id="acc-custom-spinner-overlay">
-    <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" class="acc-spinning-logo-img" alt="AccAstroForge Spinning Logo">
+<div id="acc-3d-spinning-screen">
+    <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" class="acc-spinning-logo-target" alt="AccAstroForge Spinning Logo">
 </div>
 
 <script>
@@ -653,11 +657,13 @@ function attachEyeToggle() {
     });
 }
 
-function showAccSpinOverlay(duration = 2000) {
-    const overlay = document.getElementById('acc-custom-spinner-overlay');
+let spinnerTimer = null;
+function trigger3DLogoOverlay(duration = 2800) {
+    const overlay = document.getElementById('acc-3d-spinning-screen');
     if (overlay) {
         overlay.classList.add('active');
-        setTimeout(() => {
+        if (spinnerTimer) clearTimeout(spinnerTimer);
+        spinnerTimer = setTimeout(() => {
             overlay.classList.remove('active');
         }, duration);
     }
@@ -665,37 +671,30 @@ function showAccSpinOverlay(duration = 2000) {
 
 // 1. Intercept all Clicks on Tabs, Buttons and Links
 document.addEventListener('click', function(e) {
-    const target = e.target.closest('button, [role="tab"], a');
+    const target = e.target.closest('button, [role="tab"], a, input[type="submit"]');
     if (target) {
-        showAccSpinOverlay(2500);
+        trigger3DLogoOverlay(3000);
     }
 }, true);
 
 // 2. MutationObserver to instantly hide Gradio's default spinners & trigger our 3D logo
-const observer = new MutationObserver((mutations) => {
-    for (let mutation of mutations) {
-        if (mutation.addedNodes.length > 0) {
-            mutation.addedNodes.forEach(node => {
-                if (node.nodeType === 1) {
-                    if (node.classList && (node.classList.contains('generating') || node.classList.contains('loading') || node.classList.contains('progress-bar'))) {
-                        node.style.display = 'none';
-                        showAccSpinOverlay(2500);
-                    }
-                }
-            });
-        }
-    }
+const nativeKillObserver = new MutationObserver((mutations) => {
+    const gradioSpinners = document.querySelectorAll('.generating, .loading, .progress-bar, [data-testid="status-tracker"]');
+    gradioSpinners.forEach(el => {
+        el.style.setProperty('display', 'none', 'important');
+        el.style.setProperty('opacity', '0', 'important');
+        trigger3DLogoOverlay(2500);
+    });
 });
-
-observer.observe(document.body, { childList: true, subtree: true });
-
-setInterval(() => {
-    attachEyeToggle();
-}, 300);
 
 document.addEventListener("DOMContentLoaded", () => {
     attachEyeToggle();
+    nativeKillObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
 });
+
+setInterval(() => {
+    attachEyeToggle();
+}, 400);
 </script>
 """
 

@@ -34,96 +34,74 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
+GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
+FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
+
 # ---------------------------------------------------------
-# 1. PERMANENT SUPABASE CLOUD DATABASE SYSTEM & AUTO-TABLE CREATOR
+# 1. PERMANENT SUPABASE CLOUD DATABASE SYSTEM
 # ---------------------------------------------------------
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://zhpseyagpwcakptaiswz.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_secret_YczfVGsSDg886USdV5TOUw_3BmSHzp7")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_eZEFd8jmKDqbNJ0tOsASJA_ujapk-ou")
 
 try:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+  supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 except Exception as e:
-    print(f"Supabase Client Error: {e}")
-    supabase = None
-
-# Auto-initialize/verify tables via REST API / fallback check
-def init_supabase_tables():
-    if not supabase:
-        return
-    try:
-        # Check users table by selecting 1 row
-        supabase.table("users").select("*").limit(1).execute()
-    except Exception as e:
-        print(f"Users table check/creation notice: {e}")
-
-    try:
-        # Check admin_logs table by selecting 1 row
-        supabase.table("admin_logs").select("*").limit(1).execute()
-    except Exception as e:
-        print(f"Admin logs table check/creation notice: {e}")
-
-init_supabase_tables()
-
-try:
-    razorpay_client = razorpay.Client(
-        auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)
-    )
-except Exception:
-    razorpay_client = None
+  print(f"Supabase Client Error: {e}")
+  supabase = None
 
 
 def load_users():
-    if not supabase:
-        return []
-    try:
-        res = supabase.table("users").select("*").execute()
-        return res.data if res.data else []
-    except Exception as e:
-        print(f"Supabase load_users error: {e}")
-        return []
+  if not supabase:
+    return []
+  try:
+    res = supabase.table("users").select("*").execute()
+    return res.data if res.data else []
+  except Exception as e:
+    print(f"Supabase load_users error: {e}")
+    return []
 
 
 def save_user_db_single(u_name, u_email, u_phone):
-    if not supabase:
-        return
-    now_str = str(datetime.datetime.now())
-    try:
-        data = {
-            "name": u_name,
-            "email": u_email.lower(),
-            "phone": u_phone,
-            "verified_at": now_str
-        }
-        supabase.table("users").upsert(data, on_conflict="email").execute()
-    except Exception as e:
-        print(f"Supabase save_user error: {e}")
+  if not supabase:
+    return
+  now_str = str(datetime.datetime.now())
+  try:
+    data = {
+        "name": u_name,
+        "email": u_email.lower(),
+        "phone": u_phone,
+        "verified_at": now_str,
+    }
+    supabase.table("users").upsert(data, on_conflict="email").execute()
+  except Exception as e:
+    print(f"Supabase save_user error: {e}")
 
 
 def load_logs():
-    if not supabase:
-        return []
-    try:
-        res = supabase.table("admin_logs").select("*").execute()
-        return res.data if res.data else []
-    except Exception as e:
-        print(f"Supabase load_logs error: {e}")
-        return []
+  if not supabase:
+    return []
+  try:
+    res = supabase.table("admin_logs").select("*").execute()
+    return res.data if res.data else []
+  except Exception as e:
+    print(f"Supabase load_logs error: {e}")
+    return []
 
 
 def save_log(user_data):
-    if not supabase:
-        return
-    try:
-        data = {
-            "timestamp": user_data.get("timestamp", str(datetime.datetime.now())),
-            "full_name": user_data.get("full_name", "N/A"),
-            "service": user_data.get("service", "General"),
-            "details": user_data.get("details", "N/A"),
-            "payment_status": user_data.get("payment_status", "Pending")
-        }
-        supabase.table("admin_logs").insert(data).execute()
-    except Exception as e:
-        print(f"Supabase save_log error: {e}")
+  if not supabase:
+    return
+  try:
+    data = {
+        "timestamp": user_data.get("timestamp", str(datetime.datetime.now())),
+        "full_name": user_data.get("full_name", "N/A"),
+        "service": user_data.get("service", "General"),
+        "details": user_data.get("details", "N/A"),
+        "payment_status": user_data.get("payment_status", "Pending"),
+    }
+    supabase.table("admin_logs").insert(data).execute()
+  except Exception as e:
+    print(f"Supabase save_log error: {e}")
 
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -132,20 +110,20 @@ logo_path = "logo.png" if os.path.exists("logo.png") else None
 
 
 def get_base64(file_path):
-    if file_path and os.path.exists(file_path):
-        try:
-            with open(file_path, "rb") as f:
-                return base64.b64encode(f.read()).decode("utf-8")
-        except Exception:
-            return ""
-    return ""
+  if file_path and os.path.exists(file_path):
+    try:
+      with open(file_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+    except Exception:
+      return ""
+  return ""
 
 
 logo_b64 = get_base64(logo_path)
 
 if logo_b64:
-    logo_src = "data:image/png;base64," + logo_b64
-    logo_element = f"""
+  logo_src = "data:image/png;base64," + logo_b64
+  logo_element = f"""
     <div class="header-container" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
         <div style="display: flex; align-items: center; gap: 12px;">
             <img src="{logo_src}" alt="AccAstroForge Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important;">
@@ -156,7 +134,7 @@ if logo_b64:
     </div>
     """
 else:
-    logo_element = """
+  logo_element = """
     <div class="header-container" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
         <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 24px; font-weight: 800; color: #fbcfe8; font-family: 'Cinzel', serif;">AccAstroForge</span>
@@ -165,29 +143,33 @@ else:
     </div>
     """
 
-
 # ---------------------------------------------------------
 # 2. EMAIL & OTP SENDER FUNCTION (VERIFIED SENDER)
 # ---------------------------------------------------------
+
+
 def send_brevo_email(to_email, user_name, subject, html_content):
-    url = "https://api.brevo.com/v3/smtp/email"
-    headers = {
-        "accept": "application/json",
-        "api-key": BREVO_API_KEY,
-        "content-type": "application/json",
-    }
-    payload = {
-        "sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"},
-        "to": [{"email": to_email, "name": user_name}],
-        "subject": subject,
-        "htmlContent": html_content,
-    }
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        return response.status_code in [200, 201, 202]
-    except Exception as e:
-        print(f"Email error exception: {e}")
-        return False
+  url = "https://api.brevo.com/v3/smtp/email"
+  headers = {
+      "accept": "application/json",
+      "api-key": BREVO_API_KEY,
+      "content-type": "application/json",
+  }
+  payload = {
+      "sender": {
+          "name": "AccAstroForge",
+          "email": "arnabchaudhuriaiedits@gmail.com",
+      },
+      "to": [{"email": to_email, "name": user_name}],
+      "subject": subject,
+      "htmlContent": html_content,
+  }
+  try:
+    response = requests.post(url, json=payload, headers=headers, timeout=10)
+    return response.status_code in [200, 201, 202]
+  except Exception as e:
+    print(f"Email error exception: {e}")
+    return False
 
 
 # ---------------------------------------------------------
@@ -240,35 +222,35 @@ NAKSHATRAS = [
 
 
 def calculate_astrological_profile(name, dob_str):
-    try:
-        dt = datetime.datetime.strptime(dob_str, "%Y-%m-%d")
-        day_sum = sum(int(digit) for digit in dob_str if digit.isdigit())
-        while day_sum > 9:
-            day_sum = sum(int(d) for d in str(day_sum))
+  try:
+    dt = datetime.datetime.strptime(dob_str, "%Y-%m-%d")
+    day_sum = sum(int(digit) for digit in dob_str if digit.isdigit())
+    while day_sum > 9:
+      day_sum = sum(int(d) for d in str(day_sum))
 
-        zodiac_index = (dt.month - 1 + (dt.day // 3)) % 12
-        nakshatra_index = (dt.day + dt.month * 2) % 27
+    zodiac_index = (dt.month - 1 + (dt.day // 3)) % 12
+    nakshatra_index = (dt.day + dt.month * 2) % 27
 
-        return {
-            "name": name if name else "User",
-            "zodiac": ZODIAC_SIGNS[zodiac_index],
-            "nakshatra": NAKSHATRAS[nakshatra_index],
-            "psychic_num": day_sum,
-            "dasha": f"Mahadasha of {['Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu'][day_sum % 9]} is active.",
-        }
-    except Exception:
-        return {
-            "name": name if name else "User",
-            "zodiac": "Aries (Mesha)",
-            "nakshatra": "Rohini",
-            "psychic_num": 7,
-            "dasha": "Favorable Planetary Dasha Cycle active.",
-        }
+    return {
+        "name": name if name else "User",
+        "zodiac": ZODIAC_SIGNS[zodiac_index],
+        "nakshatra": NAKSHATRAS[nakshatra_index],
+        "psychic_num": day_sum,
+        "dasha": f"Mahadasha of {['Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu'][day_sum % 9]} is active.",
+    }
+  except Exception:
+    return {
+        "name": name if name else "User",
+        "zodiac": "Aries (Mesha)",
+        "nakshatra": "Rohini",
+        "psychic_num": 7,
+        "dasha": "Favorable Planetary Dasha Cycle active.",
+    }
 
 
 def generate_visual_kundali_chart_html(name, dob, tob, pob):
-    profile = calculate_astrological_profile(name, dob)
-    return f"""
+  profile = calculate_astrological_profile(name, dob)
+  return f"""
     <div style="background: rgba(10, 3, 28, 0.95); border: 2px solid #7c3aed; border-radius: 16px; padding: 20px; color: #fff; margin-top: 15px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.5);">
         <h3 style="color: #fde047; text-align: center; margin-bottom: 15px; font-family: 'Cinzel', serif;">📜 VEDIC LAGNA KUNDALI CHART - {name.upper()}</h3>
         
@@ -317,105 +299,103 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
 # 4. REPORTLAB PDF & RAZORPAY PAYWALL
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
-    profile = calculate_astrological_profile(name, dob)
-    filename = f"Kundali_{name.replace(' ', '_')}.pdf"
+  profile = calculate_astrological_profile(name, dob)
+  filename = f"Kundali_{name.replace(' ', '_')}.pdf"
 
-    doc = SimpleDocTemplate(filename, pagesize=letter)
-    styles = getSampleStyleSheet()
-    story = []
+  doc = SimpleDocTemplate(filename, pagesize=letter)
+  styles = getSampleStyleSheet()
+  story = []
 
-    title_style = ParagraphStyle(
-        "TitleStyle",
-        parent=styles["Heading1"],
-        fontName="Helvetica-Bold",
-        fontSize=20,
-        textColor=colors.HexColor("#5b21b6"),
-        alignment=1,
-        spaceAfter=15,
-    )
+  title_style = ParagraphStyle(
+      "TitleStyle",
+      parent=styles["Heading1"],
+      fontName="Helvetica-Bold",
+      fontSize=20,
+      textColor=colors.HexColor("#5b21b6"),
+      alignment=1,
+      spaceAfter=15,
+  )
 
-    story.append(
-        Paragraph(
-            "<b>AccAstroForge - Vedic Janam Kundali Report</b>", title_style
-        )
-    )
-    story.append(Spacer(1, 10))
+  story.append(
+      Paragraph("<b>AccAstroForge - Vedic Janam Kundali Report</b>", title_style)
+  )
+  story.append(Spacer(1, 10))
 
-    data = [
-        ["Attribute", "Details"],
-        ["Full Name", profile["name"]],
-        ["Date of Birth", dob],
-        ["Time / Place", f"{tob} / {pob}"],
-        ["Zodiac Sign (Rashi)", profile["zodiac"]],
-        ["Birth Nakshatra", profile["nakshatra"]],
-        ["Destiny / Life Number", str(profile["psychic_num"])],
-        ["Current Dasha", profile["dasha"]],
-    ]
+  data = [
+      ["Attribute", "Details"],
+      ["Full Name", profile["name"]],
+      ["Date of Birth", dob],
+      ["Time / Place", f"{tob} / {pob}"],
+      ["Zodiac Sign (Rashi)", profile["zodiac"]],
+      ["Birth Nakshatra", profile["nakshatra"]],
+      ["Destiny / Life Number", str(profile["psychic_num"])],
+      ["Current Dasha", profile["dasha"]],
+  ]
 
-    t = Table(data, colWidths=[200, 300])
-    t.setStyle(
-        TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#7c3aed")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
-            ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#f3e8ff")),
-            ("GRID", (0, 0), (-1, -1), 1, colors.HexColor("#db2777")),
-        ])
-    )
-    story.append(t)
-    story.append(Spacer(1, 20))
+  t = Table(data, colWidths=[200, 300])
+  t.setStyle(
+      TableStyle([
+          ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#7c3aed")),
+          ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+          ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+          ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+          ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+          ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#f3e8ff")),
+          ("GRID", (0, 0), (-1, -1), 1, colors.HexColor("#db2777")),
+      ])
+  )
+  story.append(t)
+  story.append(Spacer(1, 20))
 
-    body_style = ParagraphStyle(
-        "BodyStyle", parent=styles["Normal"], fontSize=11, leading=15
-    )
-    story.append(
-        Paragraph("<b>Vedic Astrological Insights:</b>", styles["Heading2"])
-    )
-    story.append(
-        Paragraph(
-            f"Based on birth details of {profile['name']}, Jupiter aligns"
-            " favorably in the trikona houses. Remedies include wearing auspicious"
-            " gemstones and practicing daily morning meditation.",
-            body_style,
-        )
-    )
+  body_style = ParagraphStyle(
+      "BodyStyle", parent=styles["Normal"], fontSize=11, leading=15
+  )
+  story.append(
+      Paragraph("<b>Vedic Astrological Insights:</b>", styles["Heading2"])
+  )
+  story.append(
+      Paragraph(
+          f"Based on birth details of {profile['name']}, Jupiter aligns"
+          " favorably in the trikona houses. Remedies include wearing"
+          " auspicious gemstones and practicing daily morning meditation.",
+          body_style,
+      )
+  )
 
-    doc.build(story)
-    return filename
+  doc.build(story)
+  return filename
 
 
 def get_robust_razorpay_link(service_name, price, user_name):
-    try:
-        if razorpay_client:
-            data = {
-                "amount": int(price) * 100,
-                "currency": "INR",
-                "accept_partial": False,
-                "description": f"Payment for {service_name}",
-                "customer": {"name": user_name if user_name else "User"},
-                "notify": {"sms": False, "email": False},
-                "reminder_enable": False,
-                "callback_url": "https://accastroforge.in/",
-                "callback_method": "get",
-            }
-            response = razorpay_client.payment_link.create(data)
-            if response and "short_url" in response:
-                return response["short_url"]
-    except Exception as e:
-        print(f"Razorpay API fallback triggered due to: {e}")
+  try:
+    if razorpay_client:
+      data = {
+          "amount": int(price) * 100,
+          "currency": "INR",
+          "accept_partial": False,
+          "description": f"Payment for {service_name}",
+          "customer": {"name": user_name if user_name else "User"},
+          "notify": {"sms": False, "email": False},
+          "reminder_enable": False,
+          "callback_url": "https://accastroforge.in/",
+          "callback_method": "get",
+      }
+      response = razorpay_client.payment_link.create(data)
+      if response and "short_url" in response:
+        return response["short_url"]
+  except Exception as e:
+    print(f"Razorpay API fallback triggered due to: {e}")
 
-    return RAZORPAY_ME_URL
+  return RAZORPAY_ME_URL
 
 
 def get_paywall_html(service_name, price, user_name="User"):
-    display_name = (
-        user_name.strip() if user_name and user_name.strip() else "User"
-    )
-    pay_url = get_robust_razorpay_link(service_name, price, display_name)
+  display_name = (
+      user_name.strip() if user_name and user_name.strip() else "User"
+  )
+  pay_url = get_robust_razorpay_link(service_name, price, display_name)
 
-    return f"""
+  return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
         <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
@@ -432,40 +412,48 @@ def get_paywall_html(service_name, price, user_name="User"):
 # 5. STRICT AUTH, UNIQUE REGISTRATION, LOGIN & PERSISTENT SESSION
 # ---------------------------------------------------------
 def handle_manual_signup(name, email, phone, password):
-    u_name = name.strip() if name else "New User"
-    u_email = email.strip().lower() if email else "N/A"
-    u_phone = phone.strip() if phone else "N/A"
+  u_name = name.strip() if name else "New User"
+  u_email = email.strip().lower() if email else "N/A"
+  u_phone = phone.strip() if phone else "N/A"
 
-    if not u_email or "@" not in u_email:
-        return (
-            "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>",
-            "👤 Guest User",
-            "₹ 0.00",
-            "No active sessions.",
-            ""
-        )
-    if not u_phone or len(u_phone) < 10:
-        return (
-            "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>",
-            "👤 Guest User",
-            "₹ 0.00",
-            "No active sessions.",
-            ""
-        )
+  if not u_email or "@" not in u_email:
+    return (
+        "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a"
+        " valid email address.</span>",
+        "👤 Guest User",
+        "₹ 0.00",
+        "No active sessions.",
+        "",
+    )
+  if not u_phone or len(u_phone) < 10:
+    return (
+        "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a"
+        " valid 10-digit Phone Number.</span>",
+        "👤 Guest User",
+        "₹ 0.00",
+        "No active sessions.",
+        "",
+    )
 
-    users = load_users()
-    for existing in users:
-        if existing.get("email") == u_email:
-            return (
-                f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Already Registered</h3><p style='margin:0;'>The email <b>{u_email}</b> is already registered as an active member. Please use the <b>Member Sign In / Login</b> tab above to access your account.</p></div>",
-                "👤 Guest User",
-                "₹ 0.00",
-                "Registration blocked: Email already exists.",
-                ""
-            )
+  users = load_users()
+  for existing in users:
+    if existing.get("email") == u_email:
+      return (
+          f"<div style='background:rgba(239,68,68,0.15); border:1px solid"
+          f" #ef4444; padding:15px; border-radius:12px;"
+          f" color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️"
+          f" Email Already Registered</h3><p style='margin:0;'>The email"
+          f" <b>{u_email}</b> is already registered as an active member. Please"
+          " use the <b>Member Sign In / Login</b> tab above to access your"
+          " account.</p></div>",
+          "👤 Guest User",
+          "₹ 0.00",
+          "Registration blocked: Email already exists.",
+          "",
+      )
 
-    otp_code = str(random.randint(100000, 999999))
-    email_html = f"""
+  otp_code = str(random.randint(100000, 999999))
+  email_html = f"""
     <div style="background:#030014; color:#ffffff; padding:25px; border-radius:16px; font-family:'Poppins', sans-serif; border: 1px solid #7c3aed;">
         <h2 style="color:#fde047; text-align:center;">✨ Welcome to AccAstroForge, {u_name}!</h2>
         <p>Thank you for registering. Please use the verification code below to activate your account:</p>
@@ -476,62 +464,76 @@ def handle_manual_signup(name, email, phone, password):
     </div>
     """
 
-    email_sent = send_brevo_email(
-        u_email, u_name, "AccAstroForge Account Verification OTP", email_html
-    )
+  email_sent = send_brevo_email(
+      u_email, u_name, "AccAstroForge Account Verification OTP", email_html
+  )
 
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "Secure Account Registration",
-        "details": f"Email: {u_email} | Phone: {u_phone} | OTP Generated: {otp_code}",
-        "payment_status": "OTP Dispatched Successfully" if email_sent else "Email Failed",
-    })
+  save_log({
+      "timestamp": str(datetime.datetime.now()),
+      "full_name": u_name,
+      "service": "Secure Account Registration",
+      "details": (
+          f"Email: {u_email} | Phone: {u_phone} | OTP Generated: {otp_code}"
+      ),
+      "payment_status": (
+          "OTP Dispatched Successfully" if email_sent else "Email Failed"
+      ),
+  })
 
-    if email_sent:
-        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it below.</p></div>"
-    else:
-        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but dispatch failed.</p></div>"
+  if email_sent:
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it below.</p></div>"
+  else:
+    success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but dispatch failed.</p></div>"
 
-    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #fde047;'>Status: Pending Verification</span>"
-    wallet_box = "₹ 0.00"
-    history_box = f"• Secure OTP Dispatched to: {u_email}<br>• Phone: {u_phone}"
+  profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #fde047;'>Status: Pending Verification</span>"
+  wallet_box = "₹ 0.00"
+  history_box = f"• Secure OTP Dispatched to: {u_email}<br>• Phone: {u_phone}"
 
-    return success_msg, profile_box, wallet_box, history_box, otp_code
+  return success_msg, profile_box, wallet_box, history_box, otp_code
 
 
 def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
-    if not generated_otp:
-        return (
-            "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>⚠️ No OTP generated yet! Please click '1. Register & Send Verification OTP' first.</div>",
-            f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: No OTP</span>",
-            "₹ 0.00",
-            "Verification Pending",
-            ""
-        )
+  if not generated_otp:
+    return (
+        "<div style='background:rgba(239,68,68,0.15); border:1px solid"
+        " #ef4444; padding:12px; border-radius:10px; color:#ef4444;"
+        " font-weight:bold;'>⚠️ No OTP generated yet! Please click '1. Register"
+        " & Send Verification OTP' first.</div>",
+        f"👤 <b>{u_name}</b> ({u_email})<br><span style='color:"
+        " #ef4444;'>Status: No OTP</span>",
+        "₹ 0.00",
+        "Verification Pending",
+        "",
+    )
 
-    if not user_entered_otp or str(user_entered_otp).strip() != str(generated_otp).strip():
-        return (
-            "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>❌ Invalid OTP Code! Please check your email and try again.</div>",
-            f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: Invalid OTP</span>",
-            "₹ 0.00",
-            "Verification Failed",
-            ""
-        )
-    
-    save_user_db_single(u_name, u_email, u_phone)
+  if not user_entered_otp or str(user_entered_otp).strip() != str(
+      generated_otp
+  ).strip():
+    return (
+        "<div style='background:rgba(239,68,68,0.15); border:1px solid"
+        " #ef4444; padding:12px; border-radius:10px; color:#ef4444;"
+        " font-weight:bold;'>❌ Invalid OTP Code! Please check your email and"
+        " try again.</div>",
+        f"👤 <b>{u_name}</b> ({u_email})<br><span style='color:"
+        " #ef4444;'>Status: Invalid OTP</span>",
+        "₹ 0.00",
+        "Verification Failed",
+        "",
+    )
 
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "OTP Verification Complete",
-        "details": f"Email Verified: {u_email}",
-        "payment_status": "Active & Verified Member"
-    })
-    
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Account Verified & Active!</h3><p style='margin:0;'>Welcome <b>{u_name}</b>! Your email <b>{u_email}</b> has been successfully verified.</p></div>"
-    
-    profile_box = f"""
+  save_user_db_single(u_name, u_email, u_phone)
+
+  save_log({
+      "timestamp": str(datetime.datetime.now()),
+      "full_name": u_name,
+      "service": "OTP Verification Complete",
+      "details": f"Email Verified: {u_email}",
+      "payment_status": "Active & Verified Member",
+  })
+
+  success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Account Verified & Active!</h3><p style='margin:0;'>Welcome <b>{u_name}</b>! Your email <b>{u_email}</b> has been successfully verified.</p></div>"
+
+  profile_box = f"""
     <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
             👤 <b>{u_name}</b> ({u_email})<br>
@@ -543,54 +545,59 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
         </button>
     </div>
     """
-    wallet_box = "₹ 0.00"
-    history_box = f"• Registration & OTP Verification Complete<br>• Account Active & Saved in Cloud DB<br>• Contact: {u_phone}"
-    session_token = f"{u_email}|{u_name}|{u_phone}"
+  wallet_box = "₹ 0.00"
+  history_box = f"• Registration & OTP Verification Complete<br>• Account Active & Saved in Cloud DB<br>• Contact: {u_phone}"
+  session_token = f"{u_email}|{u_name}|{u_phone}"
 
-    return success_msg, profile_box, wallet_box, history_box, session_token
+  return success_msg, profile_box, wallet_box, history_box, session_token
 
 
 def handle_login(login_email, login_pass):
-    l_email = login_email.strip().lower() if login_email else ""
-    if not l_email or "@" not in l_email:
-        return (
-            "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email.</span>",
-            "👤 Guest User",
-            "₹ 0.00",
-            "No active sessions.",
-            ""
-        )
-    
-    users = load_users()
-    matched_user = None
-    for u in users:
-        if u.get("email") == l_email:
-            matched_user = u
-            break
-            
-    if not matched_user:
-        return (
-            f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Account Not Found</h3><p style='margin:0;'>The email <b>{l_email}</b> is not registered. Please sign up first.</p></div>",
-            "👤 Guest User",
-            "₹ 0.00",
-            "Login failed: Account not found.",
-            ""
-        )
-        
-    u_name = matched_user.get("name", "User")
-    u_phone = matched_user.get("phone", "N/A")
-    
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "Member Login",
-        "details": f"Email Logged In: {l_email}",
-        "payment_status": "Active Session"
-    })
-    
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back, {u_name}!</h3><p style='margin:0;'>You have successfully logged into your AccAstroForge account.</p></div>"
-    
-    profile_box = f"""
+  l_email = login_email.strip().lower() if login_email else ""
+  if not l_email or "@" not in l_email:
+    return (
+        "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a"
+        " valid registered email.</span>",
+        "👤 Guest User",
+        "₹ 0.00",
+        "No active sessions.",
+        "",
+    )
+
+  users = load_users()
+  matched_user = None
+  for u in users:
+    if u.get("email") == l_email:
+      matched_user = u
+      break
+
+  if not matched_user:
+    return (
+        f"<div style='background:rgba(239,68,68,0.15); border:1px solid"
+        f" #ef4444; padding:15px; border-radius:12px;"
+        f" color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️"
+        f" Account Not Found</h3><p style='margin:0;'>The email"
+        f" <b>{l_email}</b> is not registered. Please sign up first.</p></div>",
+        "👤 Guest User",
+        "₹ 0.00",
+        "Login failed: Account not found.",
+        "",
+    )
+
+  u_name = matched_user.get("name", "User")
+  u_phone = matched_user.get("phone", "N/A")
+
+  save_log({
+      "timestamp": str(datetime.datetime.now()),
+      "full_name": u_name,
+      "service": "Member Login",
+      "details": f"Email Logged In: {l_email}",
+      "payment_status": "Active Session",
+  })
+
+  success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back, {u_name}!</h3><p style='margin:0;'>You have successfully logged into your AccAstroForge account.</p></div>"
+
+  profile_box = f"""
     <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
             👤 <b>{u_name}</b> ({l_email})<br>
@@ -602,15 +609,15 @@ def handle_login(login_email, login_pass):
         </button>
     </div>
     """
-    wallet_box = "₹ 0.00"
-    history_box = f"• Member Login Successful<br>• Account Active<br>• Contact: {u_phone}"
-    session_token = f"{l_email}|{u_name}|{u_phone}"
-    
-    return success_msg, profile_box, wallet_box, history_box, session_token
+  wallet_box = "₹ 0.00"
+  history_box = f"• Member Login Successful<br>• Account Active<br>• Contact: {u_phone}"
+  session_token = f"{l_email}|{u_name}|{u_phone}"
+
+  return success_msg, profile_box, wallet_box, history_box, session_token
 
 
 def handle_logout():
-    guest_profile = """
+  guest_profile = """
     <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
             <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
@@ -621,33 +628,33 @@ def handle_logout():
         </button>
     </div>
     """
-    guest_wallet = """
+  guest_wallet = """
     <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
         <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
         <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
     </div>
     """
-    guest_history = """
+  guest_history = """
     <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
         <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
         <p style="color: #cbd5e1 !important; font-size: 0.85rem; margin: 0;">No previous orders found for current guest session. Please register or login.</p>
     </div>
     """
-    logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or switch accounts anytime.</p></div>"
-    
-    return logout_msg, guest_profile, guest_wallet, guest_history, ""
+  logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or switch accounts anytime.</p></div>"
+
+  return logout_msg, guest_profile, guest_wallet, guest_history, ""
 
 
 def restore_session_from_token(token):
-    if not token or "|" not in token:
-        return gr.update(), gr.update(), gr.update()
-    try:
-        parts = token.split("|")
-        u_email = parts[0]
-        u_name = parts[1]
-        u_phone = parts[2] if len(parts) > 2 else "N/A"
-        
-        profile_box = f"""
+  if not token or "|" not in token:
+    return gr.update(), gr.update(), gr.update()
+  try:
+    parts = token.split("|")
+    u_email = parts[0]
+    u_name = parts[1]
+    u_phone = parts[2] if len(parts) > 2 else "N/A"
+
+    profile_box = f"""
         <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
                 👤 <b>{u_name}</b> ({u_email})<br>
@@ -659,204 +666,202 @@ def restore_session_from_token(token):
             </button>
         </div>
         """
-        wallet_box = """
+    wallet_box = """
         <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
             <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
             <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
         </div>
         """
-        history_box = f"""
+    history_box = f"""
         <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
             <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
             <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Active Persistent Session Restored<br>• Email: {u_email}<br>• Phone: {u_phone}</p>
         </div>
         """
-        return profile_box, wallet_box, history_box
-    except Exception as e:
-        print(f"Session restoration error: {e}")
-        return gr.update(), gr.update(), gr.update()
+    return profile_box, wallet_box, history_box
+  except Exception as e:
+    print(f"Session restoration error: {e}")
+    return gr.update(), gr.update(), gr.update()
 
 
 def run_daily_horoscope(sign):
-    return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
+  return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
 
 
 def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
-    b_name = boy_name.strip() if boy_name else "Boy"
-    g_name = girl_name.strip() if girl_name else "Girl"
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": f"{b_name} & {g_name}",
-        "service": "Kundali Matching",
-        "payment_status": "Pending (₹399)",
-    })
+  b_name = boy_name.strip() if boy_name else "Boy"
+  g_name = girl_name.strip() if girl_name else "Girl"
+  save_log({
+      "timestamp": str(datetime.datetime.now()),
+      "full_name": f"{b_name} & {g_name}",
+      "service": "Kundali Matching",
+      "payment_status": "Pending (₹399)",
+  })
 
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
-    return teaser_text, get_paywall_html(
-        "Complete Kundali Matching Report", 399, f"{b_name} & {g_name}"
-    )
+  teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
+  return teaser_text, get_paywall_html(
+      "Complete Kundali Matching Report", 399, f"{b_name} & {g_name}"
+  )
 
 
 def run_life_predictions(
     name, dob, tob, pob, focus_area, question, phone, email, address
 ):
-    u_name = name.strip() if name else "User"
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "Complete Life Prediction",
-        "payment_status": "Pending (₹499)",
-    })
+  u_name = name.strip() if name else "User"
+  save_log({
+      "timestamp": str(datetime.datetime.now()),
+      "full_name": u_name,
+      "service": "Complete Life Prediction",
+      "payment_status": "Pending (₹499)",
+  })
 
-    profile = calculate_astrological_profile(
-        u_name, dob if dob else "2000-01-01"
-    )
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🌟 ASTROLOGICAL TEASER FOR {u_name.upper()}</h3>
+  profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
+  teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🌟 ASTROLOGICAL TEASER FOR {u_name.upper()}</h3>
     <ul style='list-style:none; padding:0; line-height:2;'>
         <li><b style='color:#fde047;'>Rashi:</b> {profile['zodiac']}</li>
         <li><b style='color:#fde047;'>Nakshatra:</b> {profile['nakshatra']}</li>
         <li><b style='color:#fde047;'>Dasha:</b> {profile['dasha']}</li>
         <li><b style='color:#fde047;'>Insight:</b> Great growth indicated in {focus_area}.</li>
     </ul></div>"""
-    return teaser_text, get_paywall_html(
-        "Complete Deep Life Forecast & PDF", 499, u_name
-    )
+  return teaser_text, get_paywall_html(
+      "Complete Deep Life Forecast & PDF", 499, u_name
+  )
 
 
 def run_gemstone_remedy(dob, zodiac):
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "service": "Gemstone Remedy",
-        "details": f"DOB: {dob} | Zodiac: {zodiac}",
-        "payment_status": "Pending (₹299)",
-    })
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
-    return teaser_text, get_paywall_html(
-        "Lucky Gemstone & Vedic Remedies Report", 299, "User"
-    )
+  save_log({
+      "timestamp": str(datetime.datetime.now()),
+      "service": "Gemstone Remedy",
+      "details": f"DOB: {dob} | Zodiac: {zodiac}",
+      "payment_status": "Pending (₹299)",
+  })
+  teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
+  return teaser_text, get_paywall_html(
+      "Lucky Gemstone & Vedic Remedies Report", 299, "User"
+  )
 
 
 def run_kundali_pdf(name, dob, tob, pob):
-    u_name = name.strip() if name else "User"
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "Janam Kundali PDF",
-        "payment_status": "Pending (₹299)",
-    })
+  u_name = name.strip() if name else "User"
+  save_log({
+      "timestamp": str(datetime.datetime.now()),
+      "full_name": u_name,
+      "service": "Janam Kundali PDF",
+      "payment_status": "Pending (₹299)",
+  })
 
-    chart_html = generate_visual_kundali_chart_html(
-        u_name, dob if dob else "2000-01-01", tob, pob
-    )
-    pdf_file = create_kundali_pdf_file(
-        u_name, dob if dob else "2000-01-01", tob, pob
-    )
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
-    return (
-        teaser_text,
-        chart_html,
-        pdf_file,
-        get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name),
-    )
+  chart_html = generate_visual_kundali_chart_html(
+      u_name, dob if dob else "2000-01-01", tob, pob
+  )
+  pdf_file = create_kundali_pdf_file(
+      u_name, dob if dob else "2000-01-01", tob, pob
+  )
+  teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
+  return (
+      teaser_text,
+      chart_html,
+      pdf_file,
+      get_paywall_html(
+          "Full Janam Kundali PDF Chart & Dasha Report", 299, u_name
+      ),
+  )
 
 
 def run_numerology(name, dob):
-    u_name = name.strip() if name else "User"
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "Numerology",
-        "payment_status": "Pending (₹249)",
-    })
-    profile = calculate_astrological_profile(
-        u_name, dob if dob else "2000-01-01"
-    )
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
-    return teaser_text, get_paywall_html(
-        "Detailed Numerology & Name Correction Report", 249, u_name
-    )
+  u_name = name.strip() if name else "User"
+  save_log({
+      "timestamp": str(datetime.datetime.now()),
+      "full_name": u_name,
+      "service": "Numerology",
+      "payment_status": "Pending (₹249)",
+  })
+  profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
+  teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
+  return teaser_text, get_paywall_html(
+      "Detailed Numerology & Name Correction Report", 249, u_name
+  )
 
 
 def run_panchang(date_str, city, mode="free"):
-    teaser = f"""<div style='color:#ffffff;'><p><b style='color:#fde047;'>Complete Vedic Panchang for {city} on {date_str}:</b></p>
+  teaser = f"""<div style='color:#ffffff;'><p><b style='color:#fde047;'>Complete Vedic Panchang for {city} on {date_str}:</b></p>
     <ul style='line-height:1.8;'>
         <li><b style='color:#fde047;'>Tithi:</b> Shukla Paksha Navami</li>
         <li><b style='color:#fde047;'>Nakshatra:</b> Rohini</li>
         <li><b style='color:#fde047;'>Rahu Kalam:</b> 10:30 AM - 12:00 PM</li>
         <li><b style='color:#fde047;'>Shubh Muhurat:</b> 11:45 AM - 12:30 PM</li>
     </ul></div>"""
-    if "Detailed" in mode:
-        return (
-            f"<h3 style='color:#fde047;'>📅 Detailed Shubh Muhurat Report</h3>{teaser}",
-            get_paywall_html("Detailed Shubh Muhurat Report", 99, "User"),
-        )
+  if "Detailed" in mode:
     return (
-        f"<h3 style='color:#fde047;'>📅 Free Daily Panchang for {city}</h3>{teaser}",
-        "",
+        f"<h3 style='color:#fde047;'>📅 Detailed Shubh Muhurat Report</h3>{teaser}",
+        get_paywall_html("Detailed Shubh Muhurat Report", 99, "User"),
     )
+  return (
+      f"<h3 style='color:#fde047;'>📅 Free Daily Panchang for {city}</h3>{teaser}",
+      "",
+  )
 
 
 def simple_astro_query(user_query):
-    if not user_query or not user_query.strip():
-        return (
-            "<div style='color:#ffffff;'><p>🙏 <b>Namaste!</b> Please ask any"
-            " question regarding career, marriage, health, or planetary"
-            " transits.</p></div>"
-        )
+  if not user_query or not user_query.strip():
+    return (
+        "<div style='color:#ffffff;'><p>🙏 <b>Namaste!</b> Please ask any"
+        " question regarding career, marriage, health, or planetary"
+        " transits.</p></div>"
+    )
 
-    msg = user_query.lower().strip()
+  msg = user_query.lower().strip()
 
-    if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
-        reply = (
-            "🙏 <b>Namaste!</b> I am your Vedic Astro Assistant. Please share your"
-            " birth details, zodiac sign, or specific questions regarding career,"
-            " marriage, health, or planetary transits, and I will guide you with"
-            " ancient astrological wisdom."
-        )
-    elif any(
-        w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]
-    ):
-        reply = (
-            "💼 <b>Career & Wealth Guidance:</b> In Vedic astrology, the 10th house"
-            " (Karma Bhava) and Jupiter's transit dictate professional growth. If"
-            " you are facing obstacles in career, chanting the 'Om Brihaspataye"
-            " Namah' mantra on Thursdays and working with disciplined focus will"
-            " bring immense growth."
-        )
-    elif any(
-        w in msg for w in ["marriage", "love", "relationship", "partner", "match"]
-    ):
-        reply = (
-            "❤️ <b>Love & Marriage Insights:</b> Compatibility in Vedic astrology is"
-            " evaluated through Guna Milan (36 points) and the positions of Venus"
-            " (Shukra) and Mars (Mangal). Strengthening your 7th house through"
-            " positive communication and harmony will resolve relationship hurdles."
-        )
-    elif any(
-        w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]
-    ):
-        reply = (
-            "🌿 <b>Health & Spiritual Well-being:</b> Physical vitality is tied to"
-            " the Sun (Surya) and Moon (Chandra). Practicing early morning Surya"
-            " Namaskar, meditation during Brahma Muhurta, and keeping a calm"
-            " mindset will balance your inner cosmic energy."
-        )
-    else:
-        responses = [
-            f"🌟 <b>Analyzing your query regarding '{user_query}':</b> Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
-            f"🔮 <b>Regarding '{user_query}':</b> The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
-            f"✨ <b>I hear your concern about '{user_query}'.</b> According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days.",
-        ]
-        reply = random.choice(responses)
+  if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
+    reply = (
+        "🙏 <b>Namaste!</b> I am your Vedic Astro Assistant. Please share your"
+        " birth details, zodiac sign, or specific questions regarding career,"
+        " marriage, health, or planetary transits, and I will guide you with"
+        " ancient astrological wisdom."
+    )
+  elif any(
+      w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]
+  ):
+    reply = (
+        "💼 <b>Career & Wealth Guidance:</b> In Vedic astrology, the 10th house"
+        " (Karma Bhava) and Jupiter's transit dictate professional growth. If"
+        " you are facing obstacles in career, chanting the 'Om Brihaspataye"
+        " Namah' mantra on Thursdays and working with disciplined focus will"
+        " bring immense growth."
+    )
+  elif any(
+      w in msg for w in ["marriage", "love", "relationship", "partner", "match"]
+  ):
+    reply = (
+        "❤️ <b>Love & Marriage Insights:</b> Compatibility in Vedic astrology is"
+        " evaluated through Guna Milan (36 points) and the positions of Venus"
+        " (Shukra) and Mars (Mangal). Strengthening your 7th house through"
+        " positive communication and harmony will resolve relationship hurdles."
+    )
+  elif any(
+      w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]
+  ):
+    reply = (
+        "🌿 <b>Health & Spiritual Well-being:</b> Physical vitality is tied to"
+        " the Sun (Surya) and Moon (Chandra). Practicing early morning Surya"
+        " Namaskar, meditation during Brahma Muhurta, and keeping a calm"
+        " mindset will balance your inner cosmic energy."
+    )
+  else:
+    responses = [
+        f"🌟 <b>Analyzing your query regarding '{user_query}':</b> Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
+        f"🔮 <b>Regarding '{user_query}':</b> The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
+        f"✨ <b>I hear your concern about '{user_query}'.</b> According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days.",
+    ]
+    reply = random.choice(responses)
 
-    return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p>{reply}</p></div>"
+  return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p>{reply}</p></div>"
 
 
 def recharge_wallet(amount):
-    pay_url = get_robust_razorpay_link(
-        f"AccAstroForge Wallet Topup (₹{amount})", amount, "Valued Customer"
-    )
-    return f"""
+  pay_url = get_robust_razorpay_link(
+      f"AccAstroForge Wallet Topup (₹{amount})", amount, "Valued Customer"
+  )
+  return f"""
     <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #4ade80; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
         <h4 style="color: #4ade80 !important; margin-bottom: 5px;">💳 Add ₹{amount} to AccAstroForge Credits</h4>
         <p style="color: #ffffff !important; font-size: 0.85rem; margin-bottom: 10px;">Click below to add credits via Razorpay UPI or Cards instantly.</p>
@@ -868,13 +873,16 @@ def recharge_wallet(amount):
 
 
 def admin_login_and_view(password):
-    if password != ADMIN_PASSWORD:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Password! Access Denied.</span>"
+  if password != ADMIN_PASSWORD:
+    return (
+        "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Password!"
+        " Access Denied.</span>"
+    )
 
-    logs = load_logs()
-    users = load_users()
-    
-    summary_html = f"""
+  logs = load_logs()
+  users = load_users()
+
+  summary_html = f"""
     <div style='color:#fff;'>
         <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Supabase Cloud Connected)</h3>
         <p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>
@@ -883,19 +891,19 @@ def admin_login_and_view(password):
         <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; margin-bottom:20px;' border='1'>
             <tr style='background:#5b21b6; color:#fff;'><th>Name</th><th>Email</th><th>Phone</th><th>Verified At</th></tr>
     """
-    for u in reversed(users):
-        summary_html += f"<tr><td>{u.get('name', '')}</td><td>{u.get('email', '')}</td><td>{u.get('phone', '')}</td><td>{str(u.get('verified_at', ''))[:19]}</td></tr>"
-    summary_html += "</table>"
+  for u in reversed(users):
+    summary_html += f"<tr><td>{u.get('name', '')}</td><td>{u.get('email', '')}</td><td>{u.get('phone', '')}</td><td>{str(u.get('verified_at', ''))[:19]}</td></tr>"
+  summary_html += "</table>"
 
-    summary_html += f"""
+  summary_html += f"""
         <h4 style='color:#fde047; margin-top:15px;'>📜 System Activity Logs</h4>
         <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'>
             <tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>
     """
-    for log in reversed(logs):
-        summary_html += f"<tr><td>{str(log.get('timestamp', ''))[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
-    summary_html += "</table></div>"
-    return summary_html
+  for log in reversed(logs):
+    summary_html += f"<tr><td>{str(log.get('timestamp', ''))[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
+  summary_html += "</table></div>"
+  return summary_html
 
 
 # ---------------------------------------------------------
@@ -1088,15 +1096,17 @@ document.addEventListener("DOMContentLoaded", () => {
 """
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
-    otp_state = gr.State(value="")
-    session_token_state = gr.Textbox(value="", elem_id="session-token-box", visible=False)
-    
-    with gr.Column():
-        with gr.Row():
-            with gr.Column(scale=8, min_width=300):
-                gr.HTML(f"<div>{logo_element}</div>")
-            with gr.Column(scale=4, min_width=350):
-                gr.HTML(f"""
+  otp_state = gr.State(value="")
+  session_token_state = gr.Textbox(
+      value="", elem_id="session-token-box", visible=False
+  )
+
+  with gr.Column():
+    with gr.Row():
+      with gr.Column(scale=8, min_width=300):
+        gr.HTML(f"<div>{logo_element}</div>")
+      with gr.Column(scale=4, min_width=350):
+        gr.HTML(f"""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 10px 18px; border-radius: 14px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                     <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
                     <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
@@ -1104,14 +1114,14 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        with gr.Tabs() as main_tabs:
-            with gr.TabItem("👤 DASHBOARD"):
-                gr.HTML(
-                    "<h3 style='color:#fde047;'>👤 User Profile, Wallet & Order"
-                    " History</h3>"
-                )
+    with gr.Tabs() as main_tabs:
+      with gr.TabItem("👤 DASHBOARD"):
+        gr.HTML(
+            "<h3 style='color:#fde047;'>👤 User Profile, Wallet & Order"
+            " History</h3>"
+        )
 
-                gr.HTML("""
+        gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1.5px dashed #f1c40f; padding: 12px 18px; border-radius: 12px; margin: 10px 0 15px 0; text-align: center; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.15);">
                     <p style="color: #f39c12 !important; font-size: 0.88rem; font-weight: 600; margin: 0; line-height: 1.5;">
                         💡 <b style="color: #ffffff !important;">Mobile View Notice:</b> If you are trying to access the site through mobile version, look at the extreme end of the visible tabs for three dots (<span style="color: #fff; font-weight: bold; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">...</span>) to open the drop-down menu.
@@ -1119,9 +1129,9 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-                with gr.Row():
-                    with gr.Column():
-                        user_profile_display = gr.HTML("""
+        with gr.Row():
+          with gr.Column():
+            user_profile_display = gr.HTML("""
                         <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <div>
                                 <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
@@ -1132,324 +1142,349 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                             </button>
                         </div>
                         """)
-                    with gr.Column():
-                        wallet_balance_display = gr.HTML("""
+          with gr.Column():
+            wallet_balance_display = gr.HTML("""
                         <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
                             <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
                             <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
                         </div>
                         """)
 
-                with gr.Group(visible=False) as signup_group:
-                    with gr.Tabs():
-                        with gr.TabItem("📝 Sign Up & Verify OTP"):
-                            with gr.Row():
-                                signup_name = gr.Textbox(
-                                    label="Full Name", placeholder="e.g. Rajesh Sharma"
-                                )
-                                signup_email = gr.Textbox(
-                                    label="Email Address", placeholder="e.g. user@gmail.com"
-                                )
-                            with gr.Row():
-                                signup_phone = gr.Textbox(
-                                    label="Phone Number (Mandatory)", placeholder="e.g. 9876543210"
-                                )
-                                signup_pass = gr.Textbox(
-                                    label="Create Password",
-                                    type="password",
-                                    placeholder="Enter secure password",
-                                )
-                            signup_btn = gr.Button(
-                                "✨ 1. Register & Send Verification OTP to Email", variant="primary"
-                            )
-                            signup_output = gr.HTML()
+        with gr.Group(visible=False) as signup_group:
+          with gr.Tabs():
+            with gr.TabItem("📝 Sign Up & Verify OTP"):
+              with gr.Row():
+                signup_name = gr.Textbox(
+                    label="Full Name", placeholder="e.g. Rajesh Sharma"
+                )
+                signup_email = gr.Textbox(
+                    label="Email Address", placeholder="e.g. user@gmail.com"
+                )
+              with gr.Row():
+                signup_phone = gr.Textbox(
+                    label="Phone Number (Mandatory)",
+                    placeholder="e.g. 9876543210",
+                )
+                signup_pass = gr.Textbox(
+                    label="Create Password",
+                    type="password",
+                    placeholder="Enter secure password",
+                )
+              signup_btn = gr.Button(
+                  "✨ 1. Register & Send Verification OTP to Email",
+                  variant="primary",
+              )
+              signup_output = gr.HTML()
 
-                            with gr.Row():
-                                user_otp_input = gr.Textbox(
-                                    label="Enter 6-Digit Email OTP",
-                                    placeholder="e.g. 123456",
-                                    max_lines=1
-                                )
-                                verify_otp_btn = gr.Button(
-                                    "🔑 2. Verify OTP & Activate Account", variant="primary"
-                                )
+              with gr.Row():
+                user_otp_input = gr.Textbox(
+                    label="Enter 6-Digit Email OTP",
+                    placeholder="e.g. 123456",
+                    max_lines=1,
+                )
+                verify_otp_btn = gr.Button(
+                    "🔑 2. Verify OTP & Activate Account", variant="primary"
+                )
 
-                        with gr.TabItem("🔐 Member Sign In / Login"):
-                            gr.HTML("<p style='color:#fde047; font-size:0.9rem;'>Already registered? Enter your email and password to log in directly without OTP.</p>")
-                            with gr.Row():
-                                login_email_input = gr.Textbox(label="Registered Email Address", placeholder="e.g. user@gmail.com")
-                                login_pass_input = gr.Textbox(label="Password", type="password", placeholder="Enter your password")
-                            login_btn = gr.Button("🚀 Sign In to Account", variant="primary")
-                            login_output = gr.HTML()
+            with gr.TabItem("🔐 Member Sign In / Login"):
+              gr.HTML(
+                  "<p style='color:#fde047; font-size:0.9rem;'>Already"
+                  " registered? Enter your email and password to log in"
+                  " directly without OTP.</p>"
+              )
+              with gr.Row():
+                login_email_input = gr.Textbox(
+                    label="Registered Email Address",
+                    placeholder="e.g. user@gmail.com",
+                )
+                login_pass_input = gr.Textbox(
+                    label="Password",
+                    type="password",
+                    placeholder="Enter your password",
+                )
+              login_btn = gr.Button(
+                  "🚀 Sign In to Account", variant="primary"
+              )
+              login_output = gr.HTML()
 
-                order_history_display = gr.HTML("""
+        order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
                     <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
                     <p style="color: #cbd5e1 !important; font-size: 0.85rem; margin: 0;">No previous orders found for current guest session. Please register or login.</p>
                 </div>
                 """)
 
-                with gr.Row():
-                    topup_amount = gr.Radio(
-                        choices=["100", "250", "500", "1000"],
-                        value="250",
-                        label="Select Topup Amount (₹)",
-                    )
-                    topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
-                wallet_pay_output = gr.HTML()
-                topup_btn.click(
-                    fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output]
-                )
+        with gr.Row():
+          topup_amount = gr.Radio(
+              choices=["100", "250", "500", "1000"],
+              value="250",
+              label="Select Topup Amount (₹)",
+          )
+          topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
+        wallet_pay_output = gr.HTML()
+        topup_btn.click(
+            fn=recharge_wallet,
+            inputs=[topup_amount],
+            outputs=[wallet_pay_output],
+        )
 
-                signup_btn.click(
-                    fn=handle_manual_signup,
-                    inputs=[signup_name, signup_email, signup_phone, signup_pass],
-                    outputs=[
-                        signup_output,
-                        user_profile_display,
-                        wallet_balance_display,
-                        order_history_display,
-                        otp_state
-                    ],
-                )
+        signup_btn.click(
+            fn=handle_manual_signup,
+            inputs=[signup_name, signup_email, signup_phone, signup_pass],
+            outputs=[
+                signup_output,
+                user_profile_display,
+                wallet_balance_display,
+                order_history_display,
+                otp_state,
+            ],
+        )
 
-                verify_otp_btn.click(
-                    fn=verify_user_otp,
-                    inputs=[user_otp_input, otp_state, signup_name, signup_email, signup_phone],
-                    outputs=[
-                        signup_output,
-                        user_profile_display,
-                        wallet_balance_display,
-                        order_history_display,
-                        session_token_state
-                    ]
-                )
+        verify_otp_btn.click(
+            fn=verify_user_otp,
+            inputs=[
+                user_otp_input,
+                otp_state,
+                signup_name,
+                signup_email,
+                signup_phone,
+            ],
+            outputs=[
+                signup_output,
+                user_profile_display,
+                wallet_balance_display,
+                order_history_display,
+                session_token_state,
+            ],
+        )
 
-                login_btn.click(
-                    fn=handle_login,
-                    inputs=[login_email_input, login_pass_input],
-                    outputs=[
-                        login_output,
-                        user_profile_display,
-                        wallet_balance_display,
-                        order_history_display,
-                        session_token_state
-                    ]
-                )
+        login_btn.click(
+            fn=handle_login,
+            inputs=[login_email_input, login_pass_input],
+            outputs=[
+                login_output,
+                user_profile_display,
+                wallet_balance_display,
+                order_history_display,
+                session_token_state,
+            ],
+        )
 
-            with gr.TabItem("🌟 LIFE PREDICTION"):
-                gr.HTML(
-                    "<h3 style='color:#fde047;'>🌌 Vedic Astrology & Deep Life"
-                    " Forecast</h3>"
-                )
-                with gr.Row():
-                    name_input = gr.Textbox(
-                        label="Full Name", placeholder="e.g. Rajesh Sharma"
-                    )
-                    dob_input = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
-                with gr.Row():
-                    tob_input = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
-                    pob_input = gr.Textbox(
-                        label="Place of Birth", placeholder="City, Country"
-                    )
-                with gr.Row():
-                    phone_input = gr.Textbox(
-                        label="Phone Number", placeholder="e.g. 9876543210"
-                    )
-                    email_input = gr.Textbox(
-                        label="Email Address", placeholder="e.g. user@gmail.com"
-                    )
+      with gr.TabItem("🌟 LIFE PREDICTION"):
+        gr.HTML(
+            "<h3 style='color:#fde047;'>🌌 Vedic Astrology & Deep Life"
+            " Forecast</h3>"
+        )
+        with gr.Row():
+          name_input = gr.Textbox(
+              label="Full Name", placeholder="e.g. Rajesh Sharma"
+          )
+          dob_input = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
+        with gr.Row():
+          tob_input = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
+          pob_input = gr.Textbox(
+              label="Place of Birth", placeholder="City, Country"
+          )
+        with gr.Row():
+          phone_input = gr.Textbox(
+              label="Phone Number", placeholder="e.g. 9876543210"
+          )
+          email_input = gr.Textbox(
+              label="Email Address", placeholder="e.g. user@gmail.com"
+          )
 
-                address_input = gr.Textbox(label="Postal Address")
-                focus_dropdown = gr.Dropdown(
-                    choices=[
-                        "General Life & Destiny",
-                        "Career & Wealth Growth",
-                        "Love & Marriage",
-                        "Health & Spiritual Growth",
-                    ],
-                    value="General Life & Destiny",
-                    label="Primary Focus Area",
-                )
-                question_input = gr.Textbox(label="Specific Question or Concern")
-                submit_life = gr.Button(
-                    "✨ Reveal Detailed Life Insights (₹499)", variant="primary"
-                )
+        address_input = gr.Textbox(label="Postal Address")
+        focus_dropdown = gr.Dropdown(
+            choices=[
+                "General Life & Destiny",
+                "Career & Wealth Growth",
+                "Love & Marriage",
+                "Health & Spiritual Growth",
+            ],
+            value="General Life & Destiny",
+            label="Primary Focus Area",
+        )
+        question_input = gr.Textbox(label="Specific Question or Concern")
+        submit_life = gr.Button(
+            "✨ Reveal Detailed Life Insights (₹499)", variant="primary"
+        )
 
-                output_life_teaser = gr.HTML()
-                output_life_paywall = gr.HTML()
-                submit_life.click(
-                    fn=run_life_predictions,
-                    inputs=[
-                        name_input,
-                        dob_input,
-                        tob_input,
-                        pob_input,
-                        focus_dropdown,
-                        question_input,
-                        phone_input,
-                        email_input,
-                        address_input,
-                    ],
-                    outputs=[output_life_teaser, output_life_paywall],
-                )
+        output_life_teaser = gr.HTML()
+        output_life_paywall = gr.HTML()
+        submit_life.click(
+            fn=run_life_predictions,
+            inputs=[
+                name_input,
+                dob_input,
+                tob_input,
+                pob_input,
+                focus_dropdown,
+                question_input,
+                phone_input,
+                email_input,
+                address_input,
+            ],
+            outputs=[output_life_teaser, output_life_paywall],
+        )
 
-            with gr.TabItem("☀️ HOROSCOPE"):
-                gr.HTML(
-                    "<h3 style='color:#fde047;'>🔮 Daily Zodiac Predictions"
-                    " (Free)</h3>"
-                )
-                zodiac_sign = gr.Dropdown(
-                    choices=ZODIAC_SIGNS,
-                    value="Aries (Mesha)",
-                    label="Select Zodiac Sign",
-                )
-                submit_horoscope = gr.Button(
-                    "🔮 Get Today's Horoscope", variant="primary"
-                )
-                output_horoscope = gr.HTML()
-                submit_horoscope.click(
-                    fn=run_daily_horoscope, inputs=[zodiac_sign], outputs=output_horoscope
-                )
+      with gr.TabItem("☀️ HOROSCOPE"):
+        gr.HTML(
+            "<h3 style='color:#fde047;'>🔮 Daily Zodiac Predictions"
+            " (Free)</h3>"
+        )
+        zodiac_sign = gr.Dropdown(
+            choices=ZODIAC_SIGNS,
+            value="Aries (Mesha)",
+            label="Select Zodiac Sign",
+        )
+        submit_horoscope = gr.Button(
+            "🔮 Get Today's Horoscope", variant="primary"
+        )
+        output_horoscope = gr.HTML()
+        submit_horoscope.click(
+            fn=run_daily_horoscope,
+            inputs=[zodiac_sign],
+            outputs=output_horoscope,
+        )
 
-            with gr.TabItem("❤️ MATCHING"):
-                gr.HTML(
-                    "<h3 style='color:#fde047;'>💍 Vedic Compatibility & Guna"
-                    " Milan</h3>"
-                )
-                with gr.Row():
-                    boy_name = gr.Textbox(label="Boy's Name", placeholder="e.g. Rahul")
-                    boy_dob = gr.Textbox(
-                        label="Boy's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
-                    )
-                with gr.Row():
-                    girl_name = gr.Textbox(label="Girl's Name", placeholder="e.g. Priya")
-                    girl_dob = gr.Textbox(
-                        label="Girl's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
-                    )
-                submit_matching = gr.Button(
-                    "❤️ Match Kundalis Now (₹399)", variant="primary"
-                )
-                output_matching = gr.HTML()
-                output_matching_paywall = gr.HTML()
-                submit_matching.click(
-                    fn=run_kundali_matching,
-                    inputs=[boy_name, boy_dob, girl_name, girl_dob],
-                    outputs=[output_matching, output_matching_paywall],
-                )
+      with gr.TabItem("❤️ MATCHING"):
+        gr.HTML(
+            "<h3 style='color:#fde047;'>💍 Vedic Compatibility & Guna"
+            " Milan</h3>"
+        )
+        with gr.Row():
+          boy_name = gr.Textbox(label="Boy's Name", placeholder="e.g. Rahul")
+          boy_dob = gr.Textbox(
+              label="Boy's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
+          )
+        with gr.Row():
+          girl_name = gr.Textbox(label="Girl's Name", placeholder="e.g. Priya")
+          girl_dob = gr.Textbox(
+              label="Girl's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
+          )
+        submit_matching = gr.Button(
+            "❤️ Match Kundalis Now (₹399)", variant="primary"
+        )
+        output_matching = gr.HTML()
+        output_matching_paywall = gr.HTML()
+        submit_matching.click(
+            fn=run_kundali_matching,
+            inputs=[boy_name, boy_dob, girl_name, girl_dob],
+            outputs=[output_matching, output_matching_paywall],
+        )
 
-            with gr.TabItem("💎 GEMSTONES"):
-                gr.HTML(
-                    "<h3 style='color:#fde047;'>🧿 Lucky Gemstones & Cosmic"
-                    " Remedies</h3>"
-                )
-                with gr.Row():
-                    gem_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
-                    gem_zodiac = gr.Textbox(
-                        label="Zodiac Sign", placeholder="e.g. Aries (Mesha)"
-                    )
-                submit_gem = gr.Button(
-                    "💎 Find My Gemstone (₹299)", variant="primary"
-                )
-                output_gem = gr.HTML()
-                output_gem_paywall = gr.HTML()
-                submit_gem.click(
-                    fn=run_gemstone_remedy,
-                    inputs=[gem_dob, gem_zodiac],
-                    outputs=[output_gem, output_gem_paywall],
-                )
+      with gr.TabItem("💎 GEMSTONES"):
+        gr.HTML(
+            "<h3 style='color:#fde047;'>🧿 Lucky Gemstones & Cosmic"
+            " Remedies</h3>"
+        )
+        with gr.Row():
+          gem_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
+          gem_zodiac = gr.Textbox(
+              label="Zodiac Sign", placeholder="e.g. Aries (Mesha)"
+          )
+        submit_gem = gr.Button(
+            "💎 Find My Gemstone (₹299)", variant="primary"
+        )
+        output_gem = gr.HTML()
+        output_gem_paywall = gr.HTML()
+        submit_gem.click(
+            fn=run_gemstone_remedy,
+            inputs=[gem_dob, gem_zodiac],
+            outputs=[output_gem, output_gem_paywall],
+        )
 
-            with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
-                gr.HTML(
-                    "<h3 style='color:#fde047;'>📜 Janam Kundali & Lagna Birth Chart"
-                    " Generator</h3>"
-                )
-                with gr.Row():
-                    k_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                    k_dob = gr.Textbox(
-                        label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
-                    )
-                with gr.Row():
-                    k_tob = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
-                    k_pob = gr.Textbox(
-                        label="Place of Birth", placeholder="City, Country"
-                    )
-                submit_kundali_pdf = gr.Button(
-                    "📜 Generate Visual Birth Chart & Kundali PDF (₹299)",
-                    variant="primary",
-                )
-                output_kundali_pdf_text = gr.HTML()
-                output_visual_chart = gr.HTML()
-                output_kundali_file = gr.File(label="Download Generated Kundali PDF")
-                output_kundali_paywall = gr.HTML()
-                submit_kundali_pdf.click(
-                    fn=run_kundali_pdf,
-                    inputs=[k_name, k_dob, k_tob, k_pob],
-                    outputs=[
-                        output_kundali_pdf_text,
-                        output_visual_chart,
-                        output_kundali_file,
-                        output_kundali_paywall,
-                    ],
-                )
+      with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
+        gr.HTML(
+            "<h3 style='color:#fde047;'>📜 Janam Kundali & Lagna Birth Chart"
+            " Generator</h3>"
+        )
+        with gr.Row():
+          k_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+          k_dob = gr.Textbox(
+              label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
+          )
+        with gr.Row():
+          k_tob = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
+          k_pob = gr.Textbox(
+              label="Place of Birth", placeholder="City, Country"
+          )
+        submit_kundali_pdf = gr.Button(
+            "📜 Generate Visual Birth Chart & Kundali PDF (₹299)",
+            variant="primary",
+        )
+        output_kundali_pdf_text = gr.HTML()
+        output_visual_chart = gr.HTML()
+        output_kundali_file = gr.File(label="Download Generated Kundali PDF")
+        output_kundali_paywall = gr.HTML()
+        submit_kundali_pdf.click(
+            fn=run_kundali_pdf,
+            inputs=[k_name, k_dob, k_tob, k_pob],
+            outputs=[
+                output_kundali_pdf_text,
+                output_visual_chart,
+                output_kundali_file,
+                output_kundali_paywall,
+            ],
+        )
 
-            with gr.TabItem("🔢 NUMEROLOGY"):
-                gr.HTML("<h3 style='color:#fde047;'>🔢 Numerology Check</h3>")
-                with gr.Row():
-                    n_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                    n_dob = gr.Textbox(
-                        label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
-                    )
-                submit_num = gr.Button(
-                    "🔢 Analyze Numerology (₹249)", variant="primary"
-                )
-                output_num = gr.HTML()
-                output_num_paywall = gr.HTML()
-                submit_num.click(
-                    fn=run_numerology,
-                    inputs=[n_name, n_dob],
-                    outputs=[output_num, output_num_paywall],
-                )
+      with gr.TabItem("🔢 NUMEROLOGY"):
+        gr.HTML("<h3 style='color:#fde047;'>🔢 Numerology Check</h3>")
+        with gr.Row():
+          n_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+          n_dob = gr.Textbox(
+              label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
+          )
+        submit_num = gr.Button(
+            "🔢 Analyze Numerology (₹249)", variant="primary"
+        )
+        output_num = gr.HTML()
+        output_num_paywall = gr.HTML()
+        submit_num.click(
+            fn=run_numerology,
+            inputs=[n_name, n_dob],
+            outputs=[output_num, output_num_paywall],
+        )
 
-            with gr.TabItem("📅 PANCHANG"):
-                gr.HTML(
-                    "<h3 style='color:#fde047;'>📅 Vedic Panchang & Shubh Muhurat</h3>"
-                )
-                with gr.Row():
-                    p_date = gr.Textbox(
-                        label="Date (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
-                    )
-                    p_city = gr.Textbox(label="City", placeholder="e.g. Kolkata")
-                p_mode = gr.Radio(
-                    choices=[
-                        "Free Daily Panchang",
-                        "Detailed Shubh Muhurat Report (₹99)",
-                    ],
-                    value="Free Daily Panchang",
-                )
-                submit_panchang = gr.Button("📅 Check Panchang", variant="primary")
-                output_panchang = gr.HTML()
-                output_panchang_paywall = gr.HTML()
-                submit_panchang.click(
-                    fn=run_panchang,
-                    inputs=[p_date, p_city, p_mode],
-                    outputs=[output_panchang, output_panchang_paywall],
-                )
+      with gr.TabItem("📅 PANCHANG"):
+        gr.HTML(
+            "<h3 style='color:#fde047;'>📅 Vedic Panchang & Shubh Muhurat</h3>"
+        )
+        with gr.Row():
+          p_date = gr.Textbox(
+              label="Date (YYYY-MM-DD)", placeholder="YYYY-MM-DD"
+          )
+          p_city = gr.Textbox(label="City", placeholder="e.g. Kolkata")
+        p_mode = gr.Radio(
+            choices=[
+                "Free Daily Panchang",
+                "Detailed Shubh Muhurat Report (₹99)",
+            ],
+            value="Free Daily Panchang",
+        )
+        submit_panchang = gr.Button("📅 Check Panchang", variant="primary")
+        output_panchang = gr.HTML()
+        output_panchang_paywall = gr.HTML()
+        submit_panchang.click(
+            fn=run_panchang,
+            inputs=[p_date, p_city, p_mode],
+            outputs=[output_panchang, output_panchang_paywall],
+        )
 
-            with gr.TabItem("🤖 AI ASSISTANT"):
-                gr.HTML(
-                    "<h3 style='color:#fde047;'>🤖 Ask Your Personal AI Astrologer</h3>"
-                )
-                ai_input = gr.Textbox(
-                    label="Type your query (e.g., career, marriage, health)",
-                    placeholder="e.g. How is my career looking for next year?",
-                )
-                ai_submit = gr.Button("Ask Assistant ✨", variant="primary")
-                ai_output = gr.HTML()
-                ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
+      with gr.TabItem("🤖 AI ASSISTANT"):
+        gr.HTML(
+            "<h3 style='color:#fde047;'>🤖 Ask Your Personal AI Astrologer</h3>"
+        )
+        ai_input = gr.Textbox(
+            label="Type your query (e.g., career, marriage, health)",
+            placeholder="e.g. How is my career looking for next year?",
+        )
+        ai_submit = gr.Button("Ask Assistant ✨", variant="primary")
+        ai_output = gr.HTML()
+        ai_submit.click(fn=simple_astro_query, inputs=ai_input, outputs=ai_output)
 
-            with gr.TabItem("⚖️ LEGAL"):
-                gr.HTML("""
+      with gr.TabItem("⚖️ LEGAL"):
+        gr.HTML("""
                 <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px; color: #ffffff;">
                     <h4 style="color: #fde047 !important;">📜 Terms of Service</h4>
                     <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
@@ -1468,70 +1503,76 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 </div>
                 """)
 
-        signup_state = gr.State(value=False)
-        manual_signup_trigger = gr.Button(
-            "Trigger Signup", elem_id="manual-signup-trigger"
+    signup_state = gr.State(value=False)
+    manual_signup_trigger = gr.Button(
+        "Trigger Signup", elem_id="manual-signup-trigger"
+    )
+    manual_signup_trigger.click(
+        fn=lambda vis: (not vis, gr.update(visible=not vis)),
+        inputs=[signup_state],
+        outputs=[signup_state, signup_group],
+    )
+
+    logout_trigger = gr.Button("Trigger Logout", elem_id="logout-trigger")
+    logout_trigger.click(
+        fn=handle_logout,
+        inputs=[],
+        outputs=[
+            signup_output,
+            user_profile_display,
+            wallet_balance_display,
+            order_history_display,
+            session_token_state,
+        ],
+    )
+
+    session_sync_btn = gr.Button("Sync Session", elem_id="session-sync-btn")
+    session_sync_btn.click(
+        fn=restore_session_from_token,
+        inputs=[session_token_state],
+        outputs=[user_profile_display, wallet_balance_display, order_history_display],
+    )
+
+    session_token_state.change(
+        fn=None,
+        inputs=[session_token_state],
+        outputs=None,
+        js=(
+            "(token) => { if(token)"
+            " localStorage.setItem('accastroforge_session', token); else"
+            " localStorage.removeItem('accastroforge_session'); }"
+        ),
+    )
+
+    with gr.Group(visible=False) as admin_group:
+      with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
+        secret_pass = gr.Textbox(
+            label="Admin Secret Password",
+            type="password",
+            placeholder="Enter Password",
         )
-        manual_signup_trigger.click(
-            fn=lambda vis: (not vis, gr.update(visible=not vis)),
-            inputs=[signup_state],
-            outputs=[signup_state, signup_group],
+        unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
+        secret_output = gr.HTML()
+        unlock_btn.click(
+            fn=admin_login_and_view,
+            inputs=secret_pass,
+            outputs=secret_output,
         )
 
-        logout_trigger = gr.Button("Trigger Logout", elem_id="logout-trigger")
-        logout_trigger.click(
-            fn=handle_logout,
-            inputs=[],
-            outputs=[
-                signup_output,
-                user_profile_display,
-                wallet_balance_display,
-                order_history_display,
-                session_token_state
-            ]
-        )
-
-        session_sync_btn = gr.Button("Sync Session", elem_id="session-sync-btn")
-        session_sync_btn.click(
-            fn=restore_session_from_token,
-            inputs=[session_token_state],
-            outputs=[user_profile_display, wallet_balance_display, order_history_display]
-        )
-
-        session_token_state.change(
-            fn=None,
-            inputs=[session_token_state],
-            outputs=None,
-            js="(token) => { if(token) localStorage.setItem('accastroforge_session', token); else localStorage.removeItem('accastroforge_session'); }"
-        )
-
-        with gr.Group(visible=False) as admin_group:
-            with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
-                secret_pass = gr.Textbox(
-                    label="Admin Secret Password",
-                    type="password",
-                    placeholder="Enter Password",
-                )
-                unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
-                secret_output = gr.HTML()
-                unlock_btn.click(
-                    fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output
-                )
-
-        admin_state = gr.State(value=False)
-        real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger")
-        real_hidden_trigger.click(
-            fn=lambda vis: (not vis, gr.update(visible=not vis)),
-            inputs=[admin_state],
-            outputs=[admin_state, admin_group],
-        )
+    admin_state = gr.State(value=False)
+    real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger")
+    real_hidden_trigger.click(
+        fn=lambda vis: (not vis, gr.update(visible=not vis)),
+        inputs=[admin_state],
+        outputs=[admin_state, admin_group],
+    )
 
 if __name__ == "__main__":
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=10000,
-        ssr_mode=False,
-        css=custom_css,
-        head=head_html,
-        favicon_path="favicon.png"
-    )
+  demo.launch(
+      server_name="0.0.0.0",
+      server_port=10000,
+      ssr_mode=False,
+      css=custom_css,
+      head=head_html,
+      favicon_path="favicon.png",
+  )

@@ -420,7 +420,7 @@ def handle_manual_signup(name, email, phone, password):
     for existing in users:
         if existing.get("email") == u_email:
             return (
-                f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Already Registered</h3><p style='margin:0;'>The email <b>{u_email}</b> is already registered as an active member. Please use the <b>Login</b> tab below to access your account.</p></div>",
+                f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Already Registered</h3><p style='margin:0;'>The email <b>{u_email}</b> is already registered as an active member. Please use the <b>Member Sign In / Login</b> tab above to access your account.</p></div>",
                 "👤 Guest User",
                 "₹ 0.00",
                 "Registration blocked: Email already exists.",
@@ -482,7 +482,6 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
     
     # Save newly verified user to persistent database
     users = load_users()
-    # Double check if already exists
     exists = any(u.get("email") == u_email.strip().lower() for u in users)
     if not exists:
         new_user = {
@@ -829,7 +828,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & PERSISTENT SESSION JAVASCRIPT
+# 6. HARDCORE CSS & HIGH CONTRAST LABEL FIX
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -910,8 +909,10 @@ button.primary, button.gr-button-primary, .gr-button-primary {
     border-radius: 12px !important;
 }
 
+/* HIGH CONTRAST LABELS FIX FOR VISIBILITY */
 label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span, h1, h2, h3, h4, p, li, b, strong {
     color: #fde047 !important;
+    font-weight: 600 !important;
 }
 
 p, li, span, div {

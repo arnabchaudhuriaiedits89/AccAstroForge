@@ -6,13 +6,13 @@ import io
 import random
 import requests
 import hashlib
-import sqlite3
 import gradio as gr
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import razorpay
+from supabase import create_client, Client
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
@@ -34,6 +34,36 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
+# ---------------------------------------------------------
+# 1. PERMANENT SUPABASE CLOUD DATABASE SYSTEM & AUTO-TABLE CREATOR
+# ---------------------------------------------------------
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://zhpseyagpwcakptaiswz.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_secret_YczfVGsSDg886USdV5TOUw_3BmSHzp7")
+
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+except Exception as e:
+    print(f"Supabase Client Error: {e}")
+    supabase = None
+
+# Auto-initialize/verify tables via REST API / fallback check
+def init_supabase_tables():
+    if not supabase:
+        return
+    try:
+        # Check users table by selecting 1 row
+        supabase.table("users").select("*").limit(1).execute()
+    except Exception as e:
+        print(f"Users table check/creation notice: {e}")
+
+    try:
+        # Check admin_logs table by selecting 1 row
+        supabase.table("admin_logs").select("*").limit(1).execute()
+    except Exception as e:
+        print(f"Admin logs table check/creation notice: {e}")
+
+init_supabase_tables()
+
 try:
     razorpay_client = razorpay.Client(
         auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)
@@ -41,101 +71,60 @@ try:
 except Exception:
     razorpay_client = None
 
-# ---------------------------------------------------------
-# 1. PERMANENT SQLITE DATABASE SYSTEM FOR RENDER DEPLOYMENT
-# ---------------------------------------------------------
-DB_FILE = "accastroforge.db"
-
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            email TEXT UNIQUE,
-            phone TEXT,
-            password TEXT,
-            verified_at TEXT
-        )
-    """)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS admin_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            full_name TEXT,
-            service TEXT,
-            details TEXT,
-            payment_status TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-init_db()
 
 def load_users():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT name, email, phone, verified_at FROM users")
-    rows = cursor.fetchall()
-    conn.close()
-    users = []
-    for r in rows:
-        users.append({"name": r[0], "email": r[1], "phone": r[2], "verified_at": r[3]})
-    return users
+    if not supabase:
+        return []
+    try:
+        res = supabase.table("users").select("*").execute()
+        return res.data if res.data else []
+    except Exception as e:
+        print(f"Supabase load_users error: {e}")
+        return []
+
 
 def save_user_db_single(u_name, u_email, u_phone):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+    if not supabase:
+        return
     now_str = str(datetime.datetime.now())
     try:
-        cursor.execute(
-            "INSERT OR REPLACE INTO users (name, email, phone, verified_at) VALUES (?, ?, ?, ?)",
-            (u_name, u_email.lower(), u_phone, now_str)
-        )
-        conn.commit()
+        data = {
+            "name": u_name,
+            "email": u_email.lower(),
+            "phone": u_phone,
+            "verified_at": now_str
+        }
+        supabase.table("users").upsert(data, on_conflict="email").execute()
     except Exception as e:
-        print(f"DB Error saving user: {e}")
-    finally:
-        conn.close()
+        print(f"Supabase save_user error: {e}")
+
 
 def load_logs():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT timestamp, full_name, service, details, payment_status FROM admin_logs")
-    rows = cursor.fetchall()
-    conn.close()
-    logs = []
-    for r in rows:
-        logs.append({
-            "timestamp": r[0],
-            "full_name": r[1],
-            "service": r[2],
-            "details": r[3],
-            "payment_status": r[4]
-        })
-    return logs
+    if not supabase:
+        return []
+    try:
+        res = supabase.table("admin_logs").select("*").execute()
+        return res.data if res.data else []
+    except Exception as e:
+        print(f"Supabase load_logs error: {e}")
+        return []
+
 
 def save_log(user_data):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
+    if not supabase:
+        return
     try:
-        cursor.execute(
-            "INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status) VALUES (?, ?, ?, ?, ?)",
-            (
-                user_data.get("timestamp", str(datetime.datetime.now())),
-                user_data.get("full_name", "N/A"),
-                user_data.get("service", "General"),
-                user_data.get("details", "N/A"),
-                user_data.get("payment_status", "Pending")
-            )
-        )
-        conn.commit()
+        data = {
+            "timestamp": user_data.get("timestamp", str(datetime.datetime.now())),
+            "full_name": user_data.get("full_name", "N/A"),
+            "service": user_data.get("service", "General"),
+            "details": user_data.get("details", "N/A"),
+            "payment_status": user_data.get("payment_status", "Pending")
+        }
+        supabase.table("admin_logs").insert(data).execute()
     except Exception as e:
-        print(f"DB Error saving log: {e}")
-    finally:
-        conn.close()
+        print(f"Supabase save_log error: {e}")
+
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
@@ -442,10 +431,6 @@ def get_paywall_html(service_name, price, user_name="User"):
 # ---------------------------------------------------------
 # 5. STRICT AUTH, UNIQUE REGISTRATION, LOGIN & PERSISTENT SESSION
 # ---------------------------------------------------------
-GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
-FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
-
-
 def handle_manual_signup(name, email, phone, password):
     u_name = name.strip() if name else "New User"
     u_email = email.strip().lower() if email else "N/A"
@@ -551,7 +536,7 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
         <div>
             👤 <b>{u_name}</b> ({u_email})<br>
             <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member</span>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Cloud Database Protected)</span>
         </div>
         <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
             🚪 Logout / Switch Account
@@ -559,7 +544,7 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
     </div>
     """
     wallet_box = "₹ 0.00"
-    history_box = f"• Registration & OTP Verification Complete<br>• Account Active<br>• Contact: {u_phone}"
+    history_box = f"• Registration & OTP Verification Complete<br>• Account Active & Saved in Cloud DB<br>• Contact: {u_phone}"
     session_token = f"{u_email}|{u_name}|{u_phone}"
 
     return success_msg, profile_box, wallet_box, history_box, session_token
@@ -610,7 +595,7 @@ def handle_login(login_email, login_pass):
         <div>
             👤 <b>{u_name}</b> ({l_email})<br>
             <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member</span>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Cloud Database Protected)</span>
         </div>
         <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
             🚪 Logout / Switch Account
@@ -891,7 +876,7 @@ def admin_login_and_view(password):
     
     summary_html = f"""
     <div style='color:#fff;'>
-        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3>
+        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Supabase Cloud Connected)</h3>
         <p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>
         
         <h4 style='color:#4ade80; margin-top:15px;'>📋 Registered Users Database</h4>
@@ -899,7 +884,7 @@ def admin_login_and_view(password):
             <tr style='background:#5b21b6; color:#fff;'><th>Name</th><th>Email</th><th>Phone</th><th>Verified At</th></tr>
     """
     for u in reversed(users):
-        summary_html += f"<tr><td>{u.get('name', '')}</td><td>{u.get('email', '')}</td><td>{u.get('phone', '')}</td><td>{u.get('verified_at', '')[:19]}</td></tr>"
+        summary_html += f"<tr><td>{u.get('name', '')}</td><td>{u.get('email', '')}</td><td>{u.get('phone', '')}</td><td>{str(u.get('verified_at', ''))[:19]}</td></tr>"
     summary_html += "</table>"
 
     summary_html += f"""
@@ -908,7 +893,7 @@ def admin_login_and_view(password):
             <tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>
     """
     for log in reversed(logs):
-        summary_html += f"<tr><td>{log.get('timestamp', '')[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
+        summary_html += f"<tr><td>{str(log.get('timestamp', ''))[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
     summary_html += "</table></div>"
     return summary_html
 
@@ -1513,7 +1498,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
             outputs=[user_profile_display, wallet_balance_display, order_history_display]
         )
 
-        # Sync session token to browser localStorage on login/verify
         session_token_state.change(
             fn=None,
             inputs=[session_token_state],

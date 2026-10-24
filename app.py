@@ -441,7 +441,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. HARDCORE CSS & 3D SPINNING OVERLAY ENGINE (BG PROTECTED)
+# 5. HARDCORE CSS & CSS-ONLY OVERLAY HIDER (BG PROTECTED)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -507,39 +507,30 @@ button[role="tab"][aria-selected="true"] {
     border-color: #fde047 !important;
 }
 
-#logo-3d-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(3, 0, 20, 0.92);
-    backdrop-filter: blur(10px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999999999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease-in-out;
+/* 100% Guaranteed Pure CSS Overlay on Loading */
+.generating {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(3, 0, 20, 0.94) !important;
+    backdrop-filter: blur(12px) !important;
+    z-index: 999999999 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-image: url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: 240px 240px !important;
+    animation: pulseLogo 0.8s ease-in-out infinite alternate !important;
+    color: transparent !important;
 }
 
-#logo-3d-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.spinner-3d-logo {
-    width: 220px;
-    height: 220px;
-    animation: spin3D 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    filter: drop-shadow(0 0 50px rgba(244, 114, 182, 1));
-}
-
-@keyframes spin3D {
-    0% { transform: rotateY(0deg) scale(0.6); }
-    50% { transform: rotateY(180deg) scale(1.35); }
-    100% { transform: rotateY(360deg) scale(0.6); }
+@keyframes pulseLogo {
+    0% { transform: scale(0.85); filter: drop-shadow(0 0 20px rgba(244, 114, 182, 0.6)); }
+    100% { transform: scale(1.15); filter: drop-shadow(0 0 60px rgba(244, 114, 182, 1)); }
 }
 
 .gr-accordion, .accordion, div[data-testid="accordion"] {
@@ -607,10 +598,6 @@ input::placeholder, textarea::placeholder {
 """
 
 head_html = """
-<div id="logo-3d-overlay">
-    <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" class="spinner-3d-logo" alt="Spinning Zodiac Logo">
-</div>
-
 <script>
 function attachEyeToggle() {
     const passInputs = document.querySelectorAll('input[type="password"]');
@@ -644,24 +631,6 @@ function attachEyeToggle() {
         }
     });
 }
-
-function triggerSpinOverlay(duration = 1800) {
-    const overlay = document.getElementById('logo-3d-overlay');
-    if (overlay) {
-        overlay.classList.add('active');
-        setTimeout(() => {
-            overlay.classList.remove('active');
-        }, duration);
-    }
-}
-
-// Trigger 3D Spinning Logo on every Tab or Action Button click
-document.addEventListener('click', function(e) {
-    const target = e.target.closest('button, [role="tab"], a');
-    if (target) {
-        triggerSpinOverlay(2000);
-    }
-}, true);
 
 setInterval(() => {
     attachEyeToggle();

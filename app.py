@@ -7,8 +7,6 @@ import random
 import requests
 import hashlib
 import gradio as gr
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, RedirectResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -32,12 +30,6 @@ GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
 FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
-
-# TWITTER OAUTH 2.0 CONFIGS
-TWITTER_CLIENT_ID = "Vy1ke1RKM1pjQWFQbzF1b1VPTGc6MTpjaQ"
-TWITTER_CLIENT_SECRET = "ap6gCWmf05A9fcu7w6mKqKbyMkT1M_wry7uzRjSdtaPhQ1aXBj"
-TWITTER_REDIRECT_URI = "https://accastroforge.in/login/twitter/callback"
-TWITTER_OAUTH_URL = f"https://x.com/i/oauth2/authorize?response_type=code&client_id={TWITTER_CLIENT_ID}&redirect_uri={TWITTER_REDIRECT_URI}&scope=users.read%20tweet.read%20offline.access&state=security_state_active&code_challenge=challenge_secure_xyz&code_challenge_method=plain"
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -69,7 +61,10 @@ def save_log(user_data):
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
-logo_path = "logo.png" if os.path.exists("logo.png") else None
+# Transparent Zodiac Logo File uploaded on GitHub
+3D_SPIN_LOGO_FILE = "AccAstroForge Zodiac Logo Text Cut Through TRANSPERANT.png"
+
+logo_path = 3D_SPIN_LOGO_FILE if os.path.exists(3D_SPIN_LOGO_FILE) else ("logo.png" if os.path.exists("logo.png") else None)
 
 
 def get_base64(file_path):
@@ -298,7 +293,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH & SIGNUP HANDLERS
+# 4. SOCIAL OAUTH & SIGNUP HANDLERS (GOOGLE & FACEBOOK)
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -449,7 +444,7 @@ def admin_login_and_view(password):
 
 
 # ---------------------------------------------------------
-# 5. HARDCORE CSS & INJECTED EYE-TOGGLE JAVASCRIPT
+# 5. HARDCORE CSS & INJECTED 3D SPINNING JS ENGINE
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -506,12 +501,48 @@ button[role="tab"] {
     border-radius: 8px !important;
     padding: 6px 2px !important;
     margin: 0 !important;
+    transition: all 0.3s ease;
 }
 
 button[role="tab"][aria-selected="true"] {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-color: #fde047 !important;
+}
+
+#logo-3d-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(5, 1, 20, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#logo-3d-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.spinner-3d-logo {
+    width: 140px;
+    height: 140px;
+    animation: spin3D 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    filter: drop-shadow(0 0 25px rgba(244, 114, 182, 0.9));
+}
+
+@keyframes spin3D {
+    0% { transform: rotateY(0deg) scale(0.8); }
+    50% { transform: rotateY(180deg) scale(1.2); }
+    100% { transform: rotateY(360deg) scale(0.8); }
 }
 
 .gr-accordion, .accordion, div[data-testid="accordion"] {
@@ -579,6 +610,10 @@ input::placeholder, textarea::placeholder {
 """
 
 head_html = """
+<div id="logo-3d-overlay">
+    <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" class="spinner-3d-logo" alt="Spinning Zodiac Logo">
+</div>
+
 <script>
 function attachEyeToggle() {
     const passInputs = document.querySelectorAll('input[type="password"]');
@@ -613,14 +648,37 @@ function attachEyeToggle() {
     });
 }
 
-setInterval(attachEyeToggle, 300);
-document.addEventListener("DOMContentLoaded", attachEyeToggle);
+function attach3DTabSpinTransition() {
+    const tabs = document.querySelectorAll('button[role="tab"]');
+    const overlay = document.getElementById('logo-3d-overlay');
+    
+    tabs.forEach(tab => {
+        if (!tab.classList.contains('spin-attached')) {
+            tab.classList.add('spin-attached');
+            tab.addEventListener('click', function() {
+                if (overlay) {
+                    overlay.classList.add('active');
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                    }, 450);
+                }
+            });
+        }
+    });
+}
+
+setInterval(() => {
+    attachEyeToggle();
+    attach3DTabSpinTransition();
+}, 300);
+
+document.addEventListener("DOMContentLoaded", () => {
+    attachEyeToggle();
+    attach3DTabSpinTransition();
+});
 </script>
 """
 
-# ---------------------------------------------------------
-# 6. GRADIO INTERFACE BUILD
-# ---------------------------------------------------------
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
     with gr.Column():
         with gr.Row():
@@ -632,7 +690,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
                     <a href="{GOOGLE_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
                     <a href="{FACEBOOK_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
-                    <a href="{TWITTER_OAUTH_URL}" target="_blank" style="color: #fff !important; background: #1da1f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Twitter</a>
                 </div>
                 """)
 
@@ -800,13 +857,12 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook/Twitter login is stored securely and never shared with third parties.</p>
+                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">📧 Support Contact & Official Handles</h4>
                     <p style="font-size: 0.85rem; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
                     <p style="font-size: 0.85rem;">Connect with us on our official social platforms:</p>
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
-                        <li>🌐 <span style="color: #fde047 !important; font-weight: 700;">Twitter (X):</span> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://x.com/AccAstroForge</a></li>
                         <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
                         <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
                         <li>📘 <span style="color: #fde047 !important; font-weight: 700;">Facebook:</span> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.facebook.com/accastroforge/</a></li>
@@ -829,61 +885,5 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
         real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger")
         real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
-
-# ---------------------------------------------------------
-# 7. FASTAPI WRAPPER & TWITTER OAUTH CALLBACK ROUTE
-# ---------------------------------------------------------
-app = FastAPI()
-
-@app.get("/login/twitter/callback")
-def twitter_callback(code: str = None, state: str = None, error: str = None):
-    if error:
-        return HTMLResponse(content=f"<h3>Twitter Authentication Error: {error}</h3><p><a href='/'>Return to AccAstroForge</a></p>")
-    
-    if code:
-        # Token Exchange with Twitter OAuth 2.0 Engine
-        token_url = "https://api.x.com/2/oauth2/token"
-        payload = {
-            "code": code,
-            "grant_type": "authorization_code",
-            "client_id": TWITTER_CLIENT_ID,
-            "redirect_uri": TWITTER_REDIRECT_URI,
-            "code_verifier": "challenge_secure_xyz"
-        }
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-        
-        try:
-            res = requests.post(token_url, data=payload, headers=headers, auth=(TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET))
-            if res.status_code == 200:
-                token_data = res.json()
-                access_token = token_data.get("access_token")
-                
-                # Fetch User Details
-                user_res = requests.get("https://api.x.com/2/users/me", headers={"Authorization": f"Bearer {access_token}"})
-                if user_res.status_code == 200:
-                    user_info = user_res.json().get("data", {})
-                    x_username = user_info.get("username", "Twitter User")
-                    x_name = user_info.get("name", x_username)
-                    
-                    save_log({
-                        "timestamp": str(datetime.datetime.now()),
-                        "full_name": x_name,
-                        "service": "Twitter OAuth Quick Login",
-                        "details": f"Handle: @{x_username}",
-                        "payment_status": "Active Session"
-                    })
-        except Exception as e:
-            print(f"Twitter OAuth Exchange Exception: {e}")
-
-    # Redirect back seamlessly to main website homepage
-    return RedirectResponse(url="/")
-
-
-# Mount Gradio Application onto FastAPI app root
-app = gr.mount_gradio_app(app, demo, path="/")
-
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=10000)
+    demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, head=head_html, favicon_path="favicon.png")

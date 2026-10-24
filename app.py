@@ -387,7 +387,7 @@ def get_paywall_html(service_name, price, user_name="User"):
 
 
 # ---------------------------------------------------------
-# 5. SOCIAL OAUTH, UNIQUE REGISTRATION & SESSION MANAGEMENT
+# 5. STRICT AUTH, UNIQUE REGISTRATION, LOGIN & PERSISTENT SESSION
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -415,15 +415,15 @@ def handle_manual_signup(name, email, phone, password):
             ""
         )
 
-    # Check if email is already registered in DB
+    # Strict Uniqueness Check: If already registered, block duplicate signup/OTP
     users = load_users()
     for existing in users:
         if existing.get("email") == u_email:
             return (
-                f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Already Registered</h3><p style='margin:0;'>The email <b>{u_email}</b> is already registered in AccAstroForge. Please login or use a different email.</p></div>",
+                f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Already Registered</h3><p style='margin:0;'>The email <b>{u_email}</b> is already registered as an active member. Please use the <b>Login</b> tab below to access your account.</p></div>",
                 "👤 Guest User",
                 "₹ 0.00",
-                "Email already exists in system.",
+                "Registration blocked: Email already exists.",
                 ""
             )
 
@@ -480,16 +480,19 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
             "Verification Failed"
         )
     
-    # Save to registered users database
+    # Save newly verified user to persistent database
     users = load_users()
-    new_user = {
-        "name": u_name,
-        "email": u_email,
-        "phone": u_phone,
-        "verified_at": str(datetime.datetime.now())
-    }
-    users.append(new_user)
-    save_user_db(users)
+    # Double check if already exists
+    exists = any(u.get("email") == u_email.strip().lower() for u in users)
+    if not exists:
+        new_user = {
+            "name": u_name,
+            "email": u_email.strip().lower(),
+            "phone": u_phone,
+            "verified_at": str(datetime.datetime.now())
+        }
+        users.append(new_user)
+        save_user_db(users)
 
     save_log({
         "timestamp": str(datetime.datetime.now()),
@@ -516,6 +519,62 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
     wallet_box = "₹ 0.00"
     history_box = f"• Registration & OTP Verification Complete<br>• Account Active<br>• Contact: {u_phone}"
 
+    return success_msg, profile_box, wallet_box, history_box
+
+
+def handle_login(login_email, login_pass):
+    l_email = login_email.strip().lower() if login_email else ""
+    if not l_email or "@" not in l_email:
+        return (
+            "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email.</span>",
+            "👤 Guest User",
+            "₹ 0.00",
+            "No active sessions."
+        )
+    
+    users = load_users()
+    matched_user = None
+    for u in users:
+        if u.get("email") == l_email:
+            matched_user = u
+            break
+            
+    if not matched_user:
+        return (
+            f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Account Not Found</h3><p style='margin:0;'>The email <b>{l_email}</b> is not registered. Please sign up first.</p></div>",
+            "👤 Guest User",
+            "₹ 0.00",
+            "Login failed: Account not found."
+        )
+        
+    u_name = matched_user.get("name", "User")
+    u_phone = matched_user.get("phone", "N/A")
+    
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
+        "service": "Member Login",
+        "details": f"Email Logged In: {l_email}",
+        "payment_status": "Active Session"
+    })
+    
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back, {u_name}!</h3><p style='margin:0;'>You have successfully logged into your AccAstroForge account.</p></div>"
+    
+    profile_box = f"""
+    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            👤 <b>{u_name}</b> ({l_email})<br>
+            <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member</span>
+        </div>
+        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+            🚪 Logout / Switch Account
+        </button>
+    </div>
+    """
+    wallet_box = "₹ 0.00"
+    history_box = f"• Member Login Successful<br>• Account Active<br>• Contact: {u_phone}"
+    
     return success_msg, profile_box, wallet_box, history_box
 
 
@@ -992,40 +1051,46 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                         """)
 
                 with gr.Group(visible=False) as signup_group:
-                    with gr.Accordion(
-                        "📝 Create Your AccAstroForge Account & Verify OTP",
-                        open=True,
-                    ):
-                        with gr.Row():
-                            signup_name = gr.Textbox(
-                                label="Full Name", placeholder="e.g. Rajesh Sharma"
+                    with gr.Tabs():
+                        with gr.TabItem("📝 Sign Up & Verify OTP"):
+                            with gr.Row():
+                                signup_name = gr.Textbox(
+                                    label="Full Name", placeholder="e.g. Rajesh Sharma"
+                                )
+                                signup_email = gr.Textbox(
+                                    label="Email Address", placeholder="e.g. user@gmail.com"
+                                )
+                            with gr.Row():
+                                signup_phone = gr.Textbox(
+                                    label="Phone Number (Mandatory)", placeholder="e.g. 9876543210"
+                                )
+                                signup_pass = gr.Textbox(
+                                    label="Create Password",
+                                    type="password",
+                                    placeholder="Enter secure password",
+                                )
+                            signup_btn = gr.Button(
+                                "✨ 1. Register & Send Verification OTP to Email", variant="primary"
                             )
-                            signup_email = gr.Textbox(
-                                label="Email Address", placeholder="e.g. user@gmail.com"
-                            )
-                        with gr.Row():
-                            signup_phone = gr.Textbox(
-                                label="Phone Number (Mandatory)", placeholder="e.g. 9876543210"
-                            )
-                            signup_pass = gr.Textbox(
-                                label="Create Password",
-                                type="password",
-                                placeholder="Enter secure password",
-                            )
-                        signup_btn = gr.Button(
-                            "✨ 1. Register & Send Verification OTP to Email", variant="primary"
-                        )
-                        signup_output = gr.HTML()
+                            signup_output = gr.HTML()
 
-                        with gr.Row():
-                            user_otp_input = gr.Textbox(
-                                label="Enter 6-Digit Email OTP",
-                                placeholder="e.g. 123456",
-                                max_lines=1
-                            )
-                            verify_otp_btn = gr.Button(
-                                "🔑 2. Verify OTP & Activate Account", variant="primary"
-                            )
+                            with gr.Row():
+                                user_otp_input = gr.Textbox(
+                                    label="Enter 6-Digit Email OTP",
+                                    placeholder="e.g. 123456",
+                                    max_lines=1
+                                )
+                                verify_otp_btn = gr.Button(
+                                    "🔑 2. Verify OTP & Activate Account", variant="primary"
+                                )
+
+                        with gr.TabItem("🔐 Member Sign In / Login"):
+                            gr.HTML("<p style='color:#fde047; font-size:0.9rem;'>Already registered? Enter your email and password to log in directly without OTP.</p>")
+                            with gr.Row():
+                                login_email_input = gr.Textbox(label="Registered Email Address", placeholder="e.g. user@gmail.com")
+                                login_pass_input = gr.Textbox(label="Password", type="password", placeholder="Enter your password")
+                            login_btn = gr.Button("🚀 Sign In to Account", variant="primary")
+                            login_output = gr.HTML()
 
                 order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
@@ -1063,6 +1128,17 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     inputs=[user_otp_input, otp_state, signup_name, signup_email, signup_phone],
                     outputs=[
                         signup_output,
+                        user_profile_display,
+                        wallet_balance_display,
+                        order_history_display
+                    ]
+                )
+
+                login_btn.click(
+                    fn=handle_login,
+                    inputs=[login_email_input, login_pass_input],
+                    outputs=[
+                        login_output,
                         user_profile_display,
                         wallet_balance_display,
                         order_history_display

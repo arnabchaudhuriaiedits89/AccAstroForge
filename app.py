@@ -513,8 +513,8 @@ button[role="tab"][aria-selected="true"] {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(3, 0, 20, 0.92);
-    backdrop-filter: blur(12px);
+    background: rgba(3, 0, 20, 0.94);
+    backdrop-filter: blur(14px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -530,15 +530,15 @@ button[role="tab"][aria-selected="true"] {
 }
 
 .spinner-3d-logo {
-    width: 190px;
-    height: 190px;
-    animation: spin3D 0.65s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    filter: drop-shadow(0 0 40px rgba(244, 114, 182, 1));
+    width: 210px;
+    height: 210px;
+    animation: spin3D 0.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    filter: drop-shadow(0 0 45px rgba(244, 114, 182, 1));
 }
 
 @keyframes spin3D {
     0% { transform: rotateY(0deg) scale(0.6); }
-    50% { transform: rotateY(180deg) scale(1.35); }
+    50% { transform: rotateY(180deg) scale(1.4); }
     100% { transform: rotateY(360deg) scale(0.6); }
 }
 
@@ -645,40 +645,50 @@ function attachEyeToggle() {
     });
 }
 
-function triggerSpinAnimation() {
+function showCustomSpinOverlay(duration = 1200) {
     const overlay = document.getElementById('logo-3d-overlay');
     if (overlay) {
         overlay.classList.add('active');
         setTimeout(() => {
             overlay.classList.remove('active');
-        }, 800);
+        }, duration);
     }
 }
 
-// Ultra-Robust Event Listener for Tabs & Action Buttons
-function setupTabInterceptors() {
-    const allTabsOrButtons = document.querySelectorAll('button, [role="tab"], a');
-    allTabsOrButtons.forEach(elem => {
-        if (!elem.hasAttribute('data-spin-bound')) {
-            elem.setAttribute('data-spin-bound', 'true');
-            elem.addEventListener('mousedown', function() {
-                triggerSpinAnimation();
-            });
-            elem.addEventListener('click', function() {
-                triggerSpinAnimation();
+// 1. Intercept all Clicks on Tabs and Submit Buttons immediately
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('button, [role="tab"], a');
+    if (target) {
+        showCustomSpinOverlay(1500);
+    }
+}, true);
+
+// 2. DOM Mutation Observer to capture Gradio's internal loading / processing states
+const observer = new MutationObserver((mutations) => {
+    for (let mutation of mutations) {
+        if (mutation.addedNodes.length > 0) {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) {
+                    // Check if Gradio's loading spinner or progress bar appears
+                    if (node.classList && (node.classList.contains('loading') || node.classList.contains('progress-bar') || node.classList.contains('generating'))) {
+                        showCustomSpinOverlay(2000);
+                    } else if (node.querySelector && node.querySelector('.loading, .progress-bar, generating')) {
+                        showCustomSpinOverlay(2000);
+                    }
+                }
             });
         }
-    });
-}
+    }
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
 
 setInterval(() => {
     attachEyeToggle();
-    setupTabInterceptors();
-}, 200);
+}, 300);
 
 document.addEventListener("DOMContentLoaded", () => {
     attachEyeToggle();
-    setupTabInterceptors();
 });
 </script>
 """

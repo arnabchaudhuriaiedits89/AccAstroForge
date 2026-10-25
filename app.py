@@ -12,7 +12,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import razorpay
-from supabase import create_client, Client
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
@@ -38,81 +37,73 @@ GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOO
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
 # ---------------------------------------------------------
-# 1. PERMANENT SUPABASE CLOUD DATABASE SYSTEM
+# 1. DIRECT REST API SUPABASE CLOUD DATABASE SYSTEM
 # ---------------------------------------------------------
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://zhpseyagpwcakptaiswz.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_eZEFd8jmKDqbNJ0tOsASJA_ujapk-ou")
 
-try:
-  supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-except Exception as e:
-  print(f"Supabase Client Error: {e}")
-  supabase = None
-
+SUPABASE_HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+    "Prefer": "return=representation"
+}
 
 def load_users():
-  if not supabase:
-    print("Supabase client is None in load_users!")
-    return []
-  try:
-    res = supabase.table("users").select("*").execute()
-    return res.data if res.data else []
-  except Exception as e:
-    print(f"Supabase load_users error: {e}")
-    return []
-
+    url = f"{SUPABASE_URL}/rest/v1/users?select=*"
+    try:
+        response = requests.get(url, headers=SUPABASE_HEADERS, timeout=10)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Supabase load_users error status: {response.status_code}, body: {response.text}")
+            return []
+    except Exception as e:
+        print(f"Supabase load_users exception: {e}")
+        return []
 
 def save_user_db_single(u_name, u_email, u_phone):
-  if not supabase:
-    print("Supabase client is None in save_user_db_single!")
-    return
-  now_str = str(datetime.datetime.now())
-  try:
+    url = f"{SUPABASE_URL}/rest/v1/users"
+    now_str = str(datetime.datetime.now())
     data = {
         "name": u_name,
         "email": u_email.lower(),
         "phone": u_phone,
-        "verified_at": now_str,
+        "verified_at": now_str
     }
-    res = supabase.table("users").insert(data).execute()
-    print(f"Supabase user insert response: {res}")
-  except Exception as e:
-    print(f"CRITICAL Supabase save_user error: {e}")
     try:
-      res_up = supabase.table("users").update({"name": u_name, "phone": u_phone, "verified_at": now_str}).eq("email", u_email.lower()).execute()
-      print(f"Supabase user update response: {res_up}")
-    except Exception as ex:
-      print(f"CRITICAL Supabase save_user fallback update error: {ex}")
-
+        response = requests.post(url, headers=SUPABASE_HEADERS, json=data, timeout=10)
+        print(f"Supabase user save response status: {response.status_code}, body: {response.text}")
+    except Exception as e:
+        print(f"Supabase user save exception: {e}")
 
 def load_logs():
-  if not supabase:
-    print("Supabase client is None in load_logs!")
-    return []
-  try:
-    res = supabase.table("admin_logs").select("*").execute()
-    return res.data if res.data else []
-  except Exception as e:
-    print(f"Supabase load_logs error: {e}")
-    return []
-
+    url = f"{SUPABASE_URL}/rest/v1/admin_logs?select=*"
+    try:
+        response = requests.get(url, headers=SUPABASE_HEADERS, timeout=10)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Supabase load_logs error status: {response.status_code}, body: {response.text}")
+            return []
+    except Exception as e:
+        print(f"Supabase load_logs exception: {e}")
+        return []
 
 def save_log(user_data):
-  if not supabase:
-    print("Supabase client is None in save_log!")
-    return
-  try:
+    url = f"{SUPABASE_URL}/rest/v1/admin_logs"
     data = {
         "timestamp": user_data.get("timestamp", str(datetime.datetime.now())),
         "full_name": user_data.get("full_name", "N/A"),
         "service": user_data.get("service", "General"),
         "details": user_data.get("details", "N/A"),
-        "payment_status": user_data.get("payment_status", "Pending"),
+        "payment_status": user_data.get("payment_status", "Pending")
     }
-    res = supabase.table("admin_logs").insert(data).execute()
-    print(f"Supabase log insert response: {res}")
-  except Exception as e:
-    print(f"CRITICAL Supabase save_log error: {e}")
+    try:
+        response = requests.post(url, headers=SUPABASE_HEADERS, json=data, timeout=10)
+        print(f"Supabase log save response status: {response.status_code}, body: {response.text}")
+    except Exception as e:
+        print(f"Supabase log save exception: {e}")
 
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")

@@ -46,7 +46,7 @@ GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzopeAeHd6L5D2aiZBFbliuOXx00R7MwtpcoYfvB/exec"
 
 # ---------------------------------------------------------
-# 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM
+# 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM (QUERY PARAMS)
 # ---------------------------------------------------------
 DB_FILE = "accastroforge.db"
 
@@ -81,27 +81,35 @@ init_db()
 
 
 def append_to_google_sheet_direct(worksheet_name, values_list):
-  """Appends row directly via Google Apps Script Web App Endpoint with robust redirect handling"""
+  """Appends row directly via Google Apps Script Web App using Query Parameters (Bulletproof)"""
   try:
-    payload = {"worksheet": worksheet_name, "values": values_list}
-    response = requests.post(
-        APPS_SCRIPT_URL, json=payload, allow_redirects=True, timeout=15
+    if worksheet_name == "Users":
+      params = {
+          "worksheet": "Users",
+          "name": values_list[0],
+          "email": values_list[1],
+          "phone": values_list[2],
+          "verified_at": values_list[3],
+      }
+    else:
+      params = {
+          "worksheet": "AdminLogs",
+          "timestamp": values_list[0],
+          "full_name": values_list[1],
+          "service": values_list[2],
+          "details": values_list[3],
+          "payment_status": values_list[4],
+      }
+
+    response = requests.get(
+        APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=15
     )
     print(
-        f"APPS SCRIPT RESPONSE STATUS for {worksheet_name}:"
-        f" {response.status_code}"
+        f"APPS SCRIPT GET STATUS for {worksheet_name}: {response.status_code}"
     )
     print(f"APPS SCRIPT RESPONSE TEXT: {response.text[:200]}")
 
     if response.status_code == 200:
-      try:
-        res_data = response.json()
-        if res_data.get("status") == "success":
-          print(f"SUCCESS APPS SCRIPT: Appended to {worksheet_name}")
-          return True
-      except Exception:
-        pass
-      print(f"SUCCESS APPS SCRIPT (Text/HTML): Appended to {worksheet_name}")
       return True
 
     print(f"APPS SCRIPT ERROR {response.status_code}: {response.text}")
@@ -112,7 +120,6 @@ def append_to_google_sheet_direct(worksheet_name, values_list):
 
 
 def load_google_sheet_direct(worksheet_name):
-  """Fetches records (placeholder or local fallback if needed)"""
   return []
 
 
@@ -140,7 +147,6 @@ def save_user_db_single(u_name, u_email, u_phone):
 
 
 def load_users():
-  # Fallback to local SQLite for instant load
   try:
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -182,7 +188,6 @@ def save_log(user_data):
 
 
 def load_logs():
-  # Fallback to local SQLite for instant load
   try:
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row

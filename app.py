@@ -149,6 +149,22 @@ def get_gspread_client():
     return None
 
 
+def test_google_sheets_connection_on_startup():
+  print("DEBUG STARTUP: Testing Google Sheets Connection...")
+  client = get_gspread_client()
+  if client:
+    try:
+      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("Users")
+      print("DEBUG STARTUP SUCCESS: Successfully connected to Google Sheet!")
+    except Exception as e:
+      print(f"DEBUG STARTUP ERROR: Failed to open worksheet: {str(e)}")
+  else:
+    print("DEBUG STARTUP ERROR: gspread client is None!")
+
+
+test_google_sheets_connection_on_startup()
+
+
 def save_user_db_single(u_name, u_email, u_phone):
   now_str = str(datetime.datetime.now())
   # 1. Local SQLite Save
@@ -164,19 +180,24 @@ def save_user_db_single(u_name, u_email, u_phone):
     )
     conn.commit()
     conn.close()
-    print(f"User saved locally: {u_email}")
+    print(f"SUCCESS: User saved locally: {u_email}")
   except Exception as e:
-    print(f"Save user local error: {e}")
+    print(f"ERROR: Save user local failed: {e}")
 
-  # 2. Google Sheets Backup via Spreadsheet ID
-  client = get_gspread_client()
-  if client:
-    try:
-      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("Users")
-      sheet.append_row([u_name, u_email.lower(), u_phone, now_str])
-      print(f"User saved to Google Sheets successfully: {u_email}")
-    except Exception as e:
-      print(f"GOOGLE SHEETS USER SAVE ERROR EXCEPTION: {e}")
+  # 2. Google Sheets Backup with Full Traceback Print
+  try:
+    client = get_gspread_client()
+    if not client:
+      print("ERROR: Google Sheets Client is NONE! Check credentials.")
+      return
+
+    sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("Users")
+    sheet.append_row([u_name, u_email.lower(), u_phone, now_str])
+    print(
+        f"SUCCESS: User successfully appended to Google Sheets: {u_email}"
+    )
+  except Exception as e:
+    print(f"CRITICAL GOOGLE SHEETS EXCEPTION IN USER SAVE: {str(e)}")
 
 
 def load_users():
@@ -225,17 +246,20 @@ def save_log(user_data):
     conn.commit()
     conn.close()
   except Exception as e:
-    print(f"Save log local error: {e}")
+    print(f"ERROR: Save log local failed: {e}")
 
-  # 2. Google Sheets Backup via Spreadsheet ID
-  client = get_gspread_client()
-  if client:
-    try:
-      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("AdminLogs")
-      sheet.append_row([ts, fn, srv, dtl, pst])
-      print("Log saved to Google Sheets successfully.")
-    except Exception as e:
-      print(f"GOOGLE SHEETS LOG SAVE ERROR EXCEPTION: {e}")
+  # 2. Google Sheets Backup with Full Traceback Print
+  try:
+    client = get_gspread_client()
+    if not client:
+      print("ERROR: Google Sheets Client is NONE for logs!")
+      return
+
+    sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("AdminLogs")
+    sheet.append_row([ts, fn, srv, dtl, pst])
+    print("SUCCESS: Log successfully appended to Google Sheets AdminLogs.")
+  except Exception as e:
+    print(f"CRITICAL GOOGLE SHEETS EXCEPTION IN LOG SAVE: {str(e)}")
 
 
 def load_logs():

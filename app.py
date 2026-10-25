@@ -53,8 +53,8 @@ FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
-# Google Sheets Configuration
-GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "AccAstroForge_DB")
+# Google Sheets Configuration via Spreadsheet ID
+GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
 
 # ---------------------------------------------------------
 # 1. GOOGLE SHEETS & LOCAL SQLITE HYBRID DATABASE SYSTEM
@@ -92,7 +92,7 @@ init_db()
 
 
 def get_gspread_client():
-  """Connect to Google Sheets via Service Account using Direct Embedded Credentials"""
+  """Connect to Google Sheets via Service Account"""
   if not GSPREAD_AVAILABLE:
     print("DEBUG: GSPREAD_AVAILABLE is False")
     return None
@@ -101,7 +101,6 @@ def get_gspread_client():
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",
     ]
-
     creds_dict = {
         "type": "service_account",
         "project_id": "accastroforge",
@@ -142,10 +141,8 @@ def get_gspread_client():
         "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accastroforge%40accastroforge.iam.gserviceaccount.com",
         "universe_domain": "googleapis.com",
     }
-
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
-    print("DEBUG: Google Sheets client authorized successfully!")
     return client
   except Exception as e:
     print(f"GOOGLE SHEETS AUTH ERROR EXCEPTION: {e}")
@@ -171,26 +168,22 @@ def save_user_db_single(u_name, u_email, u_phone):
   except Exception as e:
     print(f"Save user local error: {e}")
 
-  # 2. Google Sheets Backup
+  # 2. Google Sheets Backup via Spreadsheet ID
   client = get_gspread_client()
   if client:
     try:
-      print(f"DEBUG: Attempting to open sheet: {GOOGLE_SHEET_NAME} for Users")
-      sheet = client.open(GOOGLE_SHEET_NAME).worksheet("Users")
+      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("Users")
       sheet.append_row([u_name, u_email.lower(), u_phone, now_str])
       print(f"User saved to Google Sheets successfully: {u_email}")
     except Exception as e:
       print(f"GOOGLE SHEETS USER SAVE ERROR EXCEPTION: {e}")
-  else:
-    print("DEBUG: Client is None, Google Sheets Users save skipped.")
 
 
 def load_users():
-  # Try loading from Google Sheets first
   client = get_gspread_client()
   if client:
     try:
-      sheet = client.open(GOOGLE_SHEET_NAME).worksheet("Users")
+      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("Users")
       records = sheet.get_all_records()
       if records:
         return records
@@ -234,28 +227,22 @@ def save_log(user_data):
   except Exception as e:
     print(f"Save log local error: {e}")
 
-  # 2. Google Sheets Backup
+  # 2. Google Sheets Backup via Spreadsheet ID
   client = get_gspread_client()
   if client:
     try:
-      print(
-          f"DEBUG: Attempting to open sheet: {GOOGLE_SHEET_NAME} for AdminLogs"
-      )
-      sheet = client.open(GOOGLE_SHEET_NAME).worksheet("AdminLogs")
+      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("AdminLogs")
       sheet.append_row([ts, fn, srv, dtl, pst])
       print("Log saved to Google Sheets successfully.")
     except Exception as e:
       print(f"GOOGLE SHEETS LOG SAVE ERROR EXCEPTION: {e}")
-  else:
-    print("DEBUG: Client is None, Google Sheets AdminLogs save skipped.")
 
 
 def load_logs():
-  # Try loading from Google Sheets first
   client = get_gspread_client()
   if client:
     try:
-      sheet = client.open(GOOGLE_SHEET_NAME).worksheet("AdminLogs")
+      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("AdminLogs")
       records = sheet.get_all_records()
       if records:
         return records

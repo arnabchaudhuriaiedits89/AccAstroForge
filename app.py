@@ -94,6 +94,7 @@ init_db()
 def get_gspread_client():
   """Connect to Google Sheets via Service Account using Direct Embedded Credentials"""
   if not GSPREAD_AVAILABLE:
+    print("DEBUG: GSPREAD_AVAILABLE is False")
     return None
   try:
     scope = [
@@ -144,9 +145,10 @@ def get_gspread_client():
 
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
+    print("DEBUG: Google Sheets client authorized successfully!")
     return client
   except Exception as e:
-    print(f"Google Sheets Auth Error: {e}")
+    print(f"GOOGLE SHEETS AUTH ERROR EXCEPTION: {e}")
     return None
 
 
@@ -173,11 +175,14 @@ def save_user_db_single(u_name, u_email, u_phone):
   client = get_gspread_client()
   if client:
     try:
+      print(f"DEBUG: Attempting to open sheet: {GOOGLE_SHEET_NAME} for Users")
       sheet = client.open(GOOGLE_SHEET_NAME).worksheet("Users")
       sheet.append_row([u_name, u_email.lower(), u_phone, now_str])
-      print(f"User saved to Google Sheets: {u_email}")
+      print(f"User saved to Google Sheets successfully: {u_email}")
     except Exception as e:
-      print(f"Google Sheets User Save Error: {e}")
+      print(f"GOOGLE SHEETS USER SAVE ERROR EXCEPTION: {e}")
+  else:
+    print("DEBUG: Client is None, Google Sheets Users save skipped.")
 
 
 def load_users():
@@ -233,11 +238,16 @@ def save_log(user_data):
   client = get_gspread_client()
   if client:
     try:
+      print(
+          f"DEBUG: Attempting to open sheet: {GOOGLE_SHEET_NAME} for AdminLogs"
+      )
       sheet = client.open(GOOGLE_SHEET_NAME).worksheet("AdminLogs")
       sheet.append_row([ts, fn, srv, dtl, pst])
-      print("Log saved to Google Sheets.")
+      print("Log saved to Google Sheets successfully.")
     except Exception as e:
-      print(f"Google Sheets Log Save Error: {e}")
+      print(f"GOOGLE SHEETS LOG SAVE ERROR EXCEPTION: {e}")
+  else:
+    print("DEBUG: Client is None, Google Sheets AdminLogs save skipped.")
 
 
 def load_logs():

@@ -52,6 +52,7 @@ except Exception as e:
 
 def load_users():
   if not supabase:
+    print("Supabase client is None in load_users!")
     return []
   try:
     res = supabase.table("users").select("*").execute()
@@ -63,6 +64,7 @@ def load_users():
 
 def save_user_db_single(u_name, u_email, u_phone):
   if not supabase:
+    print("Supabase client is None in save_user_db_single!")
     return
   now_str = str(datetime.datetime.now())
   try:
@@ -72,18 +74,20 @@ def save_user_db_single(u_name, u_email, u_phone):
         "phone": u_phone,
         "verified_at": now_str,
     }
-    # Using insert directly or robust handling to avoid upsert conflicts
-    supabase.table("users").insert(data).execute()
+    res = supabase.table("users").insert(data).execute()
+    print(f"Supabase user insert response: {res}")
   except Exception as e:
-    print(f"Supabase save_user insert error (trying update fallback): {e}")
+    print(f"CRITICAL Supabase save_user error: {e}")
     try:
-      supabase.table("users").update({"name": u_name, "phone": u_phone, "verified_at": now_str}).eq("email", u_email.lower()).execute()
+      res_up = supabase.table("users").update({"name": u_name, "phone": u_phone, "verified_at": now_str}).eq("email", u_email.lower()).execute()
+      print(f"Supabase user update response: {res_up}")
     except Exception as ex:
-      print(f"Supabase save_user fallback error: {ex}")
+      print(f"CRITICAL Supabase save_user fallback update error: {ex}")
 
 
 def load_logs():
   if not supabase:
+    print("Supabase client is None in load_logs!")
     return []
   try:
     res = supabase.table("admin_logs").select("*").execute()
@@ -95,6 +99,7 @@ def load_logs():
 
 def save_log(user_data):
   if not supabase:
+    print("Supabase client is None in save_log!")
     return
   try:
     data = {
@@ -104,9 +109,10 @@ def save_log(user_data):
         "details": user_data.get("details", "N/A"),
         "payment_status": user_data.get("payment_status", "Pending"),
     }
-    supabase.table("admin_logs").insert(data).execute()
+    res = supabase.table("admin_logs").insert(data).execute()
+    print(f"Supabase log insert response: {res}")
   except Exception as e:
-    print(f"Supabase save_log error: {e}")
+    print(f"CRITICAL Supabase save_log error: {e}")
 
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -1545,7 +1551,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
         js=(
             "(token) => { if(token)"
             " localStorage.setItem('accastroforge_session', token); else"
-            " localStorage.removeItem('accastroforge_session'); }"
+            " localStorage.setItem('accastroforge_session'); }"
         ),
     )
 

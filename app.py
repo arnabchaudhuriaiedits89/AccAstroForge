@@ -14,18 +14,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-# Google Sheets Integration Libraries
-try:
-  import gspread
-  from google.oauth2.service_account import Credentials
-
-  GSPREAD_AVAILABLE = True
-except ImportError:
-  GSPREAD_AVAILABLE = False
-  print(
-      "gspread or google-auth not installed. Falling back to local SQLite only."
-  )
-
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
 # ---------------------------------------------------------
@@ -56,8 +44,50 @@ FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FA
 # Google Sheets Configuration via Spreadsheet ID
 GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
 
+# Service Account Credentials Dict for direct REST API
+SERVICE_ACCOUNT_INFO = {
+    "type": "service_account",
+    "project_id": "accastroforge",
+    "private_key_id": "cc05af6253c612a4291adccca10a71b9006d7c07",
+    "private_key": (
+        "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDaf+B+w8ROnTx7"
+        "y3dUyN190H8UYZRtrBiMSpJmEMLzWo6bBb4zlLPmaQ92C0zPMaFXwfjhnyAhft6O"
+        "qehQX9mGw5vSg7TRt6gjJkGcswTsZwblsCmPAF51jo3uyFA1C9uOlDSLqXrhJsGG"
+        "jrD63BRoe07+onu5q+p3U+pdqLb0Jc5qj4iK1Mysnlnlbs9VCiDffOFa/lrNKH0E"
+        "zh26ieAvuxp8pztjAfT9ueEoxxPUHXsoCde5RYQeLpSGHwLzrW+DbdQgju1MOkWg"
+        "f0AXAtYkNqxLowwjI+X11mAD5yB3JD1CF+nVtr/IEgqgeB9p7FUfGfpM6UUaQMDU"
+        "D8ymkx0bAgMBAAECggEAHl/Rfv3K79zG2DTAOX6U39UYnWY1Qou+e94v/NVOrJLF"
+        "qUJCnxwIaDrppdDLVDBDjBYQeZjr2Awxdyaif23bqPLPWhPqEo9T5dL/Iv/16sEl"
+        "wc9b75+vAeuXyn55O+6Sjn8G0PV1+g+vrntumej3Q1EE+bvvtC90cDMvrOZzzHul"
+        "LafDYdmtfBkisQDxP4TawCINNNfAy2YD8HLgDm6RQg3jIj30sfeXyXTIBXlN6crU"
+        "mzvYIj4ybzXbzDZ0PQF4CoEKgk5B2wWlUcU9mKQKGEwSfLNIW6lyTPTwRKqwt8mB"
+        "UiR0xlTKFFd+HKMiRP0vEyA/5MwqZ8B0mhkir737WQKBgQDzrIszrD7F9rCRWfab"
+        "bi5uxCreosN6jzbvgzeoLvGaH+6CHY0F/cTFEaHhHh4kGDOwOcOdn+jxraIdz4i7"
+        "e2PmpKrmaydPsgM0Tr7RSR4EHVMhaKyWQJyvNDghKTbtzO1DIQ1cCuG/+GfuXqlI"
+        "A/XSE76fpmI2r813fCrnNkLVMwKBgQDljVYV9zapTOPFlye4Bsa52TU6LUeET3Rx"
+        "zRidm0G8cPaHQVtJ5Wurq7rkrf4qTfs7M0YeRzXqj+ZBWbJ+Dd5rEksj5xdUu5Gx"
+        "XLHaW7U6Nc9qU2GLu9c6Zd3iawzjHbJ8Mn9LnCvNC700i55JxgzglCZfPlGwlH2z"
+        "kmBfCuJIeQKBgByhJSnJDwcLWOt6+nKAm4wAGFlYHkeEFBxH+n4UJebJ4af/+NW/"
+        "XyMYU0Cz3S64eTo3Tzhx1Viv4eBGxfXhJXev2TSBWnkOnTnEFr9YK+Kn32CJf92X"
+        "cdFT/VRIF2ARN78vXvZ1gNihQvTKwnDnpjYsg7UWQ2vRc/6Z5CCOS4PpAoGBAL3L"
+        "MAQVVCKCqkhyg6qKH8EFsBab3Wet8g8tjk6xUZamp46JIRtmDrHv2SS+H0mHFFOM"
+        "P0tFgXSg6bXandPPT7ijdXEH3qh2NS26AGsULDEm0ImOyzYnZvqnwt8zt4IIycwa"
+        "TFmNlEGClTtevM8uavM8SsWw1wXyoEPaoMe0TgexAoGBAOaKqjVwQUxn2YrSqJjZ"
+        "Czy9Y2pMlWNoHGxoWTPDRpfCgK4oa+xj+qsoC0hTAIzDMehTza3gH2e/OY0CWcCG"
+        "X/NEUdUMt70rTHnLjtevXdVQsrdo7yYUZ0IgI3XBwBQvzLRGZ+IkJBJ0a6hTw2cb"
+        "nytUAlCK0hAtjtbqvwFBo0JbX\n-----END PRIVATE KEY-----"
+    ),
+    "client_email": "accastroforge@accastroforge.iam.gserviceaccount.com",
+    "client_id": "103708387692151830338",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accastroforge%40accastroforge.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com",
+}
+
 # ---------------------------------------------------------
-# 1. GOOGLE SHEETS & LOCAL SQLITE HYBRID DATABASE SYSTEM
+# 1. GOOGLE SHEETS DIRECT REST API HYBRID DATABASE SYSTEM
 # ---------------------------------------------------------
 DB_FILE = "accastroforge.db"
 
@@ -91,75 +121,81 @@ def init_db():
 init_db()
 
 
-def get_gspread_client():
-  """Connect to Google Sheets via Service Account"""
-  if not GSPREAD_AVAILABLE:
-    print("DEBUG: GSPREAD_AVAILABLE is False")
-    return None
+def append_to_google_sheet_direct(worksheet_name, values_list):
+  """Appends row directly via Google Sheets REST API using Service Account JWT"""
   try:
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    creds_dict = {
-        "type": "service_account",
-        "project_id": "accastroforge",
-        "private_key_id": "cc05af6253c612a4291adccca10a71b9006d7c07",
-        "private_key": (
-            "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDaf+B+w8ROnTx7"
-            "y3dUyN190H8UYZRtrBiMSpJmEMLzWo6bBb4zlLPmaQ92C0zPMaFXwfjhnyAhft6O"
-            "qehQX9mGw5vSg7TRt6gjJkGcswTsZwblsCmPAF51jo3uyFA1C9uOlDSLqXrhJsGG"
-            "jrD63BRoe07+onu5q+p3U+pdqLb0Jc5qj4iK1Mysnlnlbs9VCiDffOFa/lrNKH0E"
-            "zh26ieAvuxp8pztjAfT9ueEoxxPUHXsoCde5RYQeLpSGHwLzrW+DbdQgju1MOkWg"
-            "f0AXAtYkNqxLowwjI+X11mAD5yB3JD1CF+nVtr/IEgqgeB9p7FUfGfpM6UUaQMDU"
-            "D8ymkx0bAgMBAAECggEAHl/Rfv3K79zG2DTAOX6U39UYnWY1Qou+e94v/NVOrJLF"
-            "qUJCnxwIaDrppdDLVDBDjBYQeZjr2Awxdyaif23bqPLPWhPqEo9T5dL/Iv/16sEl"
-            "wc9b75+vAeuXyn55O+6Sjn8G0PV1+g+vrntumej3Q1EE+bvvtC90cDMvrOZzzHul"
-            "LafDYdmtfBkisQDxP4TawCINNNfAy2YD8HLgDm6RQg3jIj30sfeXyXTIBXlN6crU"
-            "mzvYIj4ybzXbzDZ0PQF4CoEKgk5B2wWlUcU9mKQKGEwSfLNIW6lyTPTwRKqwt8mB"
-            "UiR0xlTKFFd+HKMiRP0vEyA/5MwqZ8B0mhkir737WQKBgQDzrIszrD7F9rCRWfab"
-            "bi5uxCreosN6jzbvgzeoLvGaH+6CHY0F/cTFEaHhHh4kGDOwOcOdn+jxraIdz4i7"
-            "e2PmpKrmaydPsgM0Tr7RSR4EHVMhaKyWQJyvNDghKTbtzO1DIQ1cCuG/+GfuXqlI"
-            "A/XSE76fpmI2r813fCrnNkLVMwKBgQDljVYV9zapTOPFlye4Bsa52TU6LUeET3Rx"
-            "zRidm0G8cPaHQVtJ5Wurq7rkrf4qTfs7M0YeRzXqj+ZBWbJ+Dd5rEksj5xdUu5Gx"
-            "XLHaW7U6Nc9qU2GLu9c6Zd3iawzjHbJ8Mn9LnCvNC700i55JxgzglCZfPlGwlH2z"
-            "kmBfCuJIeQKBgByhJSnJDwcLWOt6+nKAm4wAGFlYHkeEFBxH+n4UJebJ4af/+NW/"
-            "XyMYU0Cz3S64eTo3Tzhx1Viv4eBGxfXhJXev2TSBWnkOnTnEFr9YK+Kn32CJf92X"
-            "cdFT/VRIF2ARN78vXvZ1gNihQvTKwnDnpjYsg7UWQ2vRc/6Z5CCOS4PpAoGBAL3L"
-            "MAQVVCKCqkhyg6qKH8EFsBab3Wet8g8tjk6xUZamp46JIRtmDrHv2SS+H0mHFFOM"
-            "P0tFgXSg6bXandPPT7ijdXEH3qh2NS26AGsULDEm0ImOyzYnZvqnwt8zt4IIycwa"
-            "TFmNlEGClTtevM8uavM8SsWw1wXyoEPaoMe0TgexAoGBAOaKqjVwQUxn2YrSqJjZ"
-            "Czy9Y2pMlWNoHGxoWTPDRpfCgK4oa+xj+qsoC0hTAIzDMehTza3gH2e/OY0CWcCG"
-            "X/NEUdUMt70rTHnLjtevXdVQsrdo7yYUZ0IgI3XBwBQvzLRGZ+IkJBJ0a6hTw2cb"
-            "nytUAlCK0hAtjtbqvwFBo0JbX\n-----END PRIVATE KEY-----"
-        ),
-        "client_email": "accastroforge@accastroforge.iam.gserviceaccount.com",
-        "client_id": "103708387692151830338",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accastroforge%40accastroforge.iam.gserviceaccount.com",
-        "universe_domain": "googleapis.com",
+    from google.auth.transport import requests as google_requests
+    from google.oauth2 import service_account
+
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds = service_account.Credentials.from_service_account_info(
+        SERVICE_ACCOUNT_INFO, scopes=scopes
+    )
+    auth_req = google_requests.Request()
+    creds.refresh(auth_req)
+    token = creds.token
+
+    range_name = f"{worksheet_name}!A:E"
+    url = f"https://sheets.googleapis.com/v4/spreadsheets/{GOOGLE_SPREADSHEET_ID}/values/{range_name}:append?valueInputOption=USER_ENTERED"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
     }
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-    client = gspread.authorize(creds)
-    return client
+    payload = {"values": [values_list]}
+
+    response = requests.post(url, headers=headers, json=payload, timeout=10)
+    if response.status_code in [200, 201]:
+      print(f"SUCCESS DIRECT API: Appended to {worksheet_name}")
+      return True
+    else:
+      print(f"DIRECT API ERROR {response.status_code}: {response.text}")
+      return False
   except Exception as e:
-    print(f"GOOGLE SHEETS AUTH ERROR EXCEPTION: {e}")
-    return None
+    print(f"CRITICAL DIRECT API EXCEPTION: {str(e)}")
+    return False
+
+
+def load_google_sheet_direct(worksheet_name):
+  """Fetches records directly via Google Sheets REST API"""
+  try:
+    from google.auth.transport import requests as google_requests
+    from google.oauth2 import service_account
+
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds = service_account.Credentials.from_service_account_info(
+        SERVICE_ACCOUNT_INFO, scopes=scopes
+    )
+    auth_req = google_requests.Request()
+    creds.refresh(auth_req)
+    token = creds.token
+
+    range_name = f"{worksheet_name}!A:E"
+    url = f"https://sheets.googleapis.com/v4/spreadsheets/{GOOGLE_SPREADSHEET_ID}/values/{range_name}"
+
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(url, headers=headers, timeout=10)
+    if response.status_code == 200:
+      data = response.json()
+      rows = data.get("values", [])
+      if not rows or len(rows) <= 1:
+        return []
+      headers_row = rows[0]
+      records = []
+      for r in rows[1:]:
+        padded = r + [""] * (len(headers_row) - len(r))
+        records.append(dict(zip(headers_row, padded)))
+      return records
+    return []
+  except Exception as e:
+    print(f"DIRECT API LOAD EXCEPTION: {e}")
+    return []
 
 
 def test_google_sheets_connection_on_startup():
-  print("DEBUG STARTUP: Testing Google Sheets Connection...")
-  client = get_gspread_client()
-  if client:
-    try:
-      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("Users")
-      print("DEBUG STARTUP SUCCESS: Successfully connected to Google Sheet!")
-    except Exception as e:
-      print(f"DEBUG STARTUP ERROR: Failed to open worksheet: {str(e)}")
-  else:
-    print("DEBUG STARTUP ERROR: gspread client is None!")
+  print("DEBUG STARTUP: Testing Google Sheets Direct REST Connection...")
+  recs = load_google_sheet_direct("Users")
+  print(f"DEBUG STARTUP SUCCESS: Connected! Users found: {len(recs)}")
 
 
 test_google_sheets_connection_on_startup()
@@ -184,32 +220,14 @@ def save_user_db_single(u_name, u_email, u_phone):
   except Exception as e:
     print(f"ERROR: Save user local failed: {e}")
 
-  # 2. Google Sheets Backup with Full Traceback Print
-  try:
-    client = get_gspread_client()
-    if not client:
-      print("ERROR: Google Sheets Client is NONE! Check credentials.")
-      return
-
-    sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("Users")
-    sheet.append_row([u_name, u_email.lower(), u_phone, now_str])
-    print(
-        f"SUCCESS: User successfully appended to Google Sheets: {u_email}"
-    )
-  except Exception as e:
-    print(f"CRITICAL GOOGLE SHEETS EXCEPTION IN USER SAVE: {str(e)}")
+  # 2. Google Sheets Direct REST API Backup
+  append_to_google_sheet_direct("Users", [u_name, u_email.lower(), u_phone, now_str])
 
 
 def load_users():
-  client = get_gspread_client()
-  if client:
-    try:
-      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("Users")
-      records = sheet.get_all_records()
-      if records:
-        return records
-    except Exception as e:
-      print(f"Google Sheets User Load Error: {e}")
+  sheet_records = load_google_sheet_direct("Users")
+  if sheet_records:
+    return sheet_records
 
   # Fallback to local SQLite
   try:
@@ -248,30 +266,14 @@ def save_log(user_data):
   except Exception as e:
     print(f"ERROR: Save log local failed: {e}")
 
-  # 2. Google Sheets Backup with Full Traceback Print
-  try:
-    client = get_gspread_client()
-    if not client:
-      print("ERROR: Google Sheets Client is NONE for logs!")
-      return
-
-    sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("AdminLogs")
-    sheet.append_row([ts, fn, srv, dtl, pst])
-    print("SUCCESS: Log successfully appended to Google Sheets AdminLogs.")
-  except Exception as e:
-    print(f"CRITICAL GOOGLE SHEETS EXCEPTION IN LOG SAVE: {str(e)}")
+  # 2. Google Sheets Direct REST API Backup
+  append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
 
 
 def load_logs():
-  client = get_gspread_client()
-  if client:
-    try:
-      sheet = client.open_by_key(GOOGLE_SPREADSHEET_ID).worksheet("AdminLogs")
-      records = sheet.get_all_records()
-      if records:
-        return records
-    except Exception as e:
-      print(f"Google Sheets Log Load Error: {e}")
+  sheet_records = load_google_sheet_direct("AdminLogs")
+  if sheet_records:
+    return sheet_records
 
   # Fallback to local SQLite
   try:
@@ -598,7 +600,9 @@ def handle_manual_signup(name, email, phone, password):
 
   users = load_users()
   for existing in users:
-    if isinstance(existing, dict) and existing.get("email") == u_email:
+    if isinstance(existing, dict) and (
+        existing.get("email") == u_email or existing.get("Email") == u_email
+    ):
       return (
           f"<div style='background:rgba(239,68,68,0.15); border:1px solid"
           f" #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3"
@@ -731,7 +735,9 @@ def handle_login(login_email, login_pass):
   users = load_users()
   matched_user = None
   for u in users:
-    if isinstance(u, dict) and u.get("email") == l_email:
+    if isinstance(u, dict) and (
+        u.get("email") == l_email or u.get("Email") == l_email
+    ):
       matched_user = u
       break
 
@@ -748,8 +754,8 @@ def handle_login(login_email, login_pass):
         "",
     )
 
-  u_name = matched_user.get("name", "User")
-  u_phone = matched_user.get("phone", "N/A")
+  u_name = matched_user.get("name", matched_user.get("Name", "User"))
+  u_phone = matched_user.get("phone", matched_user.get("Phone", "N/A"))
 
   save_log({
       "timestamp": str(datetime.datetime.now()),
@@ -1048,7 +1054,7 @@ def admin_login_and_view(password):
 
   summary_html = f"""
     <div style='color:#fff;'>
-        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Cloud Sync Enabled)</h3>
+        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Direct REST API Sync)</h3>
         <p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>
         
         <h4 style='color:#4ade80; margin-top:15px;'>📋 Registered Users Database</h4>

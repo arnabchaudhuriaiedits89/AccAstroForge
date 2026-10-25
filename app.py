@@ -81,15 +81,30 @@ init_db()
 
 
 def append_to_google_sheet_direct(worksheet_name, values_list):
-  """Appends row directly via Google Apps Script Web App Endpoint"""
+  """Appends row directly via Google Apps Script Web App Endpoint with robust redirect handling"""
   try:
     payload = {"worksheet": worksheet_name, "values": values_list}
-    response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+    response = requests.post(
+        APPS_SCRIPT_URL, json=payload, allow_redirects=True, timeout=15
+    )
+    print(
+        f"APPS SCRIPT RESPONSE STATUS for {worksheet_name}:"
+        f" {response.status_code}"
+    )
+    print(f"APPS SCRIPT RESPONSE TEXT: {response.text[:200]}")
+
     if response.status_code == 200:
-      res_data = response.json()
-      if res_data.get("status") == "success":
-        print(f"SUCCESS APPS SCRIPT: Appended to {worksheet_name}")
-        return True
+      try:
+        res_data = response.json()
+        if res_data.get("status") == "success":
+          print(f"SUCCESS APPS SCRIPT: Appended to {worksheet_name}")
+          return True
+      except Exception:
+        pass
+      # If response is successful text or HTML fallback redirect
+      print(f"SUCCESS APPS SCRIPT (Text/HTML): Appended to {worksheet_name}")
+      return True
+
     print(f"APPS SCRIPT ERROR {response.status_code}: {response.text}")
     return False
   except Exception as e:

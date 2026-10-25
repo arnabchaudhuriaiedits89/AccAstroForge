@@ -91,34 +91,17 @@ def init_db():
 init_db()
 
 
-def save_user_db_single(u_name, u_email, u_phone):
-  now_str = str(datetime.datetime.now())
-  # 1. Local SQLite Save
-  try:
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        INSERT OR REPLACE INTO users (name, email, phone, verified_at)
-        VALUES (?, ?, ?, ?)
-    """,
-        (u_name, u_email.lower(), u_phone, now_str),
-    )
-    conn.commit()
-    conn.close()
-    print(f"User saved locally: {u_email}")
-  except Exception as e:
-    print(f"Save user local error: {e}")
-
-  # 2. Google Sheets Backup with Debug Exception Catching
+def get_gspread_client():
+  """Connect to Google Sheets via Service Account using Direct Embedded Credentials"""
   if not GSPREAD_AVAILABLE:
-    print("DEBUG: GSPREAD_AVAILABLE is False in save_user")
-    return
+    print("DEBUG: GSPREAD_AVAILABLE is False")
+    return None
   try:
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",
     ]
+
     creds_dict = {
         "type": "service_account",
         "project_id": "accastroforge",
@@ -159,65 +142,54 @@ def save_user_db_single(u_name, u_email, u_phone):
         "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accastroforge%40accastroforge.iam.gserviceaccount.com",
         "universe_domain": "googleapis.com",
     }
+
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
-    sheet = client.open(GOOGLE_SHEET_NAME).worksheet("Users")
-    sheet.append_row([u_name, u_email.lower(), u_phone, now_str])
-    print(f"User saved to Google Sheets successfully: {u_email}")
+    print("DEBUG: Google Sheets client authorized successfully!")
+    return client
   except Exception as e:
-    print(f"CRITICAL GOOGLE SHEETS USER SAVE ERROR: {str(e)}")
+    print(f"GOOGLE SHEETS AUTH ERROR EXCEPTION: {e}")
+    return None
+
+
+def save_user_db_single(u_name, u_email, u_phone):
+  now_str = str(datetime.datetime.now())
+  # 1. Local SQLite Save
+  try:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO users (name, email, phone, verified_at)
+        VALUES (?, ?, ?, ?)
+    """,
+        (u_name, u_email.lower(), u_phone, now_str),
+    )
+    conn.commit()
+    conn.close()
+    print(f"User saved locally: {u_email}")
+  except Exception as e:
+    print(f"Save user local error: {e}")
+
+  # 2. Google Sheets Backup
+  client = get_gspread_client()
+  if client:
+    try:
+      print(f"DEBUG: Attempting to open sheet: {GOOGLE_SHEET_NAME} for Users")
+      sheet = client.open(GOOGLE_SHEET_NAME).worksheet("Users")
+      sheet.append_row([u_name, u_email.lower(), u_phone, now_str])
+      print(f"User saved to Google Sheets successfully: {u_email}")
+    except Exception as e:
+      print(f"GOOGLE SHEETS USER SAVE ERROR EXCEPTION: {e}")
+  else:
+    print("DEBUG: Client is None, Google Sheets Users save skipped.")
 
 
 def load_users():
   # Try loading from Google Sheets first
-  if GSPREAD_AVAILABLE:
+  client = get_gspread_client()
+  if client:
     try:
-      scope = [
-          "https://spreadsheets.google.com/feeds",
-          "https://www.googleapis.com/auth/drive",
-      ]
-      creds_dict = {
-          "type": "service_account",
-          "project_id": "accastroforge",
-          "private_key_id": "cc05af6253c612a4291adccca10a71b9006d7c07",
-          "private_key": (
-              "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDaf+B+w8ROnTx7"
-              "y3dUyN190H8UYZRtrBiMSpJmEMLzWo6bBb4zlLPmaQ92C0zPMaFXwfjhnyAhft6O"
-              "qehQX9mGw5vSg7TRt6gjJkGcswTsZwblsCmPAF51jo3uyFA1C9uOlDSLqXrhJsGG"
-              "jrD63BRoe07+onu5q+p3U+pdqLb0Jc5qj4iK1Mysnlnlbs9VCiDffOFa/lrNKH0E"
-              "zh26ieAvuxp8pztjAfT9ueEoxxPUHXsoCde5RYQeLpSGHwLzrW+DbdQgju1MOkWg"
-              "f0AXAtYkNqxLowwjI+X11mAD5yB3JD1CF+nVtr/IEgqgeB9p7FUfGfpM6UUaQMDU"
-              "D8ymkx0bAgMBAAECggEAHl/Rfv3K79zG2DTAOX6U39UYnWY1Qou+e94v/NVOrJLF"
-              "qUJCnxwIaDrppdDLVDBDjBYQeZjr2Awxdyaif23bqPLPWhPqEo9T5dL/Iv/16sEl"
-              "wc9b75+vAeuXyn55O+6Sjn8G0PV1+g+vrntumej3Q1EE+bvvtC90cDMvrOZzzHul"
-              "LafDYdmtfBkisQDxP4TawCINNNfAy2YD8HLgDm6RQg3jIj30sfeXyXTIBXlN6crU"
-              "mzvYIj4ybzXbzDZ0PQF4CoEKgk5B2wWlUcU9mKQKGEwSfLNIW6lyTPTwRKqwt8mB"
-              "UiR0xlTKFFd+HKMiRP0vEyA/5MwqZ8B0mhkir737WQKBgQDzrIszrD7F9rCRWfab"
-              "bi5uxCreosN6jzbvgzeoLvGaH+6CHY0F/cTFEaHhHh4kGDOwOcOdn+jxraIdz4i7"
-              "e2PmpKrmaydPsgM0Tr7RSR4EHVMhaKyWQJyvNDghKTbtzO1DIQ1cCuG/+GfuXqlI"
-              "A/XSE76fpmI2r813fCrnNkLVMwKBgQDljVYV9zapTOPFlye4Bsa52TU6LUeET3Rx"
-              "zRidm0G8cPaHQVtJ5Wurq7rkrf4qTfs7M0YeRzXqj+ZBWbJ+Dd5rEksj5xdUu5Gx"
-              "XLHaW7U6Nc9qU2GLu9c6Zd3iawzjHbJ8Mn9LnCvNC700i55JxgzglCZfPlGwlH2z"
-              "kmBfCuJIeQKBgByhJSnJDwcLWOt6+nKAm4wAGFlYHkeEFBxH+n4UJebJ4af/+NW/"
-              "XyMYU0Cz3S64eTo3Tzhx1Viv4eBGxfXhJXev2TSBWnkOnTnEFr9YK+Kn32CJf92X"
-              "cdFT/VRIF2ARN78vXvZ1gNihQvTKwnDnpjYsg7UWQ2vRc/6Z5CCOS4PpAoGBAL3L"
-              "MAQVVCKCqkhyg6qKH8EFsBab3Wet8g8tjk6xUZamp46JIRtmDrHv2SS+H0mHFFOM"
-              "P0tFgXSg6bXandPPT7ijdXEH3qh2NS26AGsULDEm0ImOyzYnZvqnwt8zt4IIycwa"
-              "TFmNlEGClTtevM8uavM8SsWw1wXyoEPaoMe0TgexAoGBAOaKqjVwQUxn2YrSqJjZ"
-              "Czy9Y2pMlWNoHGxoWTPDRpfCgK4oa+xj+qsoC0hTAIzDMehTza3gH2e/OY0CWcCG"
-              "X/NEUdUMt70rTHnLjtevXdVQsrdo7yYUZ0IgI3XBwBQvzLRGZ+IkJBJ0a6hTw2cb"
-              "nytUAlCK0hAtjtbqvwFBo0JbX\n-----END PRIVATE KEY-----"
-          ),
-          "client_email": "accastroforge@accastroforge.iam.gserviceaccount.com",
-          "client_id": "103708387692151830338",
-          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-          "token_uri": "https://oauth2.googleapis.com/token",
-          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accastroforge%40accastroforge.iam.gserviceaccount.com",
-          "universe_domain": "googleapis.com",
-      }
-      creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-      client = gspread.authorize(creds)
       sheet = client.open(GOOGLE_SHEET_NAME).worksheet("Users")
       records = sheet.get_all_records()
       if records:
@@ -263,112 +235,26 @@ def save_log(user_data):
     print(f"Save log local error: {e}")
 
   # 2. Google Sheets Backup
-  if not GSPREAD_AVAILABLE:
-    return
-  try:
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    creds_dict = {
-        "type": "service_account",
-        "project_id": "accastroforge",
-        "private_key_id": "cc05af6253c612a4291adccca10a71b9006d7c07",
-        "private_key": (
-            "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDaf+B+w8ROnTx7"
-            "y3dUyN190H8UYZRtrBiMSpJmEMLzWo6bBb4zlLPmaQ92C0zPMaFXwfjhnyAhft6O"
-            "qehQX9mGw5vSg7TRt6gjJkGcswTsZwblsCmPAF51jo3uyFA1C9uOlDSLqXrhJsGG"
-            "jrD63BRoe07+onu5q+p3U+pdqLb0Jc5qj4iK1Mysnlnlbs9VCiDffOFa/lrNKH0E"
-            "zh26ieAvuxp8pztjAfT9ueEoxxPUHXsoCde5RYQeLpSGHwLzrW+DbdQgju1MOkWg"
-            "f0AXAtYkNqxLowwjI+X11mAD5yB3JD1CF+nVtr/IEgqgeB9p7FUfGfpM6UUaQMDU"
-            "D8ymkx0bAgMBAAECggEAHl/Rfv3K79zG2DTAOX6U39UYnWY1Qou+e94v/NVOrJLF"
-            "qUJCnxwIaDrppdDLVDBDjBYQeZjr2Awxdyaif23bqPLPWhPqEo9T5dL/Iv/16sEl"
-            "wc9b75+vAeuXyn55O+6Sjn8G0PV1+g+vrntumej3Q1EE+bvvtC90cDMvrOZzzHul"
-            "LafDYdmtfBkisQDxP4TawCINNNfAy2YD8HLgDm6RQg3jIj30sfeXyXTIBXlN6crU"
-            "mzvYIj4ybzXbzDZ0PQF4CoEKgk5B2wWlUcU9mKQKGEwSfLNIW6lyTPTwRKqwt8mB"
-            "UiR0xlTKFFd+HKMiRP0vEyA/5MwqZ8B0mhkir737WQKBgQDzrIszrD7F9rCRWfab"
-            "bi5uxCreosN6jzbvgzeoLvGaH+6CHY0F/cTFEaHhHh4kGDOwOcOdn+jxraIdz4i7"
-            "e2PmpKrmaydPsgM0Tr7RSR4EHVMhaKyWQJyvNDghKTbtzO1DIQ1cCuG/+GfuXqlI"
-            "A/XSE76fpmI2r813fCrnNkLVMwKBgQDljVYV9zapTOPFlye4Bsa52TU6LUeET3Rx"
-            "zRidm0G8cPaHQVtJ5Wurq7rkrf4qTfs7M0YeRzXqj+ZBWbJ+Dd5rEksj5xdUu5Gx"
-            "XLHaW7U6Nc9qU2GLu9c6Zd3iawzjHbJ8Mn9LnCvNC700i55JxgzglCZfPlGwlH2z"
-            "kmBfCuJIeQKBgByhJSnJDwcLWOt6+nKAm4wAGFlYHkeEFBxH+n4UJebJ4af/+NW/"
-            "XyMYU0Cz3S64eTo3Tzhx1Viv4eBGxfXhJXev2TSBWnkOnTnEFr9YK+Kn32CJf92X"
-            "cdFT/VRIF2ARN78vXvZ1gNihQvTKwnDnpjYsg7UWQ2vRc/6Z5CCOS4PpAoGBAL3L"
-            "MAQVVCKCqkhyg6qKH8EFsBab3Wet8g8tjk6xUZamp46JIRtmDrHv2SS+H0mHFFOM"
-            "P0tFgXSg6bXandPPT7ijdXEH3qh2NS26AGsULDEm0ImOyzYnZvqnwt8zt4IIycwa"
-            "TFmNlEGClTtevM8uavM8SsWw1wXyoEPaoMe0TgexAoGBAOaKqjVwQUxn2YrSqJjZ"
-            "Czy9Y2pMlWNoHGxoWTPDRpfCgK4oa+xj+qsoC0hTAIzDMehTza3gH2e/OY0CWcCG"
-            "X/NEUdUMt70rTHnLjtevXdVQsrdo7yYUZ0IgI3XBwBQvzLRGZ+IkJBJ0a6hTw2cb"
-            "nytUAlCK0hAtjtbqvwFBo0JbX\n-----END PRIVATE KEY-----"
-        ),
-        "client_email": "accastroforge@accastroforge.iam.gserviceaccount.com",
-        "client_id": "103708387692151830338",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accastroforge%40accastroforge.iam.gserviceaccount.com",
-        "universe_domain": "googleapis.com",
-    }
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-    client = gspread.authorize(creds)
-    sheet = client.open(GOOGLE_SHEET_NAME).worksheet("AdminLogs")
-    sheet.append_row([ts, fn, srv, dtl, pst])
-    print("Log saved to Google Sheets successfully.")
-  except Exception as e:
-    print(f"CRITICAL GOOGLE SHEETS LOG SAVE ERROR: {str(e)}")
+  client = get_gspread_client()
+  if client:
+    try:
+      print(
+          f"DEBUG: Attempting to open sheet: {GOOGLE_SHEET_NAME} for AdminLogs"
+      )
+      sheet = client.open(GOOGLE_SHEET_NAME).worksheet("AdminLogs")
+      sheet.append_row([ts, fn, srv, dtl, pst])
+      print("Log saved to Google Sheets successfully.")
+    except Exception as e:
+      print(f"GOOGLE SHEETS LOG SAVE ERROR EXCEPTION: {e}")
+  else:
+    print("DEBUG: Client is None, Google Sheets AdminLogs save skipped.")
 
 
 def load_logs():
   # Try loading from Google Sheets first
-  if GSPREAD_AVAILABLE:
+  client = get_gspread_client()
+  if client:
     try:
-      scope = [
-          "https://spreadsheets.google.com/feeds",
-          "https://www.googleapis.com/auth/drive",
-      ]
-      creds_dict = {
-          "type": "service_account",
-          "project_id": "accastroforge",
-          "private_key_id": "cc05af6253c612a4291adccca10a71b9006d7c07",
-          "private_key": (
-              "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDaf+B+w8ROnTx7"
-              "y3dUyN190H8UYZRtrBiMSpJmEMLzWo6bBb4zlLPmaQ92C0zPMaFXwfjhnyAhft6O"
-              "qehQX9mGw5vSg7TRt6gjJkGcswTsZwblsCmPAF51jo3uyFA1C9uOlDSLqXrhJsGG"
-              "jrD63BRoe07+onu5q+p3U+pdqLb0Jc5qj4iK1Mysnlnlbs9VCiDffOFa/lrNKH0E"
-              "zh26ieAvuxp8pztjAfT9ueEoxxPUHXsoCde5RYQeLpSGHwLzrW+DbdQgju1MOkWg"
-              "f0AXAtYkNqxLowwjI+X11mAD5yB3JD1CF+nVtr/IEgqgeB9p7FUfGfpM6UUaQMDU"
-              "D8ymkx0bAgMBAAECggEAHl/Rfv3K79zG2DTAOX6U39UYnWY1Qou+e94v/NVOrJLF"
-              "qUJCnxwIaDrppdDLVDBDjBYQeZjr2Awxdyaif23bqPLPWhPqEo9T5dL/Iv/16sEl"
-              "wc9b75+vAeuXyn55O+6Sjn8G0PV1+g+vrntumej3Q1EE+bvvtC90cDMvrOZzzHul"
-              "LafDYdmtfBkisQDxP4TawCINNNfAy2YD8HLgDm6RQg3jIj30sfeXyXTIBXlN6crU"
-              "mzvYIj4ybzXbzDZ0PQF4CoEKgk5B2wWlUcU9mKQKGEwSfLNIW6lyTPTwRKqwt8mB"
-              "UiR0xlTKFFd+HKMiRP0vEyA/5MwqZ8B0mhkir737WQKBgQDzrIszrD7F9rCRWfab"
-              "bi5uxCreosN6jzbvgzeoLvGaH+6CHY0F/cTFEaHhHh4kGDOwOcOdn+jxraIdz4i7"
-              "e2PmpKrmaydPsgM0Tr7RSR4EHVMhaKyWQJyvNDghKTbtzO1DIQ1cCuG/+GfuXqlI"
-              "A/XSE76fpmI2r813fCrnNkLVMwKBgQDljVYV9zapTOPFlye4Bsa52TU6LUeET3Rx"
-              "zRidm0G8cPaHQVtJ5Wurq7rkrf4qTfs7M0YeRzXqj+ZBWbJ+Dd5rEksj5xdUu5Gx"
-              "XLHaW7U6Nc9qU2GLu9c6Zd3iawzjHbJ8Mn9LnCvNC700i55JxgzglCZfPlGwlH2z"
-              "kmBfCuJIeQKBgByhJSnJDwcLWOt6+nKAm4wAGFlYHkeEFBxH+n4UJebJ4af/+NW/"
-              "XyMYU0Cz3S64eTo3Tzhx1Viv4eBGxfXhJXev2TSBWnkOnTnEFr9YK+Kn32CJf92X"
-              "cdFT/VRIF2ARN78vXvZ1gNihQvTKwnDnpjYsg7UWQ2vRc/6Z5CCOS4PpAoGBAL3L"
-              "MAQVVCKCqkhyg6qKH8EFsBab3Wet8g8tjk6xUZamp46JIRtmDrHv2SS+H0mHFFOM"
-              "P0tFgXSg6bXandPPT7ijdXEH3qh2NS26AGsULDEm0ImOyzYnZvqnwt8zt4IIycwa"
-              "TFmNlEGClTtevM8uavM8SsWw1wXyoEPaoMe0TgexAoGBAOaKqjVwQUxn2YrSqJjZ"
-              "Czy9Y2pMlWNoHGxoWTPDRpfCgK4oa+xj+qsoC0hTAIzDMehTza3gH2e/OY0CWcCG"
-              "X/NEUdUMt70rTHnLjtevXdVQsrdo7yYUZ0IgI3XBwBQvzLRGZ+IkJBJ0a6hTw2cb"
-              "nytUAlCK0hAtjtbqvwFBo0JbX\n-----END PRIVATE KEY-----"
-          ),
-          "client_email": "accastroforge@accastroforge.iam.gserviceaccount.com",
-          "client_id": "103708387692151830338",
-          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-          "token_uri": "https://oauth2.googleapis.com/token",
-          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accastroforge%40accastroforge.iam.gserviceaccount.com",
-          "universe_domain": "googleapis.com",
-      }
-      creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-      client = gspread.authorize(creds)
       sheet = client.open(GOOGLE_SHEET_NAME).worksheet("AdminLogs")
       records = sheet.get_all_records()
       if records:

@@ -46,9 +46,9 @@ FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
-# Google Sheets Configuration
+# Google Sheets Configuration (Meher's Custom Env Variable Name)
 GOOGLE_SHEET_NAME = os.getenv("GOOGLE_SHEET_NAME", "AccAstroForge_DB")
-GOOGLE_SERVICE_ACCOUNT_JSON = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "") # Pass JSON content or keep credentials.json locally
+GOOGLE_SERVICE_ACCOUNT_JSON = os.getenv("GOOGLE_CONSOLE_CONNECT_SPREADSHEETS", "") 
 
 # ---------------------------------------------------------
 # 1. GOOGLE SHEETS & LOCAL SQLITE HYBRID DATABASE SYSTEM

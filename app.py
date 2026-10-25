@@ -41,53 +41,12 @@ FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
-# Google Sheets Configuration via Spreadsheet ID
+# Google Sheets Configuration via Spreadsheet ID & Apps Script Web App URL
 GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
-
-# Service Account Credentials Dict for direct REST API
-SERVICE_ACCOUNT_INFO = {
-    "type": "service_account",
-    "project_id": "accastroforge",
-    "private_key_id": "cc05af6253c612a4291adccca10a71b9006d7c07",
-    "private_key": (
-        "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDaf+B+w8ROnTx7"
-        "y3dUyN190H8UYZRtrBiMSpJmEMLzWo6bBb4zlLPmaQ92C0zPMaFXwfjhnyAhft6O"
-        "qehQX9mGw5vSg7TRt6gjJkGcswTsZwblsCmPAF51jo3uyFA1C9uOlDSLqXrhJsGG"
-        "jrD63BRoe07+onu5q+p3U+pdqLb0Jc5qj4iK1Mysnlnlbs9VCiDffOFa/lrNKH0E"
-        "zh26ieAvuxp8pztjAfT9ueEoxxPUHXsoCde5RYQeLpSGHwLzrW+DbdQgju1MOkWg"
-        "f0AXAtYkNqxLowwjI+X11mAD5yB3JD1CF+nVtr/IEgqgeB9p7FUfGfpM6UUaQMDU"
-        "D8ymkx0bAgMBAAECggEAHl/Rfv3K79zG2DTAOX6U39UYnWY1Qou+e94v/NVOrJLF"
-        "qUJCnxwIaDrppdDLVDBDjBYQeZjr2Awxdyaif23bqPLPWhPqEo9T5dL/Iv/16sEl"
-        "wc9b75+vAeuXyn55O+6Sjn8G0PV1+g+vrntumej3Q1EE+bvvtC90cDMvrOZzzHul"
-        "LafDYdmtfBkisQDxP4TawCINNNfAy2YD8HLgDm6RQg3jIj30sfeXyXTIBXlN6crU"
-        "mzvYIj4ybzXbzDZ0PQF4CoEKgk5B2wWlUcU9mKQKGEwSfLNIW6lyTPTwRKqwt8mB"
-        "UiR0xlTKFFd+HKMiRP0vEyA/5MwqZ8B0mhkir737WQKBgQDzrIszrD7F9rCRWfab"
-        "bi5uxCreosN6jzbvgzeoLvGaH+6CHY0F/cTFEaHhHh4kGDOwOcOdn+jxraIdz4i7"
-        "e2PmpKrmaydPsgM0Tr7RSR4EHVMhaKyWQJyvNDghKTbtzO1DIQ1cCuG/+GfuXqlI"
-        "A/XSE76fpmI2r813fCrnNkLVMwKBgQDljVYV9zapTOPFlye4Bsa52TU6LUeET3Rx"
-        "zRidm0G8cPaHQVtJ5Wurq7rkrf4qTfs7M0YeRzXqj+ZBWbJ+Dd5rEksj5xdUu5Gx"
-        "XLHaW7U6Nc9qU2GLu9c6Zd3iawzjHbJ8Mn9LnCvNC700i55JxgzglCZfPlGwlH2z"
-        "kmBfCuJIeQKBgByhJSnJDwcLWOt6+nKAm4wAGFlYHkeEFBxH+n4UJebJ4af/+NW/"
-        "XyMYU0Cz3S64eTo3Tzhx1Viv4eBGxfXhJXev2TSBWnkOnTnEFr9YK+Kn32CJf92X"
-        "cdFT/VRIF2ARN78vXvZ1gNihQvTKwnDnpjYsg7UWQ2vRc/6Z5CCOS4PpAoGBAL3L"
-        "MAQVVCKCqkhyg6qKH8EFsBab3Wet8g8tjk6xUZamp46JIRtmDrHv2SS+H0mHFFOM"
-        "P0tFgXSg6bXandPPT7ijdXEH3qh2NS26AGsULDEm0ImOyzYnZvqnwt8zt4IIycwa"
-        "TFmNlEGClTtevM8uavM8SsWw1wXyoEPaoMe0TgexAoGBAOaKqjVwQUxn2YrSqJjZ"
-        "Czy9Y2pMlWNoHGxoWTPDRpfCgK4oa+xj+qsoC0hTAIzDMehTza3gH2e/OY0CWcCG"
-        "X/NEUdUMt70rTHnLjtevXdVQsrdo7yYUZ0IgI3XBwBQvzLRGZ+IkJBJ0a6hTw2cb"
-        "nytUAlCK0hAtjtbqvwFBo0JbX\n-----END PRIVATE KEY-----"
-    ),
-    "client_email": "accastroforge@accastroforge.iam.gserviceaccount.com",
-    "client_id": "103708387692151830338",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accastroforge%40accastroforge.iam.gserviceaccount.com",
-    "universe_domain": "googleapis.com",
-}
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJnwcqMQ7g2pHLDEamDh39ZQF4JzUSV80t42UVgnMR84sjoRD_3l__vaqehOwb0PU/exec"
 
 # ---------------------------------------------------------
-# 1. GOOGLE SHEETS DIRECT REST API HYBRID DATABASE SYSTEM
+# 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM
 # ---------------------------------------------------------
 DB_FILE = "accastroforge.db"
 
@@ -122,83 +81,25 @@ init_db()
 
 
 def append_to_google_sheet_direct(worksheet_name, values_list):
-  """Appends row directly via Google Sheets REST API using Service Account JWT"""
+  """Appends row directly via Google Apps Script Web App Endpoint"""
   try:
-    from google.auth.transport import requests as google_requests
-    from google.oauth2 import service_account
-
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds = service_account.Credentials.from_service_account_info(
-        SERVICE_ACCOUNT_INFO, scopes=scopes
-    )
-    auth_req = google_requests.Request()
-    creds.refresh(auth_req)
-    token = creds.token
-
-    range_name = f"{worksheet_name}!A:E"
-    url = f"https://sheets.googleapis.com/v4/spreadsheets/{GOOGLE_SPREADSHEET_ID}/values/{range_name}:append?valueInputOption=USER_ENTERED"
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
-    payload = {"values": [values_list]}
-
-    response = requests.post(url, headers=headers, json=payload, timeout=10)
-    if response.status_code in [200, 201]:
-      print(f"SUCCESS DIRECT API: Appended to {worksheet_name}")
-      return True
-    else:
-      print(f"DIRECT API ERROR {response.status_code}: {response.text}")
-      return False
+    payload = {"worksheet": worksheet_name, "values": values_list}
+    response = requests.post(APPS_SCRIPT_URL, json=payload, timeout=10)
+    if response.status_code == 200:
+      res_data = response.json()
+      if res_data.get("status") == "success":
+        print(f"SUCCESS APPS SCRIPT: Appended to {worksheet_name}")
+        return True
+    print(f"APPS SCRIPT ERROR {response.status_code}: {response.text}")
+    return False
   except Exception as e:
-    print(f"CRITICAL DIRECT API EXCEPTION: {str(e)}")
+    print(f"CRITICAL APPS SCRIPT EXCEPTION: {str(e)}")
     return False
 
 
 def load_google_sheet_direct(worksheet_name):
-  """Fetches records directly via Google Sheets REST API"""
-  try:
-    from google.auth.transport import requests as google_requests
-    from google.oauth2 import service_account
-
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds = service_account.Credentials.from_service_account_info(
-        SERVICE_ACCOUNT_INFO, scopes=scopes
-    )
-    auth_req = google_requests.Request()
-    creds.refresh(auth_req)
-    token = creds.token
-
-    range_name = f"{worksheet_name}!A:E"
-    url = f"https://sheets.googleapis.com/v4/spreadsheets/{GOOGLE_SPREADSHEET_ID}/values/{range_name}"
-
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(url, headers=headers, timeout=10)
-    if response.status_code == 200:
-      data = response.json()
-      rows = data.get("values", [])
-      if not rows or len(rows) <= 1:
-        return []
-      headers_row = rows[0]
-      records = []
-      for r in rows[1:]:
-        padded = r + [""] * (len(headers_row) - len(r))
-        records.append(dict(zip(headers_row, padded)))
-      return records
-    return []
-  except Exception as e:
-    print(f"DIRECT API LOAD EXCEPTION: {e}")
-    return []
-
-
-def test_google_sheets_connection_on_startup():
-  print("DEBUG STARTUP: Testing Google Sheets Direct REST Connection...")
-  recs = load_google_sheet_direct("Users")
-  print(f"DEBUG STARTUP SUCCESS: Connected! Users found: {len(recs)}")
-
-
-test_google_sheets_connection_on_startup()
+  """Fetches records (placeholder or local fallback if needed)"""
+  return []
 
 
 def save_user_db_single(u_name, u_email, u_phone):
@@ -220,16 +121,12 @@ def save_user_db_single(u_name, u_email, u_phone):
   except Exception as e:
     print(f"ERROR: Save user local failed: {e}")
 
-  # 2. Google Sheets Direct REST API Backup
+  # 2. Google Apps Script Web App Sync Backup
   append_to_google_sheet_direct("Users", [u_name, u_email.lower(), u_phone, now_str])
 
 
 def load_users():
-  sheet_records = load_google_sheet_direct("Users")
-  if sheet_records:
-    return sheet_records
-
-  # Fallback to local SQLite
+  # Fallback to local SQLite for instant load
   try:
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -266,16 +163,12 @@ def save_log(user_data):
   except Exception as e:
     print(f"ERROR: Save log local failed: {e}")
 
-  # 2. Google Sheets Direct REST API Backup
+  # 2. Google Apps Script Web App Sync Backup
   append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
 
 
 def load_logs():
-  sheet_records = load_google_sheet_direct("AdminLogs")
-  if sheet_records:
-    return sheet_records
-
-  # Fallback to local SQLite
+  # Fallback to local SQLite for instant load
   try:
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -1054,7 +947,7 @@ def admin_login_and_view(password):
 
   summary_html = f"""
     <div style='color:#fff;'>
-        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Direct REST API Sync)</h3>
+        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Apps Script Web App Sync)</h3>
         <p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>
         
         <h4 style='color:#4ade80; margin-top:15px;'>📋 Registered Users Database</h4>

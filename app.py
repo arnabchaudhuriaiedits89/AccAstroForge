@@ -5,6 +5,7 @@ import os
 import io
 import random
 import requests
+import sqlite3
 import hashlib
 import gradio as gr
 from reportlab.lib.pagesizes import letter
@@ -37,73 +38,96 @@ GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOO
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
 # ---------------------------------------------------------
-# 1. DIRECT REST API SUPABASE CLOUD DATABASE SYSTEM
+# 1. 100% BULLETPROOF LOCAL SQLITE DATABASE SYSTEM
 # ---------------------------------------------------------
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://zhpseyagpwcakptaiswz.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_eZEFd8jmKDqbNJ0tOsASJA_ujapk-ou")
+DB_FILE = "accastroforge.db"
 
-SUPABASE_HEADERS = {
-    "apikey": SUPABASE_KEY,
-    "Authorization": f"Bearer {SUPABASE_KEY}",
-    "Content-Type": "application/json",
-    "Prefer": "return=representation"
-}
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT UNIQUE,
+            phone TEXT,
+            verified_at TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS admin_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            full_name TEXT,
+            service TEXT,
+            details TEXT,
+            payment_status TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
 
 def load_users():
-    url = f"{SUPABASE_URL}/rest/v1/users?select=*"
     try:
-        response = requests.get(url, headers=SUPABASE_HEADERS, timeout=10)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            print(f"Supabase load_users error status: {response.status_code}, body: {response.text}")
-            return []
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users")
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
     except Exception as e:
-        print(f"Supabase load_users exception: {e}")
+        print(f"Load users error: {e}")
         return []
 
 def save_user_db_single(u_name, u_email, u_phone):
-    url = f"{SUPABASE_URL}/rest/v1/users"
-    now_str = str(datetime.datetime.now())
-    data = {
-        "name": u_name,
-        "email": u_email.lower(),
-        "phone": u_phone,
-        "verified_at": now_str
-    }
     try:
-        response = requests.post(url, headers=SUPABASE_HEADERS, json=data, timeout=10)
-        print(f"Supabase user save response status: {response.status_code}, body: {response.text}")
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        now_str = str(datetime.datetime.now())
+        cursor.execute('''
+            INSERT OR REPLACE INTO users (name, email, phone, verified_at)
+            VALUES (?, ?, ?, ?)
+        ''', (u_name, u_email.lower(), u_phone, now_str))
+        conn.commit()
+        conn.close()
+        print(f"User saved locally: {u_email}")
     except Exception as e:
-        print(f"Supabase user save exception: {e}")
+        print(f"Save user error: {e}")
 
 def load_logs():
-    url = f"{SUPABASE_URL}/rest/v1/admin_logs?select=*"
     try:
-        response = requests.get(url, headers=SUPABASE_HEADERS, timeout=10)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            print(f"Supabase load_logs error status: {response.status_code}, body: {response.text}")
-            return []
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admin_logs")
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
     except Exception as e:
-        print(f"Supabase load_logs exception: {e}")
+        print(f"Load logs error: {e}")
         return []
 
 def save_log(user_data):
-    url = f"{SUPABASE_URL}/rest/v1/admin_logs"
-    data = {
-        "timestamp": user_data.get("timestamp", str(datetime.datetime.now())),
-        "full_name": user_data.get("full_name", "N/A"),
-        "service": user_data.get("service", "General"),
-        "details": user_data.get("details", "N/A"),
-        "payment_status": user_data.get("payment_status", "Pending")
-    }
     try:
-        response = requests.post(url, headers=SUPABASE_HEADERS, json=data, timeout=10)
-        print(f"Supabase log save response status: {response.status_code}, body: {response.text}")
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            user_data.get("timestamp", str(datetime.datetime.now())),
+            user_data.get("full_name", "N/A"),
+            user_data.get("service", "General"),
+            user_data.get("details", "N/A"),
+            user_data.get("payment_status", "Pending")
+        ))
+        conn.commit()
+        conn.close()
     except Exception as e:
-        print(f"Supabase log save exception: {e}")
+        print(f"Save log error: {e}")
 
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -369,25 +393,6 @@ def create_kundali_pdf_file(name, dob, tob, pob):
 
 
 def get_robust_razorpay_link(service_name, price, user_name):
-  try:
-    if razorpay_client:
-      data = {
-          "amount": int(price) * 100,
-          "currency": "INR",
-          "accept_partial": False,
-          "description": f"Payment for {service_name}",
-          "customer": {"name": user_name if user_name else "User"},
-          "notify": {"sms": False, "email": False},
-          "reminder_enable": False,
-          "callback_url": "https://accastroforge.in/",
-          "callback_method": "get",
-      }
-      response = razorpay_client.payment_link.create(data)
-      if response and "short_url" in response:
-        return response["short_url"]
-  except Exception as e:
-    print(f"Razorpay API fallback triggered due to: {e}")
-
   return RAZORPAY_ME_URL
 
 
@@ -540,7 +545,7 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
         <div>
             👤 <b>{u_name}</b> ({u_email})<br>
             <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Cloud Database Protected)</span>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Local Database Protected)</span>
         </div>
         <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
             🚪 Logout / Switch Account
@@ -548,7 +553,7 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
     </div>
     """
   wallet_box = "₹ 0.00"
-  history_box = f"• Registration & OTP Verification Complete<br>• Account Active & Saved in Cloud DB<br>• Contact: {u_phone}"
+  history_box = f"• Registration & OTP Verification Complete<br>• Account Active & Saved in Local DB<br>• Contact: {u_phone}"
   session_token = f"{u_email}|{u_name}|{u_phone}"
 
   return success_msg, profile_box, wallet_box, history_box, session_token
@@ -604,7 +609,7 @@ def handle_login(login_email, login_pass):
         <div>
             👤 <b>{u_name}</b> ({l_email})<br>
             <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Cloud Database Protected)</span>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Local Database Protected)</span>
         </div>
         <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
             🚪 Logout / Switch Account
@@ -886,7 +891,7 @@ def admin_login_and_view(password):
 
   summary_html = f"""
     <div style='color:#fff;'>
-        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Supabase Cloud Connected)</h3>
+        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Local Database Connected)</h3>
         <p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>
         
         <h4 style='color:#4ade80; margin-top:15px;'>📋 Registered Users Database</h4>

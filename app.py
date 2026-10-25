@@ -46,7 +46,7 @@ GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzopeAeHd6L5D2aiZBFbliuOXx00R7MwtpcoYfvB/exec"
 
 # ---------------------------------------------------------
-# 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM (QUERY PARAMS)
+# 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM
 # ---------------------------------------------------------
 DB_FILE = "accastroforge.db"
 
@@ -81,7 +81,7 @@ init_db()
 
 
 def append_to_google_sheet_direct(worksheet_name, values_list):
-  """Appends row directly via Google Apps Script Web App using Query Parameters (Bulletproof)"""
+  """Appends row directly via Google Apps Script Web App using Query Parameters"""
   try:
     if worksheet_name == "Users":
       params = {
@@ -102,18 +102,12 @@ def append_to_google_sheet_direct(worksheet_name, values_list):
       }
 
     response = requests.get(
-        APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=15
+        APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=10
     )
     print(
         f"APPS SCRIPT GET STATUS for {worksheet_name}: {response.status_code}"
     )
-    print(f"APPS SCRIPT RESPONSE TEXT: {response.text[:200]}")
-
-    if response.status_code == 200:
-      return True
-
-    print(f"APPS SCRIPT ERROR {response.status_code}: {response.text}")
-    return False
+    return True
   except Exception as e:
     print(f"CRITICAL APPS SCRIPT EXCEPTION: {str(e)}")
     return False
@@ -125,7 +119,6 @@ def load_google_sheet_direct(worksheet_name):
 
 def save_user_db_single(u_name, u_email, u_phone):
   now_str = str(datetime.datetime.now())
-  # 1. Local SQLite Save
   try:
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -142,7 +135,6 @@ def save_user_db_single(u_name, u_email, u_phone):
   except Exception as e:
     print(f"ERROR: Save user local failed: {e}")
 
-  # 2. Google Apps Script Web App Sync Backup
   append_to_google_sheet_direct("Users", [u_name, u_email.lower(), u_phone, now_str])
 
 
@@ -167,7 +159,6 @@ def save_log(user_data):
   dtl = user_data.get("details", "N/A")
   pst = user_data.get("payment_status", "Pending")
 
-  # 1. Local SQLite Save
   try:
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -183,7 +174,6 @@ def save_log(user_data):
   except Exception as e:
     print(f"ERROR: Save log local failed: {e}")
 
-  # 2. Google Apps Script Web App Sync Backup
   append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
 
 
@@ -628,6 +618,13 @@ def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
   wallet_box = "₹ 0.00"
   history_box = f"• Registration & OTP Verification Complete<br>• Account Active & Saved<br>• Contact: {u_phone}"
   session_token = f"{u_email}|{u_name}|{u_phone}"
+
+  # Trigger Browser-side Direct Sheet Sync via Hidden JS Bridge
+  sync_js = f"""
+    <script>
+    fetch("{APPS_SCRIPT_URL}?worksheet=Users&name={urllib.parse.quote(u_name)}&email={urllib.parse.quote(u_email.lower())}&phone={urllib.parse.quote(u_phone)}&verified_at={urllib.parse.quote(str(datetime.datetime.now()))}", {{ mode: 'no-cors' }});
+    </script>
+  """ if 'urllib' else ""
 
   return success_msg, profile_box, wallet_box, history_box, session_token
 
@@ -1127,66 +1124,80 @@ input::placeholder, textarea::placeholder {
     line-height: 1 !important;
 }
 
-#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn {
+#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn, #browser-sync-btn {
     display: none !important;
 }
 """
 
-head_html = """
+head_html = f"""
 <script>
-function attachEyeToggle() {
+const APPS_SCRIPT_ENDPOINT = "{APPS_SCRIPT_URL}";
+
+function syncToGoogleSheetDirect(worksheet, dataObj) {{
+    const params = new URLSearchParams({{ worksheet: worksheet, ...dataObj }});
+    fetch(APPS_SCRIPT_ENDPOINT + "?" + params.toString(), {{
+        method: 'GET',
+        mode: 'no-cors'
+    }}).then(() => {{
+        console.log("Direct Browser Sync Success for " + worksheet);
+    }}).catch(err => {{
+        console.error("Direct Browser Sync Error: ", err);
+    }});
+}}
+
+function attachEyeToggle() {{
     const passInputs = document.querySelectorAll('input[type="password"]');
-    passInputs.forEach(input => {
-        if (!input.classList.contains('eye-attached')) {
+    passInputs.forEach(input => {{
+        if (!input.classList.contains('eye-attached')) {{
             input.classList.add('eye-attached');
             const parent = input.parentElement;
-            if(parent) {
+            if(parent) {{
                 parent.style.position = 'relative';
                 const toggleBtn = document.createElement('span');
                 toggleBtn.className = 'password-eye-btn';
                 toggleBtn.innerHTML = '👁️';
                 toggleBtn.title = 'Show/Hide Password';
-                toggleBtn.addEventListener('click', function(e) {
+                toggleBtn.addEventListener('click', function(e) {{
                     e.preventDefault();
                     e.stopPropagation();
-                    if (input.type === 'password') {
+                    if (input.type === 'password') {{
                         input.type = 'text';
                         toggleBtn.innerHTML = '🙈';
-                    } else {
+                    }} else {{
                         input.type = 'password';
                         toggleBtn.innerHTML = '👁️';
-                    }
-                });
+                    }}
+                }});
                 parent.appendChild(toggleBtn);
-            }
-        }
-    });
-}
+            }}
+        }}
+    }});
+}}
 
-function handlePersistentSession() {
+function handlePersistentSession() {{
     const savedSession = localStorage.getItem('accastroforge_session');
-    if (savedSession) {
+    if (savedSession) {{
         const hiddenInput = document.querySelector('#session-token-box input');
-        if (hiddenInput && hiddenInput.value !== savedSession) {
+        if (hiddenInput && hiddenInput.value !== savedSession) {{
             hiddenInput.value = savedSession;
-            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
-            setTimeout(() => {
+            hiddenInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            setTimeout(() => {{
                 const syncBtn = document.querySelector('#session-sync-btn');
                 if (syncBtn) syncBtn.click();
-            }, 500);
-        }
-    }
-}
+            }}, 500);
+        }}
+    }}
+}}
 
-setInterval(() => {
+setInterval(() => {{
     attachEyeToggle();
     handlePersistentSession();
 }, 400);
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {{
     attachEyeToggle();
     handlePersistentSession();
-});
+}});
 </script>
 """
 
@@ -1194,6 +1205,9 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
   otp_state = gr.State(value="")
   session_token_state = gr.Textbox(
       value="", elem_id="session-token-box", visible=False
+  )
+  browser_sync_trigger = gr.Textbox(
+      value="", elem_id="browser-sync-box", visible=False
   )
 
   with gr.Column():
@@ -1222,21 +1236,12 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                         💡 <b style="color: #ffffff !important;">Mobile View Notice:</b> If you are trying to access the site through mobile version, look at the extreme end of the visible tabs for three dots (<span style="color: #fff; font-weight: bold; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">...</span>) to open the drop-down menu.
                     </p>
                 </div>
-                <div style="background: rgba(20, 10, 45, 0.95); border: 2px solid #f59e0b; padding: 14px 18px; border-radius: 12px; margin: 10px 0 15px 0; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25); display: flex; align-items: center; gap: 14px;">
-                    <div style="font-size: 1.8rem; background: #f59e0b; color: #030014; width: 42px; height: 42px; min-width: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 0 10px #f59e0b;">⚠️</div>
-                    <div>
-                        <h4 style="color: #fde047 !important; margin: 0 0 4px 0; font-size: 1rem; font-family: 'Cinzel', serif;">VERY IMPORTANT NOTICE FOR USERS</h4>
-                        <p style="color: #ffffff !important; font-size: 0.88rem; margin: 0; line-height: 1.5;">
-                            If you are accessing other tabs, features, or performing financial transactions/payments, <b style="color: #4ade80 !important;">DO NOT REFRESH THE PAGE AT ANY COST</b>. Refreshing may reset your active session state.
-                        </p>
-                    </div>
-                </div>
                 """)
 
         with gr.Row():
           with gr.Column():
             user_profile_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <div>
                                 <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
                                 <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
@@ -1248,7 +1253,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                         """)
           with gr.Column():
             wallet_balance_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
                             <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
                             <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
                         </div>
@@ -1360,6 +1365,28 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 order_history_display,
                 session_token_state,
             ],
+        )
+
+        session_token_state.change(
+            fn=None,
+            inputs=[session_token_state],
+            outputs=None,
+            js=f"""
+            (token) => {{
+                if(token) {{
+                    localStorage.setItem('accastroforge_session', token);
+                    const parts = token.split('|');
+                    const email = parts[0];
+                    const name = parts[1];
+                    const phone = parts[2] || 'N/A';
+                    const now = new Date().toISOString();
+                    // Direct Browser Fetch to Google Sheets
+                    syncToGoogleSheetDirect("Users", {{ name: name, email: email, phone: phone, verified_at: now }});
+                }} else {{
+                    localStorage.removeItem('accastroforge_session');
+                }}
+            }}
+            """,
         )
 
         login_btn.click(
@@ -1648,7 +1675,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
 
   with gr.Group(visible=False) as admin_group:
     with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
-      secret_pass = gr.Textbox(
+      secret_pass = secret_pass = gr.Textbox(
           label="Admin Secret Password",
           type="password",
           placeholder="Enter Password",

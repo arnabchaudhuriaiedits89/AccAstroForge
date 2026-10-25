@@ -41,9 +41,9 @@ FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
-# Google Sheets Configuration via Spreadsheet ID & Apps Script Web App URL
+# Google Sheets Configuration via Spreadsheet ID & Updated Apps Script Web App URL
 GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJnwcqMQ7g2pHLDEamDh39ZQF4JzUSV80t42UVgnMR84sjoRD_3l__vaqehOwb0PU/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzopeAeHd6L5D2aiZBFbliuOXx00R7MwtpcoYfvB/exec"
 
 # ---------------------------------------------------------
 # 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM
@@ -101,7 +101,6 @@ def append_to_google_sheet_direct(worksheet_name, values_list):
           return True
       except Exception:
         pass
-      # If response is successful text or HTML fallback redirect
       print(f"SUCCESS APPS SCRIPT (Text/HTML): Appended to {worksheet_name}")
       return True
 

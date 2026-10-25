@@ -72,9 +72,14 @@ def save_user_db_single(u_name, u_email, u_phone):
         "phone": u_phone,
         "verified_at": now_str,
     }
-    supabase.table("users").upsert(data, on_conflict="email").execute()
+    # Using insert directly or robust handling to avoid upsert conflicts
+    supabase.table("users").insert(data).execute()
   except Exception as e:
-    print(f"Supabase save_user error: {e}")
+    print(f"Supabase save_user insert error (trying update fallback): {e}")
+    try:
+      supabase.table("users").update({"name": u_name, "phone": u_phone, "verified_at": now_str}).eq("email", u_email.lower()).execute()
+    except Exception as ex:
+      print(f"Supabase save_user fallback error: {ex}")
 
 
 def load_logs():

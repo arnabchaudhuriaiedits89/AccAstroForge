@@ -1134,6 +1134,15 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                         💡 <b style="color: #ffffff !important;">Mobile View Notice:</b> If you are trying to access the site through mobile version, look at the extreme end of the visible tabs for three dots (<span style="color: #fff; font-weight: bold; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">...</span>) to open the drop-down menu.
                     </p>
                 </div>
+                <div style="background: rgba(20, 10, 45, 0.95); border: 2px solid #f59e0b; padding: 14px 18px; border-radius: 12px; margin: 10px 0 15px 0; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25); display: flex; align-items: center; gap: 14px;">
+                    <div style="font-size: 1.8rem; background: #f59e0b; color: #030014; width: 42px; height: 42px; min-width: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 0 10px #f59e0b;">⚠️</div>
+                    <div>
+                        <h4 style="color: #fde047 !important; margin: 0 0 4px 0; font-size: 1rem; font-family: 'Cinzel', serif;">VERY IMPORTANT NOTICE FOR USERS</h4>
+                        <p style="color: #ffffff !important; font-size: 0.88rem; margin: 0; line-height: 1.5;">
+                            If you are accessing other tabs, features, or performing financial transactions/payments, <b style="color: #4ade80 !important;">DO NOT REFRESH THE PAGE AT ANY COST</b>. Refreshing may reset your active session state.
+                        </p>
+                    </div>
+                </div>
                 """)
 
         with gr.Row():

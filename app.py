@@ -1042,27 +1042,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
                 )
 
-                session_token_state.change(
-                    fn=None,
-                    inputs=[session_token_state],
-                    outputs=None,
-                    js="""
-                    (token) => {
-                        if(token) {
-                            localStorage.setItem('accastroforge_session', token);
-                            const parts = token.split('|');
-                            const email = parts[0];
-                            const name = parts[1];
-                            const phone = parts[2] || 'N/A';
-                            const now = new Date().toISOString();
-                            syncToGoogleSheetDirect("Users", { name: name, email: email, phone: phone, verified_at: now });
-                        } else {
-                            localStorage.removeItem('accastroforge_session');
-                        }
-                    }
-                    """
-                )
-
                 login_btn.click(
                     fn=handle_login,
                     inputs=[login_email_input, login_pass_input],

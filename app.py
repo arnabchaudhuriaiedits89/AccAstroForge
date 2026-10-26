@@ -870,77 +870,81 @@ input::placeholder, textarea::placeholder {
 }
 """
 
-head_html = f"""
+head_html = (
+    """
 <script>
-const APPS_SCRIPT_ENDPOINT = "{APPS_SCRIPT_URL}";
+const APPS_SCRIPT_ENDPOINT = '"""
+    + APPS_SCRIPT_URL
+    + """';
 
-function syncToGoogleSheetDirect(worksheet, dataObj) {{
-    const params = new URLSearchParams({{ worksheet: worksheet, ...dataObj }});
-    fetch(APPS_SCRIPT_ENDPOINT + "?" + params.toString(), {{
+function syncToGoogleSheetDirect(worksheet, dataObj) {
+    const params = new URLSearchParams({ worksheet: worksheet, ...dataObj });
+    fetch(APPS_SCRIPT_ENDPOINT + "?" + params.toString(), {
         method: 'GET',
         mode: 'no-cors'
-    }}).then(() => {{
+    }).then(() => {
         console.log("Direct Browser Sync Success for " + worksheet);
-    }}).catch(err => {{
+    }).catch(err => {
         console.error("Direct Browser Sync Error: ", err);
-    }});
-}}
+    });
+}
 
-function attachEyeToggle() {{
+function attachEyeToggle() {
     const passInputs = document.querySelectorAll('input[type="password"]');
-    passInputs.forEach(input => {{
-        if (!input.classList.contains('eye-attached')) {{
+    passInputs.forEach(input => {
+        if (!input.classList.contains('eye-attached')) {
             input.classList.add('eye-attached');
             const parent = input.parentElement;
-            if(parent) {{
+            if(parent) {
                 parent.style.position = 'relative';
                 const toggleBtn = document.createElement('span');
                 toggleBtn.className = 'password-eye-btn';
                 toggleBtn.innerHTML = '👁️';
                 toggleBtn.title = 'Show/Hide Password';
-                toggleBtn.addEventListener('click', function(e) {{
+                toggleBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (input.type === 'password') {{
+                    if (input.type === 'password') {
                         input.type = 'text';
                         toggleBtn.innerHTML = '🙈';
-                    }} else {{
+                    } else {
                         input.type = 'password';
                         toggleBtn.innerHTML = '👁️';
-                    }}
-                }});
+                    }
+                });
                 parent.appendChild(toggleBtn);
-            }}
-        }}
-    }});
-}}
+            }
+        }
+    });
+}
 
-function handlePersistentSession() {{
+function handlePersistentSession() {
     const savedSession = localStorage.getItem('accastroforge_session');
-    if (savedSession) {{
+    if (savedSession) {
         const hiddenInput = document.querySelector('#session-token-box input');
-        if (hiddenInput && hiddenInput.value !== savedSession) {{
+        if (hiddenInput && hiddenInput.value !== savedSession) {
             hiddenInput.value = savedSession;
-            hiddenInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-            setTimeout(() => {{
+            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+            setTimeout(() => {
                 const syncBtn = document.querySelector('#session-sync-btn');
                 if (syncBtn) syncBtn.click();
-            }}, 500);
-        }}
-    }}
-}}
+            }, 500);
+        }
+    }
+}
 
-setInterval(() => {{
+setInterval(() => {
     attachEyeToggle();
     handlePersistentSession();
 }, 400);
 
-document.addEventListener("DOMContentLoaded", () => {{
+document.addEventListener("DOMContentLoaded", () => {
     attachEyeToggle();
     handlePersistentSession();
-}});
+});
 </script>
 """
+)
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     otp_state = gr.State(value="")

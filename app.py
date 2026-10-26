@@ -35,8 +35,8 @@ GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOO
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
 # Google Sheets Configuration via Spreadsheet ID & Updated Apps Script Web App URL
-GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlnf8NVIIDf9tH47JR4vu1Ecb_K-NKLgn0LIuo5EUNNUMr1CaqKUU8fC6QDf14qh_/exec"
+GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyxhdOzOk7R7XJVcrlirFzwqrKpQ"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 
 # ---------------------------------------------------------
 # 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM

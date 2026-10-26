@@ -34,6 +34,11 @@ FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
+try:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+except Exception:
+    razorpay_client = None
+
 # Google Sheets Configuration via Spreadsheet ID & Updated Apps Script Web App URL
 GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
@@ -341,7 +346,7 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
     """
 
 # ---------------------------------------------------------
-# 4. REPORTLAB PDF & RAZORPAY PAYWALL
+# 4. REPORTLAB PDF & ROBUST RAZORPAY PAYWALL (RESTORED DYNAMIC LINK)
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -396,6 +401,27 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     return filename
 
 def get_robust_razorpay_link(service_name, price, user_name):
+    try:
+        if razorpay_client:
+            data = {
+                "amount": int(price) * 100,
+                "currency": "INR",
+                "accept_partial": False,
+                "description": f"Payment for {service_name}",
+                "customer": {
+                    "name": user_name if user_name else "User"
+                },
+                "notify": {"sms": False, "email": False},
+                "reminder_enable": False,
+                "callback_url": "https://accastroforge.in/",
+                "callback_method": "get"
+            }
+            response = razorpay_client.payment_link.create(data)
+            if response and "short_url" in response:
+                return response["short_url"]
+    except Exception as e:
+        print(f"Razorpay API fallback triggered due to: {e}")
+    
     return RAZORPAY_ME_URL
 
 def get_paywall_html(service_name, price, user_name="User"):

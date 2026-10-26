@@ -1,19 +1,18 @@
 import base64
 import datetime
+import hashlib
+import io
 import json
 import os
-import io
 import random
-import requests
-import hashlib
 import gradio as gr
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
 import razorpay
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import requests
+import sqlite3
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
@@ -22,8 +21,7 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
-PROKERALA_CLIENT_ID = "ffb5cc5c-e8c7-4cde-bec3-3c608af33a33"
-PROKERALA_CLIENT_SECRET = "LXih7EzrT4ym7GXA@4ykOyHv1mofs4RxmWhzChgX"
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
@@ -33,88 +31,182 @@ FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 
-try:
-    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-except Exception:
-    razorpay_client = None
+GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
+FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
-LOG_FILE = "admin_logs.json"
+# Google Sheets Configuration via Spreadsheet ID & Updated Apps Script Web App URL
+GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyxhdOzOk7R7XJVcrlirFzwqrKpQ"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 
-# GOOGLE SHEETS INITIALIZATION
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-sheet = None
-try:
-    if os.path.exists("credentials.json"):
-        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-        client = gspread.authorize(creds)
-        sheet = client.open("AccAstroForge_DB").worksheet("AdminLogs")
-    elif "GOOGLE_CREDENTIALS_JSON" in os.environ:
-        creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-        client = gspread.authorize(creds)
-        sheet = client.open("AccAstroForge_DB").worksheet("AdminLogs")
-except Exception as e:
-    print(f"Google Sheets Init Warning: {e}")
+# ---------------------------------------------------------
+# 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM
+# ---------------------------------------------------------
+DB_FILE = "accastroforge.db"
 
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT UNIQUE,
+            phone TEXT,
+            verified_at TEXT
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admin_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            full_name TEXT,
+            service TEXT,
+            details TEXT,
+            payment_status TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
 
-def load_logs():
-    if sheet:
-        try:
-            records = sheet.get_all_records()
-            return records
-        except Exception:
-            pass
-    if not os.path.exists(LOG_FILE):
-        return []
+init_db()
+
+def append_to_google_sheet_direct(worksheet_name, values_list):
+    """Appends row directly via Google Apps Script Web App using Query Parameters"""
     try:
-        with open(LOG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
+        if worksheet_name == "Users":
+            params = {
+                "worksheet": "Users",
+                "name": values_list[0],
+                "email": values_list[1],
+                "phone": values_list[2],
+                "verified_at": values_list[3]
+            }
+        else:
+            params = {
+                "worksheet": "AdminLogs",
+                "timestamp": values_list[0],
+                "full_name": values_list[1],
+                "service": values_list[2],
+                "details": values_list[3],
+                "payment_status": values_list[4]
+            }
+            
+        response = requests.get(APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=10)
+        print(f"APPS SCRIPT GET STATUS for {worksheet_name}: {response.status_code}")
+        return True
+    except Exception as e:
+        print(f"CRITICAL APPS SCRIPT EXCEPTION: {str(e)}")
+        return False
 
+def load_google_sheet_direct(worksheet_name):
+    """Loads sheet data directly from Apps Script endpoint"""
+    try:
+        url = f"{APPS_SCRIPT_URL}?action=get&worksheet={worksheet_name}"
+        res = requests.get(url, timeout=8)
+        if res.status_code == 200:
+            data = res.json()
+            if isinstance(data, list):
+                return data
+    except Exception as e:
+        print(f"Load Google Sheet Direct Error: {e}")
+    return []
+
+def save_user_db_single(u_name, u_email, u_phone):
+    now_str = str(datetime.datetime.now())
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO users (name, email, phone, verified_at)
+            VALUES (?, ?, ?, ?)
+        """, (u_name, u_email.lower(), u_phone, now_str))
+        conn.commit()
+        conn.close()
+        print(f"SUCCESS: User saved locally: {u_email}")
+    except Exception as e:
+        print(f"ERROR: Save user local failed: {e}")
+        
+    append_to_google_sheet_direct("Users", [u_name, u_email.lower(), u_phone, now_str])
+
+def load_users():
+    users_dict = {}
+    
+    # 1. Load from Google Sheet first (Permanent cloud persistence)
+    sheet_rows = load_google_sheet_direct("Users")
+    for row in sheet_rows:
+        if isinstance(row, dict):
+            email = str(row.get("email", row.get("Email", ""))).strip().lower()
+            if email:
+                users_dict[email] = {
+                    "name": row.get("name", row.get("Name", "User")),
+                    "email": email,
+                    "phone": row.get("phone", row.get("Phone", "N/A")),
+                    "verified_at": row.get("verified_at", row.get("Verified_At", str(datetime.datetime.now())))
+                }
+
+    # 2. Load from local SQLite DB (Fallback / Speed)
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users")
+        rows = cursor.fetchall()
+        conn.close()
+        for row in rows:
+            d = dict(row)
+            email = str(d.get("email", "")).strip().lower()
+            if email and email not in users_dict:
+                users_dict[email] = d
+    except Exception as e:
+        print(f"Load users local error: {e}")
+        
+    return list(users_dict.values())
 
 def save_log(user_data):
-    timestamp_str = str(datetime.datetime.now())
-    full_name = user_data.get("full_name", "User")
-    service = user_data.get("service", "General")
-    details = user_data.get("details", "N/A")
-    payment_status = user_data.get("payment_status", "Pending")
+    ts = user_data.get("timestamp", str(datetime.datetime.now()))
+    fn = user_data.get("full_name", "N/A")
+    srv = user_data.get("service", "General")
+    dtl = user_data.get("details", "N/A")
+    pst = user_data.get("payment_status", "Pending")
 
-    if sheet:
-        try:
-            sheet.append_row([timestamp_str, full_name, service, details, payment_status])
-        except Exception as e:
-            print(f"Error appending to Google Sheets: {e}")
-
-    logs = load_logs()
-    logs.append({
-        "timestamp": timestamp_str,
-        "full_name": full_name,
-        "service": service,
-        "details": details,
-        "payment_status": payment_status
-    })
     try:
-        with open(LOG_FILE, "w", encoding="utf-8") as f:
-            json.dump(logs, f, indent=4, ensure_ascii=False)
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status)
+            VALUES (?, ?, ?, ?, ?)
+        """, (ts, fn, srv, dtl, pst))
+        conn.commit()
+        conn.close()
     except Exception as e:
-        print(f"Error saving local log: {e}")
+        print(f"ERROR: Save log local failed: {e}")
+        
+    append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
 
+def load_logs():
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admin_logs")
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        print(f"Load logs error: {e}")
+        return []
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
-
 logo_path = "logo.png" if os.path.exists("logo.png") else None
-
 
 def get_base64(file_path):
     if file_path and os.path.exists(file_path):
         try:
             with open(file_path, "rb") as f:
-                return base64.b64encode(f.read()).decode("utf-8")
+                return base64.b64encode(f.read()).decode('utf-8')
         except Exception:
             return ""
     return ""
-
 
 logo_b64 = get_base64(logo_path)
 
@@ -140,9 +232,31 @@ else:
     </div>
     """
 
+# ---------------------------------------------------------
+# 2. EMAIL & OTP SENDER FUNCTION (VERIFIED SENDER)
+# ---------------------------------------------------------
+def send_brevo_email(to_email, user_name, subject, html_content):
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+    payload = {
+        "sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"},
+        "to": [{"email": to_email, "name": user_name}],
+        "subject": subject,
+        "htmlContent": html_content
+    }
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        return response.status_code in [200, 201, 202]
+    except Exception as e:
+        print(f"Email error exception: {e}")
+        return False
 
 # ---------------------------------------------------------
-# 2. ASTROLOGICAL ENGINE & KUNDALI GENERATOR
+# 3. ASTROLOGICAL ENGINE & KUNDALI GENERATOR
 # ---------------------------------------------------------
 ZODIAC_SIGNS = [
     "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
@@ -151,13 +265,10 @@ ZODIAC_SIGNS = [
 ]
 
 NAKSHATRAS = [
-    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra",
-    "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
-    "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
-    "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta",
-    "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
+    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha",
+    "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
+    "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
 ]
-
 
 def calculate_astrological_profile(name, dob_str):
     try:
@@ -184,7 +295,6 @@ def calculate_astrological_profile(name, dob_str):
             "psychic_num": 7,
             "dasha": "Favorable Planetary Dasha Cycle active."
         }
-
 
 def generate_visual_kundali_chart_html(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -232,9 +342,8 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
     </div>
     """
 
-
 # ---------------------------------------------------------
-# 3. REPORTLAB PDF & RAZORPAY PAYWALL
+# 4. REPORTLAB PDF & RAZORPAY PAYWALL
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -243,20 +352,20 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     doc = SimpleDocTemplate(filename, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
-
+    
     title_style = ParagraphStyle(
         'TitleStyle',
         parent=styles['Heading1'],
         fontName='Helvetica-Bold',
         fontSize=20,
-        textColor=colors.HexColor('#5b21b6'),
+        textColor=colors.HexColor("#5b21b6"),
         alignment=1,
         spaceAfter=15
     )
     
     story.append(Paragraph("<b>AccAstroForge - Vedic Janam Kundali Report</b>", title_style))
     story.append(Spacer(1, 10))
-
+    
     data = [
         ["Attribute", "Details"],
         ["Full Name", profile["name"]],
@@ -267,20 +376,20 @@ def create_kundali_pdf_file(name, dob, tob, pob):
         ["Destiny / Life Number", str(profile["psychic_num"])],
         ["Current Dasha", profile["dasha"]]
     ]
-
+    
     t = Table(data, colWidths=[200, 300])
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#7c3aed')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f3e8ff')),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#db2777')),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#7c3aed")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0,0), (-1,0), 10),
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor("#f3e8ff")),
+        ('GRID', (0,0), (-1,-1), 1, colors.HexColor("#db2777")),
     ]))
     story.append(t)
     story.append(Spacer(1, 20))
-
+    
     body_style = ParagraphStyle('BodyStyle', parent=styles['Normal'], fontSize=11, leading=15)
     story.append(Paragraph("<b>Vedic Astrological Insights:</b>", styles['Heading2']))
     story.append(Paragraph(f"Based on birth details of {profile['name']}, Jupiter aligns favorably in the trikona houses. Remedies include wearing auspicious gemstones and practicing daily morning meditation.", body_style))
@@ -288,31 +397,8 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     doc.build(story)
     return filename
 
-
 def get_robust_razorpay_link(service_name, price, user_name):
-    try:
-        if razorpay_client:
-            data = {
-                "amount": int(price) * 100,
-                "currency": "INR",
-                "accept_partial": False,
-                "description": f"Payment for {service_name}",
-                "customer": {
-                    "name": user_name if user_name else "User"
-                },
-                "notify": {"sms": False, "email": False},
-                "reminder_enable": False,
-                "callback_url": "https://accastroforge.in/",
-                "callback_method": "get"
-            }
-            response = razorpay_client.payment_link.create(data)
-            if response and "short_url" in response:
-                return response["short_url"]
-    except Exception as e:
-        print(f"Razorpay API fallback triggered due to: {e}")
-    
     return RAZORPAY_ME_URL
-
 
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
@@ -321,7 +407,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
         
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
@@ -330,115 +416,280 @@ def get_paywall_html(service_name, price, user_name="User"):
     </div>
     """
 
-
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH & SIGNUP HANDLERS (GOOGLE & FACEBOOK)
+# 5. STRICT AUTH, UNIQUE REGISTRATION, LOGIN & PERSISTENT SESSION
 # ---------------------------------------------------------
-GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
-FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
-
-
 def handle_manual_signup(name, email, phone, password):
     u_name = name.strip() if name else "New User"
-    u_email = email.strip() if email else "N/A"
+    u_email = email.strip().lower() if email else "N/A"
     u_phone = phone.strip() if phone else "N/A"
-    
-    if not u_email or "@" not in u_email:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
-    if not u_phone or len(u_phone) < 10:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
-    
-    save_log({
-        "full_name": u_name,
-        "service": "Manual Account Registration",
-        "details": f"Email: {u_email} | Phone: {u_phone}",
-        "payment_status": "Registered & Active"
-    })
-    
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='color:#ffffff; margin:0;'>Your account has been created successfully with <b style='color:#4ade80;'>{u_email}</b> (Phone: <b style='color:#4ade80;'>{u_phone}</b>).</p></div>"
-    profile_box = f"👤 <b style='color:#ffffff;'>{u_name}</b> (<b style='color:#fde047;'>{u_email}</b>)<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
-    wallet_box = "₹ 0.00"
-    history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
-    
-    return success_msg, profile_box, wallet_box, history_box
 
+    if not u_email or "@" not in u_email:
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>", "👤 Guest User", "₹ 0.00", "No active sessions.", ""
+    if not u_phone or len(u_phone) < 10:
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", "👤 Guest User", "₹ 0.00", "No active sessions.", ""
+
+    users = load_users()
+    for existing in users:
+        if isinstance(existing, dict) and (existing.get("email") == u_email or existing.get("Email") == u_email):
+            return f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Already Registered</h3><p style='margin:0;'>The email <b>{u_email}</b> is already registered as an active member. Please use the <b>Member Sign In / Login</b> tab above to access your account.</p></div>", "👤 Guest User", "₹ 0.00", "Registration blocked: Email already exists.", ""
+
+    otp_code = str(random.randint(100000, 999999))
+    email_html = f"""
+    <div style="background:#030014; color:#ffffff; padding:25px; border-radius:16px; font-family:'Poppins', sans-serif; border: 1px solid #7c3aed;">
+        <h2 style="color:#fde047; text-align:center;">✨ Welcome to AccAstroForge, {u_name}!</h2>
+        <p>Thank you for registering. Please use the verification code below to activate your account:</p>
+        <div style="text-align:center; margin: 20px 0;">
+            <span style="font-size:2rem; font-weight:bold; color:#4ade80; background:rgba(34,197,94,0.15); padding:10px 25px; border-radius:12px; letter-spacing:4px; border: 1px dashed #4ade80;">{otp_code}</span>
+        </div>
+        <p style="font-size:0.85rem; color:#cbd5e1; text-align:center;">If you did not request this, please ignore this email.</p>
+    </div>
+    """
+
+    email_sent = send_brevo_email(u_email, u_name, "AccAstroForge Account Verification OTP", email_html)
+
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
+        "service": "Secure Account Registration",
+        "details": f"Email: {u_email} | Phone: {u_phone} | OTP Generated: {otp_code}",
+        "payment_status": "OTP Dispatched Successfully" if email_sent else "Email Failed"
+    })
+
+    if email_sent:
+        success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it below.</p></div>"
+    else:
+        success_msg = f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Email Delivery Notice</h3><p style='margin:0;'>Registration initiated for <b>{u_email}</b>, but dispatch failed.</p></div>"
+
+    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #fde047;'>Status: Pending Verification</span>"
+    wallet_box = "₹ 0.00"
+    history_box = f"• Secure OTP Dispatched to: {u_email}<br>• Phone: {u_phone}"
+
+    return success_msg, profile_box, wallet_box, history_box, otp_code
+
+def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
+    if not generated_otp:
+        return "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>⚠️ No OTP generated yet! Please click '1. Register & Send Verification OTP' first.</div>", f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: No OTP</span>", "₹ 0.00", "Verification Pending", ""
+
+    if not user_entered_otp or str(user_entered_otp).strip() != str(generated_otp).strip():
+        return "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>❌ Invalid OTP Code! Please check your email and try again.</div>", f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: Invalid OTP</span>", "₹ 0.00", "Verification Failed", ""
+
+    save_user_db_single(u_name, u_email, u_phone)
+
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
+        "service": "OTP Verification Complete",
+        "details": f"Email Verified: {u_email}",
+        "payment_status": "Active & Verified Member"
+    })
+
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Account Verified & Active!</h3><p style='margin:0;'>Welcome <b>{u_name}</b>! Your email <b>{u_email}</b> has been successfully verified.</p></div>"
+
+    profile_box = f"""
+    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            👤 <b>{u_name}</b> ({u_email})<br>
+            <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Cloud Backup Protected)</span>
+        </div>
+        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+            🚪 Logout / Switch Account
+        </button>
+    </div>
+    """
+    wallet_box = "₹ 0.00"
+    history_box = f"• Registration & OTP Verification Complete<br>• Account Active & Saved<br>• Contact: {u_phone}"
+    session_token = f"{u_email}|{u_name}|{u_phone}"
+
+    return success_msg, profile_box, wallet_box, history_box, session_token
 
 def handle_login(login_email, login_pass):
-    l_email = login_email.strip() if login_email else "N/A"
+    l_email = login_email.strip().lower() if login_email else ""
     if not l_email or "@" not in l_email:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
-    
-    # FIXED: SAVE LOG TO BOTH LOCAL FILE AND GOOGLE SHEETS ON MEMBER LOGIN
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email.</span>", "👤 Guest User", "₹ 0.00", "No active sessions.", ""
+
+    users = load_users()
+    matched_user = None
+    for u in users:
+        if isinstance(u, dict) and (str(u.get("email", u.get("Email", ""))).strip().lower() == l_email):
+            matched_user = u
+            break
+
+    if not matched_user:
+        return f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Account Not Found</h3><p style='margin:0;'>The email <b>{l_email}</b> is not registered. Please sign up first.</p></div>", "👤 Guest User", "₹ 0.00", "Login failed: Account not found.", ""
+
+    u_name = matched_user.get("name", matched_user.get("Name", "User"))
+    u_phone = matched_user.get("phone", matched_user.get("Phone", "N/A"))
+
     save_log({
-        "full_name": "Arnab Chaudhuri",
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
         "service": "Member Login",
         "details": f"Email Logged In: {l_email}",
         "payment_status": "Active Session"
     })
-    
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back!</h3><p style='color:#ffffff; margin:0;'>You have successfully logged into your AccAstroForge account with <b style='color:#4ade80;'>{l_email}</b>.</p></div>"
-    profile_box = f"👤 <b style='color:#ffffff;'>Arnab Chaudhuri</b> (<b style='color:#fde047;'>{l_email}</b>)<br><span style='color: #4ade80; font-weight:bold;'>Status: Active Session</span>"
-    wallet_box = "₹ 0.00"
-    history_box = f"• Member Login Successful<br>• Account Active"
-    
-    return success_msg, profile_box, wallet_box, history_box
 
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back, {u_name}!</h3><p style='margin:0;'>You have successfully logged into your AccAstroForge account.</p></div>"
+
+    profile_box = f"""
+    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            👤 <b>{u_name}</b> ({l_email})<br>
+            <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Cloud Backup Protected)</span>
+        </div>
+        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+            🚪 Logout / Switch Account
+        </button>
+    </div>
+    """
+    wallet_box = "₹ 0.00"
+    history_box = f"• Member Login Successful<br>• Account Active<br>• Contact: {u_phone}"
+    session_token = f"{l_email}|{u_name}|{u_phone}"
+
+    return success_msg, profile_box, wallet_box, history_box, session_token
+
+def handle_logout():
+    guest_profile = """
+    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
+            <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
+        </div>
+        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
+            📝 SIGN UP / SWITCH
+        </button>
+    </div>
+    """
+    guest_wallet = """
+    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+        <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
+        <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
+    </div>
+    """
+    guest_history = """
+    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+        <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+        <p style="color: #cbd5e1 !important; font-size: 0.85rem; margin: 0;">No previous orders found for current guest session. Please register or login.</p>
+    </div>
+    """
+    logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or switch accounts anytime.</p></div>"
+
+    return logout_msg, guest_profile, guest_wallet, guest_history, ""
+
+def restore_session_from_token(token):
+    if not token or "|" not in token:
+        return gr.update(), gr.update(), gr.update()
+    try:
+        parts = token.split("|")
+        u_email = parts[0]
+        u_name = parts[1]
+        u_phone = parts[2] if len(parts) > 2 else "N/A"
+        
+        profile_box = f"""
+        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                👤 <b>{u_name}</b> ({u_email})<br>
+                <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
+                <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Persistent Session)</span>
+            </div>
+            <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                🚪 Logout / Switch Account
+            </button>
+        </div>
+        """
+        wallet_box = """
+        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+            <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
+            <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
+        </div>
+        """
+        history_box = f"""
+        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+            <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Active Persistent Session Restored<br>• Email: {u_email}<br>• Phone: {u_phone}</p>
+        </div>
+        """
+        return profile_box, wallet_box, history_box
+    except Exception as e:
+        print(f"Session restoration error: {e}")
+        return gr.update(), gr.update(), gr.update()
 
 def run_daily_horoscope(sign):
-    return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p style='color:#ffffff;'>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
-
+    return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
 
 def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
     b_name = boy_name.strip() if boy_name else "Boy"
     g_name = girl_name.strip() if girl_name else "Girl"
-    save_log({"full_name": f"{b_name} & {g_name}", "service": "Kundali Matching", "details": f"Boy: {boy_dob}, Girl: {girl_dob}", "payment_status": "Pending (₹399)"})
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": f"{b_name} & {g_name}",
+        "service": "Kundali Matching",
+        "payment_status": "Pending (₹399)"
+    })
     
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p style='color:#ffffff;'>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
     return teaser_text, get_paywall_html("Complete Kundali Matching Report", 399, f"{b_name} & {g_name}")
-
 
 def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email, address):
     u_name = name.strip() if name else "User"
-    save_log({"full_name": u_name, "service": "Complete Life Prediction", "details": f"DOB: {dob}, Focus: {focus_area}", "payment_status": "Pending (₹499)"})
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
+        "service": "Complete Life Prediction",
+        "payment_status": "Pending (₹499)"
+    })
     
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
     teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🌟 ASTROLOGICAL TEASER FOR {u_name.upper()}</h3>
     <ul style='list-style:none; padding:0; line-height:2;'>
-        <li><b style='color:#fde047;'>Rashi:</b> <span style='color:#ffffff;'>{profile['zodiac']}</span></li>
-        <li><b style='color:#fde047;'>Nakshatra:</b> <span style='color:#ffffff;'>{profile['nakshatra']}</span></li>
-        <li><b style='color:#fde047;'>Dasha:</b> <span style='color:#ffffff;'>{profile['dasha']}</span></li>
-        <li><b style='color:#fde047;'>Insight:</b> <span style='color:#ffffff;'>Great growth indicated in {focus_area}.</span></li>
+        <li><b style='color:#fde047;'>Rashi:</b> {profile['zodiac']}</li>
+        <li><b style='color:#fde047;'>Nakshatra:</b> {profile['nakshatra']}</li>
+        <li><b style='color:#fde047;'>Dasha:</b> {profile['dasha']}</li>
+        <li><b style='color:#fde047;'>Insight:</b> Great growth indicated in {focus_area}.</li>
     </ul></div>"""
     return teaser_text, get_paywall_html("Complete Deep Life Forecast & PDF", 499, u_name)
 
-
 def run_gemstone_remedy(dob, zodiac):
-    save_log({"full_name": "User", "service": "Gemstone Remedy", "details": f"DOB: {dob} | Zodiac: {zodiac}", "payment_status": "Pending (₹299)"})
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p style='color:#ffffff;'>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "service": "Gemstone Remedy",
+        "details": f"DOB: {dob} | Zodiac: {zodiac}",
+        "payment_status": "Pending (₹299)"
+    })
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
     return teaser_text, get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
-
 
 def run_kundali_pdf(name, dob, tob, pob):
     u_name = name.strip() if name else "User"
-    save_log({"full_name": u_name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Pending (₹299)"})
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
+        "service": "Janam Kundali PDF",
+        "payment_status": "Pending (₹299)"
+    })
     
     chart_html = generate_visual_kundali_chart_html(u_name, dob if dob else "2000-01-01", tob, pob)
     pdf_file = create_kundali_pdf_file(u_name, dob if dob else "2000-01-01", tob, pob)
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p style='color:#ffffff;'>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
     return teaser_text, chart_html, pdf_file, get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name)
-
 
 def run_numerology(name, dob):
     u_name = name.strip() if name else "User"
-    save_log({"full_name": u_name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Pending (₹249)"})
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": u_name,
+        "service": "Numerology",
+        "payment_status": "Pending (₹249)"
+    })
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p style='color:#ffffff;'>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
     return teaser_text, get_paywall_html("Detailed Numerology & Name Correction Report", 249, u_name)
-
 
 def run_panchang(date_str, city, mode="free"):
     teaser = f"""<div style='color:#ffffff;'><p><b style='color:#fde047;'>Complete Vedic Panchang for {city} on {date_str}:</b></p>
-    <ul style='line-height:1.8; color:#ffffff;'>
+    <ul style='line-height:1.8;'>
         <li><b style='color:#fde047;'>Tithi:</b> Shukla Paksha Navami</li>
         <li><b style='color:#fde047;'>Nakshatra:</b> Rohini</li>
         <li><b style='color:#fde047;'>Rahu Kalam:</b> 10:30 AM - 12:00 PM</li>
@@ -447,7 +698,6 @@ def run_panchang(date_str, city, mode="free"):
     if "Detailed" in mode:
         return f"<h3 style='color:#fde047;'>📅 Detailed Shubh Muhurat Report</h3>{teaser}", get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
     return f"<h3 style='color:#fde047;'>📅 Free Daily Panchang for {city}</h3>{teaser}", ""
-
 
 def simple_astro_query(user_query):
     if not user_query or not user_query.strip():
@@ -470,13 +720,11 @@ def simple_astro_query(user_query):
             f"✨ <b>I hear your concern about '{user_query}'.</b> According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
         ]
         reply = random.choice(responses)
-
-    return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p style='color:#ffffff;'>{reply}</p></div>"
-
+        
+    return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p>{reply}</p></div>"
 
 def recharge_wallet(amount):
     pay_url = get_robust_razorpay_link(f"AccAstroForge Wallet Topup (₹{amount})", amount, "Valued Customer")
-    save_log({"full_name": "Valued Customer", "service": "Wallet Topup", "details": f"Amount: ₹{amount}", "payment_status": "Pending"})
     return f"""
     <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #4ade80; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
         <h4 style="color: #4ade80 !important; margin-bottom: 5px;">💳 Add ₹{amount} to AccAstroForge Credits</h4>
@@ -487,27 +735,40 @@ def recharge_wallet(amount):
     </div>
     """
 
-
 def admin_login_and_view(password):
     if password != ADMIN_PASSWORD:
         return "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Password! Access Denied.</span>"
-
+    
     logs = load_logs()
-    if not logs:
-        return "<span style='color:#fde047;'>📭 No user logs found yet.</span>"
-
-    summary_html = f"<div style='color:#fff;'><h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Google Sheets Synced)</h3><p><b>Total User Entries:</b> {len(logs)}</p><table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'><tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>"
+    users = load_users()
+    
+    summary_html = f"""
+    <div style='color:#fff;'>
+        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Apps Script Web App Sync)</h3>
+        <p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>
+        
+        <h4 style='color:#4ade80; margin-top:15px;'>📋 Registered Users Database</h4>
+        <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; margin-bottom:20px;' border='1'>
+            <tr style='background:#5b21b6; color:#fff;'><th>Name</th><th>Email</th><th>Phone</th><th>Verified At</th></tr>
+    """
+    for u in reversed(users):
+        if isinstance(u, dict):
+            summary_html += f"<tr><td>{u.get('name', u.get('Name', ''))}</td><td>{u.get('email', u.get('Email', ''))}</td><td>{u.get('phone', u.get('Phone', ''))}</td><td>{str(u.get('verified_at', u.get('Verified_At', '')))[:19]}</td></tr>"
+    summary_html += "</table>"
+    
+    summary_html += f"""
+        <h4 style='color:#fde047; margin-top:15px;'>📜 System Activity Logs</h4>
+        <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'>
+            <tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>
+    """
     for log in reversed(logs):
         if isinstance(log, dict):
-            summary_html += f"<tr><td>{str(log.get('Timestamp', log.get('timestamp', '')))}</td><td>{str(log.get('FullName', log.get('full_name', 'N/A')))} ({str(log.get('Service', log.get('service', 'General')))})</td><td>{str(log.get('Details', log.get('details', 'N/A')))}</td><td>{str(log.get('PaymentStatus', log.get('payment_status', 'Pending')))}</td></tr>"
-        elif isinstance(log, list) and len(log) >= 5:
-            summary_html += f"<tr><td>{log[0]}</td><td>{log[1]} ({log[2]})</td><td>{log[3]}</td><td>{log[4]}</td></tr>"
+            summary_html += f"<tr><td>{str(log.get('timestamp', log.get('Timestamp', '')))[:19]}</td><td>{log.get('full_name', log.get('Full_Name', 'N/A'))} ({log.get('service', log.get('Service', 'General'))})</td><td>{log.get('details', log.get('Details', 'N/A'))}</td><td>{log.get('payment_status', log.get('Payment_Status', 'Pending'))}</td></tr>"
     summary_html += "</table></div>"
     return summary_html
 
-
 # ---------------------------------------------------------
-# 5. HARDCORE CSS & ABSOLUTE GRADIO SPINNER KILLER (BG PROTECTED)
+# 6. HARDCORE CSS & PERSISTENT SESSION LOCALSTORAGE
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -526,7 +787,7 @@ html, body, .gr-root, .gradio-container, gradio-app {
     min-height: 100vh;
 }
 
-footer, header, #footer, .footer, .built-with, a[href*="huggingface.co/space"] {
+footer, header, #footer, .footer, .built-with {
     display: none !important;
 }
 
@@ -564,60 +825,12 @@ button[role="tab"] {
     border-radius: 8px !important;
     padding: 6px 2px !important;
     margin: 0 !important;
-    transition: all 0.3s ease;
 }
 
 button[role="tab"][aria-selected="true"] {
     background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
     color: #ffffff !important;
     border-color: #fde047 !important;
-}
-
-/* HIDE GRADIO'S BUILT-IN SPINNERS & REVEALED LOADERS COMPLETELY */
-.progress-bar, .loading, .spinner, svg.spinner, .generating-panel, .generating, .meta-text, .eta-bar, div[data-testid="status-tracker"] {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    width: 0 !important;
-    pointer-events: none !important;
-}
-
-/* CUSTOM 3D SPINNING OVERLAY */
-#acc-3d-spinning-screen {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background: rgba(3, 0, 20, 0.94) !important;
-    backdrop-filter: blur(14px) !important;
-    -webkit-backdrop-filter: blur(14px) !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    z-index: 2147483647 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity 0.2s ease-in-out !important;
-}
-
-#acc-3d-spinning-screen.active {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-}
-
-.acc-spinning-logo-target {
-    width: 250px !important;
-    height: 250px !important;
-    animation: acc3DSpinAnimation 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
-    filter: drop-shadow(0 0 50px rgba(244, 114, 182, 1)) !important;
-}
-
-@keyframes acc3DSpinAnimation {
-    0% { transform: rotateY(0deg) scale(0.65); }
-    50% { transform: rotateY(180deg) scale(1.35); }
-    100% { transform: rotateY(360deg) scale(0.65); }
 }
 
 .gr-accordion, .accordion, div[data-testid="accordion"] {
@@ -638,6 +851,7 @@ button.primary, button.gr-button-primary, .gr-button-primary {
 
 label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span, h1, h2, h3, h4, p, li, b, strong {
     color: #fde047 !important;
+    font-weight: 600 !important;
 }
 
 p, li, span, div {
@@ -656,7 +870,6 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
-/* PASSWORD EYE TOGGLE STYLING */
 .password-box-wrapper {
     position: relative !important;
     width: 100% !important;
@@ -680,33 +893,42 @@ input::placeholder, textarea::placeholder {
     line-height: 1 !important;
 }
 
-#manual-signup-trigger, #real-hidden-trigger {
+#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn, #browser-sync-btn {
     display: none !important;
 }
 """
 
-head_html = """
-<div id="acc-3d-spinning-screen">
-    <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" class="acc-spinning-logo-target" alt="AccAstroForge Spinning Logo">
-</div>
-
+head_html = (
+    """
 <script>
+const APPS_SCRIPT_ENDPOINT = '"""
+    + APPS_SCRIPT_URL
+    + """';
+
+function syncToGoogleSheetDirect(worksheet, dataObj) {
+    const params = new URLSearchParams({ worksheet: worksheet, ...dataObj });
+    fetch(APPS_SCRIPT_ENDPOINT + "?" + params.toString(), {
+        method: 'GET',
+        mode: 'no-cors'
+    }).then(() => {
+        console.log("Direct Browser Sync Success for " + worksheet);
+    }).catch(err => {
+        console.error("Direct Browser Sync Error: ", err);
+    });
+}
+
 function attachEyeToggle() {
-    const passInputs = document.querySelectorAll('input[type="password"], input[id*="pass"], input[placeholder*="password"], input[placeholder*="Password"]');
+    const passInputs = document.querySelectorAll('input[type="password"]');
     passInputs.forEach(input => {
         if (!input.classList.contains('eye-attached')) {
             input.classList.add('eye-attached');
-            input.type = 'password';
-            
             const parent = input.parentElement;
             if(parent) {
                 parent.style.position = 'relative';
-                
                 const toggleBtn = document.createElement('span');
                 toggleBtn.className = 'password-eye-btn';
                 toggleBtn.innerHTML = '👁️';
                 toggleBtn.title = 'Show/Hide Password';
-                
                 toggleBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -718,53 +940,45 @@ function attachEyeToggle() {
                         toggleBtn.innerHTML = '👁️';
                     }
                 });
-                
                 parent.appendChild(toggleBtn);
             }
         }
     });
 }
 
-let spinnerTimer = null;
-function trigger3DLogoOverlay(duration = 2800) {
-    const overlay = document.getElementById('acc-3d-spinning-screen');
-    if (overlay) {
-        overlay.classList.add('active');
-        if (spinnerTimer) clearTimeout(spinnerTimer);
-        spinnerTimer = setTimeout(() => {
-            overlay.classList.remove('active');
-        }, duration);
+function handlePersistentSession() {
+    const savedSession = localStorage.getItem('accastroforge_session');
+    if (savedSession) {
+        const hiddenInput = document.querySelector('#session-token-box input');
+        if (hiddenInput && hiddenInput.value !== savedSession) {
+            hiddenInput.value = savedSession;
+            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+            setTimeout(() => {
+                const syncBtn = document.querySelector('#session-sync-btn');
+                if (syncBtn) syncBtn.click();
+            }, 500);
+        }
     }
 }
 
-document.addEventListener('click', function(e) {
-    const target = e.target.closest('button, [role="tab"], a, input[type="submit"]');
-    if (target) {
-        trigger3DLogoOverlay(3000);
-    }
-}, true);
-
-const nativeKillObserver = new MutationObserver((mutations) => {
-    const gradioSpinners = document.querySelectorAll('.generating, .loading, .progress-bar, [data-testid="status-tracker"]');
-    gradioSpinners.forEach(el => {
-        el.style.setProperty('display', 'none', 'important');
-        el.style.setProperty('opacity', '0', 'important');
-        trigger3DLogoOverlay(2500);
-    });
-});
+setInterval(() => {
+    attachEyeToggle();
+    handlePersistentSession();
+}, 400);
 
 document.addEventListener("DOMContentLoaded", () => {
     attachEyeToggle();
-    nativeKillObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
+    handlePersistentSession();
 });
-
-setInterval(() => {
-    attachEyeToggle();
-}, 300);
 </script>
 """
+)
 
-with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
+    otp_state = gr.State(value="")
+    session_token_state = gr.Textbox(value="", elem_id="session-token-box", visible=False)
+    browser_sync_trigger = gr.Textbox(value="", elem_id="browser-sync-box", visible=False)
+
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
@@ -793,19 +1007,19 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 with gr.Row():
                     with gr.Column():
                         user_profile_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <div>
                                 <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
                                 <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
                             </div>
                             <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-                                📝 SIGN UP & LOGIN
+                                📝 SIGN UP / SWITCH
                             </button>
                         </div>
                         """)
                     with gr.Column():
                         wallet_balance_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
                             <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
                             <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
                         </div>
@@ -813,18 +1027,22 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
 
                 with gr.Group(visible=False) as signup_group:
                     with gr.Tabs():
-                        with gr.TabItem("📝 Sign Up"):
+                        with gr.TabItem("📝 Sign Up & Verify OTP"):
                             with gr.Row():
                                 signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
                                 signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
                             with gr.Row():
                                 signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
                                 signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                            signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
+                            signup_btn = gr.Button("✨ 1. Register & Send Verification OTP to Email", variant="primary")
                             signup_output = gr.HTML()
+                            
+                            with gr.Row():
+                                user_otp_input = gr.Textbox(label="Enter 6-Digit Email OTP", placeholder="e.g. 123456", max_lines=1)
+                                verify_otp_btn = gr.Button("🔑 2. Verify OTP & Activate Account", variant="primary")
 
-                        with gr.TabItem("🔐 Member Login"):
-                            gr.HTML("<p style='color:#fde047; font-size:0.9rem;'>Already registered? Enter your email and password to log in.</p>")
+                        with gr.TabItem("🔐 Member Sign In / Login"):
+                            gr.HTML("<p style='color:#fde047; font-size:0.9rem;'>Already registered? Enter your email and password to log in directly without OTP.</p>")
                             with gr.Row():
                                 login_email_input = gr.Textbox(label="Registered Email Address", placeholder="e.g. user@gmail.com")
                                 login_pass_input = gr.Textbox(label="Password", type="password", placeholder="Enter your password")
@@ -845,15 +1063,21 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
                 signup_btn.click(
-                    fn=handle_manual_signup, 
-                    inputs=[signup_name, signup_email, signup_phone, signup_pass], 
-                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
+                    fn=handle_manual_signup,
+                    inputs=[signup_name, signup_email, signup_phone, signup_pass],
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, otp_state]
+                )
+
+                verify_otp_btn.click(
+                    fn=verify_user_otp,
+                    inputs=[user_otp_input, otp_state, signup_name, signup_email, signup_phone],
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
                 )
 
                 login_btn.click(
                     fn=handle_login,
                     inputs=[login_email_input, login_pass_input],
-                    outputs=[login_output, user_profile_display, wallet_balance_display, order_history_display]
+                    outputs=[login_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
                 )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -867,12 +1091,12 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 with gr.Row():
                     phone_input = gr.Textbox(label="Phone Number", placeholder="e.g. 9876543210")
                     email_input = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
-
+                
                 address_input = gr.Textbox(label="Postal Address")
                 focus_dropdown = gr.Dropdown(choices=["General Life & Destiny", "Career & Wealth Growth", "Love & Marriage", "Health & Spiritual Growth"], value="General Life & Destiny", label="Primary Focus Area")
                 question_input = gr.Textbox(label="Specific Question or Concern")
                 submit_life = gr.Button("✨ Reveal Detailed Life Insights (₹499)", variant="primary")
-
+                
                 output_life_teaser = gr.HTML()
                 output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
@@ -920,7 +1144,11 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 output_visual_chart = gr.HTML()
                 output_kundali_file = gr.File(label="Download Generated Kundali PDF")
                 output_kundali_paywall = gr.HTML()
-                submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
+                submit_kundali_pdf.click(
+                    fn=run_kundali_pdf,
+                    inputs=[k_name, k_dob, k_tob, k_pob],
+                    outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall]
+                )
 
             with gr.TabItem("🔢 NUMEROLOGY"):
                 gr.HTML("<h3 style='color:#fde047;'>🔢 Numerology Check</h3>")
@@ -954,14 +1182,14 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 gr.HTML("""
                 <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px; color: #ffffff;">
                     <h4 style="color: #fde047 !important;">📜 Terms of Service</h4>
-                    <p style="font-size: 0.85rem; color: #ffffff;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
+                    <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem; color: #ffffff;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
+                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">📧 Support Contact & Official Handles</h4>
-                    <p style="font-size: 0.85rem; margin-bottom: 8px; color: #ffffff;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
-                    <p style="font-size: 0.85rem; color: #ffffff;">Connect with us on our official social platforms:</p>
+                    <p style="font-size: 0.85rem; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
+                    <p style="font-size: 0.85rem;">Connect with us on our official social platforms:</p>
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
                         <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
                         <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
@@ -970,20 +1198,33 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 </div>
                 """)
 
-        signup_state = gr.State(value=False)
-        manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")
-        manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
+    signup_state = gr.State(value=False)
+    manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")
+    manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
 
-        with gr.Group(visible=False) as admin_group:
-            with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
-                secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")
-                unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
-                secret_output = gr.HTML()
-                unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
+    logout_trigger = gr.Button("Trigger Logout", elem_id="logout-trigger")
+    logout_trigger.click(fn=handle_logout, inputs=[], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state])
 
-        admin_state = gr.State(value=False)
-        real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger")
-        real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
+    session_sync_btn = gr.Button("Sync Session", elem_id="session-sync-btn")
+    session_sync_btn.click(fn=restore_session_from_token, inputs=[session_token_state], outputs=[user_profile_display, wallet_balance_display, order_history_display])
+
+    session_token_state.change(
+        fn=None,
+        inputs=[session_token_state],
+        outputs=None,
+        js="(token) => { if(token) localStorage.setItem('accastroforge_session', token); else localStorage.removeItem('accastroforge_session'); }"
+    )
+
+    with gr.Group(visible=False) as admin_group:
+        with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
+            secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")
+            unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
+            secret_output = gr.HTML()
+            unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
+
+    admin_state = gr.State(value=False)
+    real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger")
+    real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, head=head_html, favicon_path="favicon.png")

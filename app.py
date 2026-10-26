@@ -1,17 +1,17 @@
 import base64
 import datetime
+import hashlib
+import io
 import json
 import os
-import io
 import random
-import requests
-import hashlib
 import gradio as gr
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
 import razorpay
+import requests
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
@@ -179,7 +179,7 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
     """
 
 # ---------------------------------------------------------
-# 3. REPORTLAB PDF & RAZORPAY SDK PAYWALL (UNCHANGED & WORKING)
+# 3. REPORTLAB PDF & RAZORPAY SDK PAYWALL (WORKING)
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -274,7 +274,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# 4. SOCIAL OAUTH & SIGNUP HANDLERS
+# 4. AUTH & SIGNUP / LOGIN HANDLERS
 # ---------------------------------------------------------
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
@@ -301,6 +301,26 @@ def handle_manual_signup(name, email, phone, password):
     profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
     wallet_box = "₹ 0.00"
     history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
+    
+    return success_msg, profile_box, wallet_box, history_box
+
+def handle_manual_login(email, password):
+    l_email = email.strip() if email else ""
+    if not l_email or "@" not in l_email:
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email address.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
+    
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": "Member User",
+        "service": "Manual Member Login",
+        "details": f"Email Logged In: {l_email}",
+        "payment_status": "Active Session"
+    })
+    
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back!</h3><p style='margin:0;'>You have successfully logged in with <b>{l_email}</b>.</p></div>"
+    profile_box = f"👤 <b>Member</b> ({l_email})<br><span style='color: #4ade80;'>Status: Active Session</span>"
+    wallet_box = "₹ 0.00"
+    history_box = f"• Member Session Active<br>• Email: {l_email}"
     
     return success_msg, profile_box, wallet_box, history_box
 
@@ -722,15 +742,25 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                         """)
 
                 with gr.Group(visible=False) as signup_group:
-                    with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
-                        with gr.Row():
-                            signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                            signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
-                        with gr.Row():
-                            signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
-                            signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                        signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
-                        signup_output = gr.HTML()
+                    with gr.Tabs():
+                        with gr.TabItem("📝 New User Sign Up"):
+                            with gr.Row():
+                                signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                                signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
+                            with gr.Row():
+                                signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
+                                signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
+                            signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
+                            signup_output = gr.HTML()
+                            signup_btn.click(fn=handle_manual_signup, inputs=[signup_name, signup_email, signup_phone, signup_pass], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display])
+
+                        with gr.TabItem("🔐 Member Sign In / Login"):
+                            with gr.Row():
+                                login_email = gr.Textbox(label="Registered Email Address", placeholder="e.g. user@gmail.com")
+                                login_pass = gr.Textbox(label="Password", type="password", placeholder="Enter password")
+                            login_btn = gr.Button("🚀 Sign In to Account", variant="primary")
+                            login_output = gr.HTML()
+                            login_btn.click(fn=handle_manual_login, inputs=[login_email, login_pass], outputs=[login_output, user_profile_display, wallet_balance_display, order_history_display])
 
                 order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
@@ -744,12 +774,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     topup_btn = gr.Button("⚡ Topup Wallet Credits", variant="primary")
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
-
-                signup_btn.click(
-                    fn=handle_manual_signup, 
-                    inputs=[signup_name, signup_email, signup_phone, signup_pass], 
-                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
-                )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):
                 gr.HTML("<h3 style='color:#fde047;'>🌌 Vedic Astrology & Deep Life Forecast</h3>")

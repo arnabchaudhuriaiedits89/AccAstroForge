@@ -1,17 +1,17 @@
 import base64
 import datetime
-import hashlib
-import io
 import json
 import os
+import io
 import random
-import gradio as gr
-import razorpay
 import requests
-from reportlab.lib import colors
+import hashlib
+import gradio as gr
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+import razorpay
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
@@ -25,8 +25,6 @@ try:
 except Exception:
     razorpay_client = None
 
-BREVO_API_KEY = os.getenv("BREVO_API_KEY")
-
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -34,12 +32,6 @@ GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
 FACEBOOK_APP_ID = "1487294163221538"
 FACEBOOK_APP_SECRET = "b0bacbcf5968b456843fe66aeea8af47"
 FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
-
-GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
-FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
-
-GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyxhdOzOk7R7XJVcrlirFzwqrKpQ"
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 
 LOG_FILE = "admin_logs.json"
 
@@ -68,7 +60,7 @@ def get_base64(file_path):
     if file_path and os.path.exists(file_path):
         try:
             with open(file_path, "rb") as f:
-                return base64.b64encode(f.read()).decode('utf-8')
+                return base64.b64encode(f.read()).decode("utf-8")
         except Exception:
             return ""
     return ""
@@ -107,9 +99,11 @@ ZODIAC_SIGNS = [
 ]
 
 NAKSHATRAS = [
-    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha",
-    "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
-    "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
+    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra",
+    "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
+    "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
+    "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta",
+    "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
 ]
 
 def calculate_astrological_profile(name, dob_str):
@@ -135,7 +129,7 @@ def calculate_astrological_profile(name, dob_str):
             "zodiac": "Aries (Mesha)",
             "nakshatra": "Rohini",
             "psychic_num": 7,
-            "dasha": f"Favorable Planetary Dasha Cycle active."
+            "dasha": "Favorable Planetary Dasha Cycle active."
         }
 
 def generate_visual_kundali_chart_html(name, dob, tob, pob):
@@ -185,7 +179,7 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
     """
 
 # ---------------------------------------------------------
-# 3. REPORTLAB PDF & ROBUST RAZORPAY SDK PAYWALL
+# 3. REPORTLAB PDF & RAZORPAY SDK PAYWALL (UNCHANGED & WORKING)
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -194,20 +188,20 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     doc = SimpleDocTemplate(filename, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
-    
+
     title_style = ParagraphStyle(
         'TitleStyle',
         parent=styles['Heading1'],
         fontName='Helvetica-Bold',
         fontSize=20,
-        textColor=colors.HexColor("#5b21b6"),
+        textColor=colors.HexColor('#5b21b6'),
         alignment=1,
         spaceAfter=15
     )
     
     story.append(Paragraph("<b>AccAstroForge - Vedic Janam Kundali Report</b>", title_style))
     story.append(Spacer(1, 10))
-    
+
     data = [
         ["Attribute", "Details"],
         ["Full Name", profile["name"]],
@@ -218,20 +212,20 @@ def create_kundali_pdf_file(name, dob, tob, pob):
         ["Destiny / Life Number", str(profile["psychic_num"])],
         ["Current Dasha", profile["dasha"]]
     ]
-    
+
     t = Table(data, colWidths=[200, 300])
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#7c3aed")),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0,0), (-1,0), 10),
-        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor("#f3e8ff")),
-        ('GRID', (0,0), (-1,-1), 1, colors.HexColor("#db2777")),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#7c3aed')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f3e8ff')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#db2777')),
     ]))
     story.append(t)
     story.append(Spacer(1, 20))
-    
+
     body_style = ParagraphStyle('BodyStyle', parent=styles['Normal'], fontSize=11, leading=15)
     story.append(Paragraph("<b>Vedic Astrological Insights:</b>", styles['Heading2']))
     story.append(Paragraph(f"Based on birth details of {profile['name']}, Jupiter aligns favorably in the trikona houses. Remedies include wearing auspicious gemstones and practicing daily morning meditation.", body_style))
@@ -280,18 +274,21 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# 4. AUTH & SESSION HANDLERS
+# 4. SOCIAL OAUTH & SIGNUP HANDLERS
 # ---------------------------------------------------------
+GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
+FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
+
 def handle_manual_signup(name, email, phone, password):
     u_name = name.strip() if name else "New User"
     u_email = email.strip() if email else "N/A"
     u_phone = phone.strip() if phone else "N/A"
-
+    
     if not u_email or "@" not in u_email:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>", "👤 Guest User", "₹ 0.00", "No active sessions."
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
     if not u_phone or len(u_phone) < 10:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", "👤 Guest User", "₹ 0.00", "No active sessions."
-
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
+    
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
@@ -299,52 +296,68 @@ def handle_manual_signup(name, email, phone, password):
         "details": f"Email: {u_email} | Phone: {u_phone}",
         "payment_status": "Registered & Active"
     })
-
+    
     success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='margin:0;'>Your account has been created successfully with <b>{u_email}</b> (Phone: {u_phone}).</p></div>"
     profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
     wallet_box = "₹ 0.00"
     history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
-
+    
     return success_msg, profile_box, wallet_box, history_box
 
 def run_daily_horoscope(sign):
     return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
 
 def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
-    b_name, g_name = boy_name.strip() if boy_name else "Boy", girl_name.strip() if girl_name else "Girl"
+    b_name = boy_name.strip() if boy_name else "Boy"
+    g_name = girl_name.strip() if girl_name else "Girl"
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b_name} & {g_name}", "service": "Kundali Matching", "payment_status": "Pending (₹399)"})
-    teaser = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
-    return teaser, get_paywall_html("Complete Kundali Matching Report", 399, f"{b_name} & {g_name}")
+    
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
+    return teaser_text, get_paywall_html("Complete Kundali Matching Report", 399, f"{b_name} & {g_name}")
 
 def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email, address):
     u_name = name.strip() if name else "User"
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Complete Life Prediction", "payment_status": "Pending (₹499)"})
+    
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🌟 ASTROLOGICAL TEASER FOR {u_name.upper()}</h3><ul style='list-style:none; padding:0; line-height:2;'><li><b style='color:#fde047;'>Rashi:</b> {profile['zodiac']}</li><li><b style='color:#fde047;'>Nakshatra:</b> {profile['nakshatra']}</li><li><b style='color:#fde047;'>Dasha:</b> {profile['dasha']}</li><li><b style='color:#fde047;'>Insight:</b> Great growth indicated in {focus_area}.</li></ul></div>"""
-    return teaser, get_paywall_html("Complete Deep Life Forecast & PDF", 499, u_name)
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🌟 ASTROLOGICAL TEASER FOR {u_name.upper()}</h3>
+    <ul style='list-style:none; padding:0; line-height:2;'>
+        <li><b style='color:#fde047;'>Rashi:</b> {profile['zodiac']}</li>
+        <li><b style='color:#fde047;'>Nakshatra:</b> {profile['nakshatra']}</li>
+        <li><b style='color:#fde047;'>Dasha:</b> {profile['dasha']}</li>
+        <li><b style='color:#fde047;'>Insight:</b> Great growth indicated in {focus_area}.</li>
+    </ul></div>"""
+    return teaser_text, get_paywall_html("Complete Deep Life Forecast & PDF", 499, u_name)
 
 def run_gemstone_remedy(dob, zodiac):
     save_log({"timestamp": str(datetime.datetime.now()), "service": "Gemstone Remedy", "details": f"DOB: {dob} | Zodiac: {zodiac}", "payment_status": "Pending (₹299)"})
-    teaser = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
-    return teaser, get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
+    return teaser_text, get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
 
 def run_kundali_pdf(name, dob, tob, pob):
     u_name = name.strip() if name else "User"
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Janam Kundali PDF", "payment_status": "Pending (₹299)"})
+    
     chart_html = generate_visual_kundali_chart_html(u_name, dob if dob else "2000-01-01", tob, pob)
     pdf_file = create_kundali_pdf_file(u_name, dob if dob else "2000-01-01", tob, pob)
-    teaser = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
-    return teaser, chart_html, pdf_file, get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name)
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
+    return teaser_text, chart_html, pdf_file, get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name)
 
 def run_numerology(name, dob):
     u_name = name.strip() if name else "User"
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Numerology", "payment_status": "Pending (₹249)"})
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
-    return teaser, get_paywall_html("Detailed Numerology & Name Correction Report", 249, u_name)
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
+    return teaser_text, get_paywall_html("Detailed Numerology & Name Correction Report", 249, u_name)
 
 def run_panchang(date_str, city, mode="free"):
-    teaser = f"""<div style='color:#ffffff;'><p><b style='color:#fde047;'>Complete Vedic Panchang for {city} on {date_str}:</b></p><ul style='line-height:1.8;'><li><b style='color:#fde047;'>Tithi:</b> Shukla Paksha Navami</li><li><b style='color:#fde047;'>Nakshatra:</b> Rohini</li><li><b style='color:#fde047;'>Rahu Kalam:</b> 10:30 AM - 12:00 PM</li><li><b style='color:#fde047;'>Shubh Muhurat:</b> 11:45 AM - 12:30 PM</li></ul></div>"""
+    teaser = f"""<div style='color:#ffffff;'><p><b style='color:#fde047;'>Complete Vedic Panchang for {city} on {date_str}:</b></p>
+    <ul style='line-height:1.8;'>
+        <li><b style='color:#fde047;'>Tithi:</b> Shukla Paksha Navami</li>
+        <li><b style='color:#fde047;'>Nakshatra:</b> Rohini</li>
+        <li><b style='color:#fde047;'>Rahu Kalam:</b> 10:30 AM - 12:00 PM</li>
+        <li><b style='color:#fde047;'>Shubh Muhurat:</b> 11:45 AM - 12:30 PM</li>
+    </ul></div>"""
     if "Detailed" in mode:
         return f"<h3 style='color:#fde047;'>📅 Detailed Shubh Muhurat Report</h3>{teaser}", get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
     return f"<h3 style='color:#fde047;'>📅 Free Daily Panchang for {city}</h3>{teaser}", ""
@@ -352,15 +365,25 @@ def run_panchang(date_str, city, mode="free"):
 def simple_astro_query(user_query):
     if not user_query or not user_query.strip():
         return "<div style='color:#ffffff;'><p>🙏 <b>Namaste!</b> Please ask any question regarding career, marriage, health, or planetary transits.</p></div>"
+    
     msg = user_query.lower().strip()
+    
     if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
-        reply = "🙏 <b>Namaste!</b> I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits."
+        reply = "🙏 <b>Namaste!</b> I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
     elif any(w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]):
-        reply = "💼 <b>Career & Wealth Guidance:</b> In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth."
+        reply = "💼 <b>Career & Wealth Guidance:</b> In Vedic astrology, the 10th house (Karma Bhava) and Jupiter's transit dictate professional growth. If you are facing obstacles in career, chanting the 'Om Brihaspataye Namah' mantra on Thursdays and working with disciplined focus will bring immense growth."
     elif any(w in msg for w in ["marriage", "love", "relationship", "partner", "match"]):
-        reply = "❤️ <b>Love & Marriage Insights:</b> Compatibility in Vedic astrology is evaluated through Guna Milan (36 points) and the positions of Venus and Mars."
+        reply = "❤️ <b>Love & Marriage Insights:</b> Compatibility in Vedic astrology is evaluated through Guna Milan (36 points) and the positions of Venus (Shukra) and Mars (Mangal). Strengthening your 7th house through positive communication and harmony will resolve relationship hurdles."
+    elif any(w in msg for w in ["health", "peace", "stress", "anxiety", "remedy"]):
+        reply = "🌿 <b>Health & Spiritual Well-being:</b> Physical vitality is tied to the Sun (Surya) and Moon (Chandra). Practicing early morning Surya Namaskar, meditation during Brahma Muhurta, and keeping a calm mindset will balance your inner cosmic energy."
     else:
-        reply = f"🌟 <b>Analyzing your query regarding '{user_query}':</b> Vedic charts show that current planetary alignments are favorable for new beginnings."
+        responses = [
+            f"🌟 <b>Analyzing your query regarding '{user_query}':</b> Vedic charts show that current planetary alignments are favorable for new beginnings. Focus on your inner strengths and auspicious timings.",
+            f"🔮 <b>Regarding '{user_query}':</b> The celestial bodies indicate a period of transition and karmic reward. Patience and spiritual remedies will clear your path.",
+            f"✨ <b>I hear your concern about '{user_query}'.</b> According to Vedic principles, planetary grace follows sincere effort. Consider charitable acts and positive affirmations on auspicious days."
+        ]
+        reply = random.choice(responses)
+
     return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p>{reply}</p></div>"
 
 def recharge_wallet(amount):
@@ -378,9 +401,11 @@ def recharge_wallet(amount):
 def admin_login_and_view(password):
     if password != ADMIN_PASSWORD:
         return "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Password! Access Denied.</span>"
+
     logs = load_logs()
     if not logs:
         return "<span style='color:#fde047;'>📭 No user logs found yet.</span>"
+
     summary_html = f"<div style='color:#fff;'><h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3><p><b>Total User Entries:</b> {len(logs)}</p><table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'><tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>"
     for log in reversed(logs):
         summary_html += f"<tr><td>{log.get('timestamp', '')[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
@@ -388,7 +413,7 @@ def admin_login_and_view(password):
     return summary_html
 
 # ---------------------------------------------------------
-# 5. CSS & GRADIO BLOCKS
+# 5. HARDCORE CSS & ABSOLUTE GRADIO SPINNER KILLER (BG PROTECTED)
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -411,9 +436,12 @@ footer, header, #footer, .footer, .built-with, a[href*="huggingface.co/space"] {
     display: none !important;
 }
 
-* { color-scheme: dark !important; }
+* {
+    color-scheme: dark !important;
+}
 
-.gr-box, .gr-row, .gr-form, .form, panel, div[data-testid="block"], .block, .wrap, .contain, .gr-panel, fieldset, .gr-markdown, .prose {
+.gr-box, .gr-row, .gr-form, .form, panel, 
+div[data-testid="block"], .block, .wrap, .contain, .gr-panel, fieldset, .gr-markdown, .prose {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -425,10 +453,10 @@ div[role="tablist"] {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     width: 100% !important;
-    gap: 4px !important;
-    padding: 6px !important;
+    gap: 2px !important;
+    padding: 4px 2px !important;
     background: rgba(10, 3, 25, 0.9) !important;
-    border-radius: 14px !important;
+    border-radius: 12px !important;
     border: 1px solid rgba(244, 114, 182, 0.4) !important;
 }
 
@@ -438,10 +466,11 @@ button[role="tab"] {
     color: #fef08a !important;
     font-family: 'Cinzel', serif !important;
     font-weight: 700 !important;
-    font-size: 0.8rem !important;
-    border-radius: 10px !important;
-    padding: 10px 14px !important;
-    white-space: nowrap !important;
+    font-size: 0.62rem !important;
+    border-radius: 8px !important;
+    padding: 6px 2px !important;
+    margin: 0 !important;
+    transition: all 0.3s ease;
 }
 
 button[role="tab"][aria-selected="true"] {
@@ -450,6 +479,7 @@ button[role="tab"][aria-selected="true"] {
     border-color: #fde047 !important;
 }
 
+/* HIDE GRADIO'S BUILT-IN SPINNERS & REVEALED LOADERS COMPLETELY */
 .progress-bar, .loading, .spinner, svg.spinner, .generating-panel, .generating, .meta-text, .eta-bar, div[data-testid="status-tracker"] {
     display: none !important;
     opacity: 0 !important;
@@ -459,6 +489,7 @@ button[role="tab"][aria-selected="true"] {
     pointer-events: none !important;
 }
 
+/* CUSTOM 3D SPINNING OVERLAY */
 #acc-3d-spinning-screen {
     position: fixed !important;
     top: 0 !important;
@@ -467,6 +498,7 @@ button[role="tab"][aria-selected="true"] {
     height: 100vh !important;
     background: rgba(3, 0, 20, 0.94) !important;
     backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -510,12 +542,13 @@ button.primary, button.gr-button-primary, .gr-button-primary {
     border-radius: 12px !important;
 }
 
-label span, .block span, .gr-input-label, span.svelte-1b6s6s, h1, h2, h3, h4, p, li, b, strong {
+label span, .block span, .gr-input-label, span.svelte-1b6s6s, .label-wrap span, .gr-block-label span, h1, h2, h3, h4, p, li, b, strong {
     color: #fde047 !important;
-    font-weight: 600 !important;
 }
 
-p, li, span, div { color: #ffffff !important; }
+p, li, span, div {
+    color: #ffffff !important;
+}
 
 input, textarea, select {
     background: rgba(22, 10, 48, 0.95) !important;
@@ -525,12 +558,36 @@ input, textarea, select {
     padding: 12px 16px !important;
 }
 
-input::placeholder, textarea::placeholder { color: rgba(255, 255, 255, 0.65) !important; }
+input::placeholder, textarea::placeholder {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
 
-.password-box-wrapper { position: relative !important; width: 100% !important; display: flex !important; align-items: center !important; }
-.password-eye-btn { position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; cursor: pointer !important; font-size: 1.2rem !important; z-index: 9999 !important; background: rgba(124, 58, 237, 0.3) !important; border: 1px solid #fde047 !important; border-radius: 50% !important; padding: 2px 6px !important; }
+.password-box-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+}
 
-#manual-signup-trigger, #real-hidden-trigger { display: none !important; }
+.password-eye-btn {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    cursor: pointer !important;
+    font-size: 1.2rem !important;
+    z-index: 9999 !important;
+    user-select: none !important;
+    background: rgba(124, 58, 237, 0.3) !important;
+    border: 1px solid #fde047 !important;
+    border-radius: 50% !important;
+    padding: 2px 6px !important;
+    line-height: 1 !important;
+}
+
+#manual-signup-trigger, #real-hidden-trigger {
+    display: none !important;
+}
 """
 
 head_html = """
@@ -544,18 +601,28 @@ function attachEyeToggle() {
     passInputs.forEach(input => {
         if (!input.classList.contains('eye-attached')) {
             input.classList.add('eye-attached');
+            
             const parent = input.parentElement;
             if(parent) {
                 parent.style.position = 'relative';
+                
                 const toggleBtn = document.createElement('span');
                 toggleBtn.className = 'password-eye-btn';
                 toggleBtn.innerHTML = '👁️';
+                toggleBtn.title = 'Show/Hide Password';
+                
                 toggleBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (input.type === 'password') { input.type = 'text'; toggleBtn.innerHTML = '🙈'; }
-                    else { input.type = 'password'; toggleBtn.innerHTML = '👁️'; }
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        toggleBtn.innerHTML = '🙈';
+                    } else {
+                        input.type = 'password';
+                        toggleBtn.innerHTML = '👁️';
+                    }
                 });
+                
                 parent.appendChild(toggleBtn);
             }
         }
@@ -568,21 +635,40 @@ function trigger3DLogoOverlay(duration = 2800) {
     if (overlay) {
         overlay.classList.add('active');
         if (spinnerTimer) clearTimeout(spinnerTimer);
-        spinnerTimer = setTimeout(() => { overlay.classList.remove('active'); }, duration);
+        spinnerTimer = setTimeout(() => {
+            overlay.classList.remove('active');
+        }, duration);
     }
 }
 
 document.addEventListener('click', function(e) {
     const target = e.target.closest('button, [role="tab"], a, input[type="submit"]');
-    if (target) { trigger3DLogoOverlay(3000); }
+    if (target) {
+        trigger3DLogoOverlay(3000);
+    }
 }, true);
 
-setInterval(() => { attachEyeToggle(); }, 400);
-document.addEventListener("DOMContentLoaded", () => { attachEyeToggle(); });
+const nativeKillObserver = new MutationObserver((mutations) => {
+    const gradioSpinners = document.querySelectorAll('.generating, .loading, .progress-bar, [data-testid="status-tracker"]');
+    gradioSpinners.forEach(el => {
+        el.style.setProperty('display', 'none', 'important');
+        el.style.setProperty('opacity', '0', 'important');
+        trigger3DLogoOverlay(2500);
+    });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    attachEyeToggle();
+    nativeKillObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
+});
+
+setInterval(() => {
+    attachEyeToggle();
+}, 400);
 </script>
 """
 
-with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
@@ -623,7 +709,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                                 <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
                             </div>
                             <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-                                📝 SIGN UP
+                                📝 SIGN UP / LOGIN
                             </button>
                         </div>
                         """)
@@ -659,7 +745,11 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
-                signup_btn.click(fn=handle_manual_signup, inputs=[signup_name, signup_email, signup_phone, signup_pass], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display])
+                signup_btn.click(
+                    fn=handle_manual_signup, 
+                    inputs=[signup_name, signup_email, signup_phone, signup_pass], 
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
+                )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):
                 gr.HTML("<h3 style='color:#fde047;'>🌌 Vedic Astrology & Deep Life Forecast</h3>")
@@ -672,11 +762,14 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 with gr.Row():
                     phone_input = gr.Textbox(label="Phone Number", placeholder="e.g. 9876543210")
                     email_input = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
+
                 address_input = gr.Textbox(label="Postal Address")
                 focus_dropdown = gr.Dropdown(choices=["General Life & Destiny", "Career & Wealth Growth", "Love & Marriage", "Health & Spiritual Growth"], value="General Life & Destiny", label="Primary Focus Area")
                 question_input = gr.Textbox(label="Specific Question or Concern")
                 submit_life = gr.Button("✨ Reveal Detailed Life Insights (₹499)", variant="primary")
-                output_life_teaser, output_life_paywall = gr.HTML(), gr.HTML()
+
+                output_life_teaser = gr.HTML()
+                output_life_paywall = gr.HTML()
                 submit_life.click(fn=run_life_predictions, inputs=[name_input, dob_input, tob_input, pob_input, focus_dropdown, question_input, phone_input, email_input, address_input], outputs=[output_life_teaser, output_life_paywall])
 
             with gr.TabItem("☀️ HOROSCOPE"):
@@ -695,7 +788,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     girl_name = gr.Textbox(label="Girl's Name", placeholder="e.g. Priya")
                     girl_dob = gr.Textbox(label="Girl's DOB (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
                 submit_matching = gr.Button("❤️ Match Kundalis Now (₹399)", variant="primary")
-                output_matching, output_matching_paywall = gr.HTML(), gr.HTML()
+                output_matching = gr.HTML()
+                output_matching_paywall = gr.HTML()
                 submit_matching.click(fn=run_kundali_matching, inputs=[boy_name, boy_dob, girl_name, girl_dob], outputs=[output_matching, output_matching_paywall])
 
             with gr.TabItem("💎 GEMSTONES"):
@@ -704,7 +798,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     gem_dob = gr.Textbox(label="Date of Birth", placeholder="YYYY-MM-DD")
                     gem_zodiac = gr.Textbox(label="Zodiac Sign", placeholder="e.g. Aries (Mesha)")
                 submit_gem = gr.Button("💎 Find My Gemstone (₹299)", variant="primary")
-                output_gem, output_gem_paywall = gr.HTML(), gr.HTML()
+                output_gem = gr.HTML()
+                output_gem_paywall = gr.HTML()
                 submit_gem.click(fn=run_gemstone_remedy, inputs=[gem_dob, gem_zodiac], outputs=[output_gem, output_gem_paywall])
 
             with gr.TabItem("📜 KUNDALI & BIRTH PDF"):
@@ -716,7 +811,10 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     k_tob = gr.Textbox(label="Time of Birth", placeholder="HH:MM")
                     k_pob = gr.Textbox(label="Place of Birth", placeholder="City, Country")
                 submit_kundali_pdf = gr.Button("📜 Generate Visual Birth Chart & Kundali PDF (₹299)", variant="primary")
-                output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall = gr.HTML(), gr.HTML(), gr.File(label="Download Generated Kundali PDF"), gr.HTML()
+                output_kundali_pdf_text = gr.HTML()
+                output_visual_chart = gr.HTML()
+                output_kundali_file = gr.File(label="Download Generated Kundali PDF")
+                output_kundali_paywall = gr.HTML()
                 submit_kundali_pdf.click(fn=run_kundali_pdf, inputs=[k_name, k_dob, k_tob, k_pob], outputs=[output_kundali_pdf_text, output_visual_chart, output_kundali_file, output_kundali_paywall])
 
             with gr.TabItem("🔢 NUMEROLOGY"):
@@ -725,7 +823,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     n_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
                     n_dob = gr.Textbox(label="Date of Birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
                 submit_num = gr.Button("🔢 Analyze Numerology (₹249)", variant="primary")
-                output_num, output_num_paywall = gr.HTML(), gr.HTML()
+                output_num = gr.HTML()
+                output_num_paywall = gr.HTML()
                 submit_num.click(fn=run_numerology, inputs=[n_name, n_dob], outputs=[output_num, output_num_paywall])
 
             with gr.TabItem("📅 PANCHANG"):
@@ -735,7 +834,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                     p_city = gr.Textbox(label="City", placeholder="e.g. Kolkata")
                 p_mode = gr.Radio(choices=["Free Daily Panchang", "Detailed Shubh Muhurat Report (₹99)"], value="Free Daily Panchang")
                 submit_panchang = gr.Button("📅 Check Panchang", variant="primary")
-                output_panchang, output_panchang_paywall = gr.HTML(), gr.HTML()
+                output_panchang = gr.HTML()
+                output_panchang_paywall = gr.HTML()
                 submit_panchang.click(fn=run_panchang, inputs=[p_date, p_city, p_mode], outputs=[output_panchang, output_panchang_paywall])
 
             with gr.TabItem("🤖 AI ASSISTANT"):
@@ -749,24 +849,24 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 gr.HTML("""
                 <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px; color: #ffffff;">
                     <h4 style="color: #fde047 !important;">📜 Terms of Service</h4>
-                    <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines.</p>
+                    <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                 </div>
                 """)
 
-    signup_state = gr.State(value=False)
-    manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")
-    manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
+        signup_state = gr.State(value=False)
+        manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")
+        manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
 
-    with gr.Group(visible=False) as admin_group:
-        with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
-            secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")
-            unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
-            secret_output = gr.HTML()
-            unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
+        with gr.Group(visible=False) as admin_group:
+            with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
+                secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")
+                unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
+                secret_output = gr.HTML()
+                unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
 
-    admin_state = gr.State(value=False)
-    real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger")
-    real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
+        admin_state = gr.State(value=False)
+        real_hidden_trigger = gr.Button("Trigger", elem_id="real-hidden-trigger")
+        real_hidden_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[admin_state], outputs=[admin_state, admin_group])
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=10000, ssr_mode=False, css=custom_css, head=head_html, favicon_path="favicon.png")

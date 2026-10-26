@@ -179,7 +179,7 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
             <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
                 <span style="color: #fde047; font-size: 0.75rem;">House 10</span><br><b style="color: #f43f5e;">Ketu</b>
             </div>
-            <div style="background: #31104b; padding: 15px; text-align: center; border: 1px solid #db2777; border-radius: 8px;">
+            <div style="background: #31104b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
                 <span style="color: #fde047; font-size: 0.75rem;">House 9</span><br><b style="color: #e879f9;">Moon</b>
             </div>
             <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
@@ -279,7 +279,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
         
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
@@ -318,6 +318,27 @@ def handle_manual_signup(name, email, phone, password):
     profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
     wallet_box = "₹ 0.00"
     history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
+    
+    return success_msg, profile_box, wallet_box, history_box
+
+
+def handle_login(login_email, login_pass):
+    l_email = login_email.strip() if login_email else "N/A"
+    if not l_email or "@" not in l_email:
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
+    
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": "Member Login",
+        "service": "Member Login",
+        "details": f"Email Logged In: {l_email}",
+        "payment_status": "Active Session"
+    })
+    
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back!</h3><p style='margin:0;'>You have successfully logged into your AccAstroForge account with <b>{l_email}</b>.</p></div>"
+    profile_box = f"👤 <b>Member</b> ({l_email})<br><span style='color: #4ade80; font-weight:bold;'>Status: Active Session</span>"
+    wallet_box = "₹ 0.00"
+    history_box = f"• Member Login Successful<br>• Account Active"
     
     return success_msg, profile_box, wallet_box, history_box
 
@@ -733,7 +754,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                                 <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
                             </div>
                             <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-                                📝 SIGN UP
+                                📝 SIGN UP & LOGIN
                             </button>
                         </div>
                         """)
@@ -746,15 +767,24 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                         """)
 
                 with gr.Group(visible=False) as signup_group:
-                    with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
-                        with gr.Row():
-                            signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                            signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
-                        with gr.Row():
-                            signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
-                            signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                        signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
-                        signup_output = gr.HTML()
+                    with gr.Tabs():
+                        with gr.TabItem("📝 Sign Up"):
+                            with gr.Row():
+                                signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                                signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
+                            with gr.Row():
+                                signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
+                                signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
+                            signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
+                            signup_output = gr.HTML()
+
+                        with gr.TabItem("🔐 Member Login"):
+                            gr.HTML("<p style='color:#fde047; font-size:0.9rem;'>Already registered? Enter your email and password to log in.</p>")
+                            with gr.Row():
+                                login_email_input = gr.Textbox(label="Registered Email Address", placeholder="e.g. user@gmail.com")
+                                login_pass_input = gr.Textbox(label="Password", type="password", placeholder="Enter your password")
+                            login_btn = gr.Button("🚀 Sign In to Account", variant="primary")
+                            login_output = gr.HTML()
 
                 order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
@@ -773,6 +803,12 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     fn=handle_manual_signup, 
                     inputs=[signup_name, signup_email, signup_phone, signup_pass], 
                     outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
+                )
+
+                login_btn.click(
+                    fn=handle_login,
+                    inputs=[login_email_input, login_pass_input],
+                    outputs=[login_output, user_profile_display, wallet_balance_display, order_history_display]
                 )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -873,14 +909,14 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 gr.HTML("""
                 <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px; color: #ffffff;">
                     <h4 style="color: #fde047 !important;">📜 Terms of Service</h4>
-                    <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
+                    <p style="font-size: 0.85rem; color: #ffffff;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
+                    <p style="font-size: 0.85rem; color: #ffffff;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">📧 Support Contact & Official Handles</h4>
-                    <p style="font-size: 0.85rem; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
-                    <p style="font-size: 0.85rem;">Connect with us on our official social platforms:</p>
+                    <p style="font-size: 0.85rem; margin-bottom: 8px; color: #ffffff;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
+                    <p style="font-size: 0.85rem; color: #ffffff;">Connect with us on our official social platforms:</p>
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
                         <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
                         <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>

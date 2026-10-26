@@ -8,8 +8,6 @@ import random
 import gradio as gr
 import razorpay
 import requests
-import sqlite3
-from urllib.parse import quote_plus
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -21,6 +19,11 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
+
+try:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+except Exception:
+    razorpay_client = None
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 
@@ -38,151 +41,25 @@ FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FA
 GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyxhdOzOk7R7XJVcrlirFzwqrKpQ"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 
-# ---------------------------------------------------------
-# 1. DATABASE & GOOGLE SHEETS SYSTEM
-# ---------------------------------------------------------
-DB_FILE = "accastroforge.db"
-
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            email TEXT UNIQUE,
-            phone TEXT,
-            verified_at TEXT
-        )
-    """)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS admin_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            full_name TEXT,
-            service TEXT,
-            details TEXT,
-            payment_status TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-init_db()
-
-def append_to_google_sheet_direct(worksheet_name, values_list):
-    try:
-        if worksheet_name == "Users":
-            params = {
-                "worksheet": "Users",
-                "name": values_list[0],
-                "email": values_list[1],
-                "phone": values_list[2],
-                "verified_at": values_list[3]
-            }
-        else:
-            params = {
-                "worksheet": "AdminLogs",
-                "timestamp": values_list[0],
-                "full_name": values_list[1],
-                "service": values_list[2],
-                "details": values_list[3],
-                "payment_status": values_list[4]
-            }
-        response = requests.get(APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=10)
-        return True
-    except Exception as e:
-        print(f"CRITICAL APPS SCRIPT EXCEPTION: {str(e)}")
-        return False
-
-def load_google_sheet_direct(worksheet_name):
-    try:
-        url = f"{APPS_SCRIPT_URL}?action=get&worksheet={worksheet_name}"
-        res = requests.get(url, timeout=8)
-        if res.status_code == 200:
-            data = res.json()
-            if isinstance(data, list):
-                return data
-    except Exception as e:
-        print(f"Load Google Sheet Direct Error: {e}")
-    return []
-
-def save_user_db_single(u_name, u_email, u_phone):
-    now_str = str(datetime.datetime.now())
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT OR REPLACE INTO users (name, email, phone, verified_at)
-            VALUES (?, ?, ?, ?)
-        """, (u_name, u_email.lower(), u_phone, now_str))
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"ERROR: Save user local failed: {e}")
-    append_to_google_sheet_direct("Users", [u_name, u_email.lower(), u_phone, now_str])
-
-def load_users():
-    users_dict = {}
-    sheet_rows = load_google_sheet_direct("Users")
-    for row in sheet_rows:
-        if isinstance(row, dict):
-            email = str(row.get("email", row.get("Email", ""))).strip().lower()
-            if email:
-                users_dict[email] = {
-                    "name": row.get("name", row.get("Name", "User")),
-                    "email": email,
-                    "phone": row.get("phone", row.get("Phone", "N/A")),
-                    "verified_at": row.get("verified_at", row.get("Verified_At", str(datetime.datetime.now())))
-                }
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users")
-        rows = cursor.fetchall()
-        conn.close()
-        for row in rows:
-            d = dict(row)
-            email = str(d.get("email", "")).strip().lower()
-            if email and email not in users_dict:
-                users_dict[email] = d
-    except Exception as e:
-        print(f"Load users local error: {e}")
-    return list(users_dict.values())
-
-def save_log(user_data):
-    ts = user_data.get("timestamp", str(datetime.datetime.now()))
-    fn = user_data.get("full_name", "N/A")
-    srv = user_data.get("service", "General")
-    dtl = user_data.get("details", "N/A")
-    pst = user_data.get("payment_status", "Pending")
-
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status)
-            VALUES (?, ?, ?, ?, ?)
-        """, (ts, fn, srv, dtl, pst))
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"ERROR: Save log local failed: {e}")
-    append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
+LOG_FILE = "admin_logs.json"
 
 def load_logs():
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM admin_logs")
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
-    except Exception as e:
-        print(f"Load logs error: {e}")
+    if not os.path.exists(LOG_FILE):
         return []
+    try:
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def save_log(user_data):
+    logs = load_logs()
+    logs.append(user_data)
+    try:
+        with open(LOG_FILE, "w", encoding="utf-8") as f:
+            json.dump(logs, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error saving log: {e}")
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 logo_path = "logo.png" if os.path.exists("logo.png") else None
@@ -221,30 +98,7 @@ else:
     """
 
 # ---------------------------------------------------------
-# 2. EMAIL & OTP SENDER FUNCTION
-# ---------------------------------------------------------
-def send_brevo_email(to_email, user_name, subject, html_content):
-    url = "https://api.brevo.com/v3/smtp/email"
-    headers = {
-        "accept": "application/json",
-        "api-key": BREVO_API_KEY,
-        "content-type": "application/json"
-    }
-    payload = {
-        "sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"},
-        "to": [{"email": to_email, "name": user_name}],
-        "subject": subject,
-        "htmlContent": html_content
-    }
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        return response.status_code in [200, 201, 202]
-    except Exception as e:
-        print(f"Email error exception: {e}")
-        return False
-
-# ---------------------------------------------------------
-# 3. ASTROLOGICAL ENGINE & KUNDALI GENERATOR
+# 2. ASTROLOGICAL ENGINE & KUNDALI GENERATOR
 # ---------------------------------------------------------
 ZODIAC_SIGNS = [
     "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
@@ -331,7 +185,7 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
     """
 
 # ---------------------------------------------------------
-# 4. REPORTLAB PDF & ROBUST RAZORPAY PAYWALL FIX
+# 3. REPORTLAB PDF & ROBUST RAZORPAY SDK PAYWALL
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -386,8 +240,28 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     return filename
 
 def get_robust_razorpay_link(service_name, price, user_name):
-    # Fixed: Clean Razorpay.me URL without breaking parameters
-    return f"{RAZORPAY_ME_URL}?amount={price}"
+    try:
+        if razorpay_client:
+            data = {
+                "amount": int(price) * 100,
+                "currency": "INR",
+                "accept_partial": False,
+                "description": f"Payment for {service_name}",
+                "customer": {
+                    "name": user_name if user_name else "User"
+                },
+                "notify": {"sms": False, "email": False},
+                "reminder_enable": False,
+                "callback_url": "https://accastroforge.in/",
+                "callback_method": "get"
+            }
+            response = razorpay_client.payment_link.create(data)
+            if response and "short_url" in response:
+                return response["short_url"]
+    except Exception as e:
+        print(f"Razorpay API fallback triggered due to: {e}")
+    
+    return RAZORPAY_ME_URL
 
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
@@ -406,177 +280,32 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# 5. STRICT AUTH & SESSION HANDLERS
+# 4. AUTH & SESSION HANDLERS
 # ---------------------------------------------------------
 def handle_manual_signup(name, email, phone, password):
     u_name = name.strip() if name else "New User"
-    u_email = email.strip().lower() if email else "N/A"
+    u_email = email.strip() if email else "N/A"
     u_phone = phone.strip() if phone else "N/A"
 
     if not u_email or "@" not in u_email:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>", "👤 Guest User", "₹ 0.00", "No active sessions.", ""
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid email address.</span>", "👤 Guest User", "₹ 0.00", "No active sessions."
     if not u_phone or len(u_phone) < 10:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", "👤 Guest User", "₹ 0.00", "No active sessions.", ""
-
-    otp_code = str(random.randint(100000, 999999))
-    email_html = f"""
-    <div style="background:#030014; color:#ffffff; padding:25px; border-radius:16px; font-family:'Poppins', sans-serif; border: 1px solid #7c3aed;">
-        <h2 style="color:#fde047; text-align:center;">✨ Welcome to AccAstroForge, {u_name}!</h2>
-        <p>Thank you for registering. Please use the verification code below to activate your account:</p>
-        <div style="text-align:center; margin: 20px 0;">
-            <span style="font-size:2rem; font-weight:bold; color:#4ade80; background:rgba(34,197,94,0.15); padding:10px 25px; border-radius:12px; letter-spacing:4px; border: 1px dashed #4ade80;">{otp_code}</span>
-        </div>
-        <p style="font-size:0.85rem; color:#cbd5e1; text-align:center;">If you did not request this, please ignore this email.</p>
-    </div>
-    """
-    email_sent = send_brevo_email(u_email, u_name, "AccAstroForge Account Verification OTP", email_html)
-    
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "Secure Account Registration",
-        "details": f"Email: {u_email} | Phone: {u_phone} | OTP Generated: {otp_code}",
-        "payment_status": "OTP Dispatched Successfully" if email_sent else "Email Failed"
-    })
-
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>📧 OTP Sent Successfully!</h3><p style='margin:0;'>An OTP verification code has been dispatched to <b>{u_email}</b>. Please check your Inbox / Spam folder and enter it below.</p></div>"
-    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #fde047;'>Status: Pending Verification</span>"
-    return success_msg, profile_box, "₹ 0.00", f"• Secure OTP Dispatched to: {u_email}<br>• Phone: {u_phone}", otp_code
-
-def verify_user_otp(user_entered_otp, generated_otp, u_name, u_email, u_phone):
-    if not generated_otp or str(user_entered_otp).strip() != str(generated_otp).strip():
-        return "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:12px; border-radius:10px; color:#ef4444; font-weight:bold;'>❌ Invalid OTP Code! Please check your email and try again.</div>", f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #ef4444;'>Status: Invalid OTP</span>", "₹ 0.00", "Verification Failed", ""
-
-    save_user_db_single(u_name, u_email, u_phone)
-    save_log({
-        "timestamp": str(datetime.datetime.now()),
-        "full_name": u_name,
-        "service": "OTP Verification Complete",
-        "details": f"Email Verified: {u_email}",
-        "payment_status": "Active & Verified Member"
-    })
-
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Account Verified & Active!</h3><p style='margin:0;'>Welcome <b>{u_name}</b>! Your email <b>{u_email}</b> has been successfully verified.</p></div>"
-    
-    profile_box = f"""
-    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <div>
-            👤 <b>{u_name}</b> ({u_email})<br>
-            <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Cloud Backup Protected)</span>
-        </div>
-        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-            🚪 Logout / Switch Account
-        </button>
-    </div>
-    """
-    session_token = f"{u_email}|{u_name}|{u_phone}"
-    return success_msg, profile_box, "₹ 0.00", f"• Registration & OTP Verification Complete<br>• Account Active & Saved<br>• Contact: {u_phone}", session_token
-
-def handle_login(login_email, login_pass):
-    l_email = login_email.strip().lower() if login_email else ""
-    if not l_email or "@" not in l_email:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email.</span>", "👤 Guest User", "₹ 0.00", "No active sessions.", ""
-
-    users = load_users()
-    matched_user = None
-    for u in users:
-        if isinstance(u, dict) and (str(u.get("email", u.get("Email", ""))).strip().lower() == l_email):
-            matched_user = u
-            break
-
-    if not matched_user:
-        return f"<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#ef4444; margin:0 0 5px 0;'>⚠️ Account Not Found</h3><p style='margin:0;'>The email <b>{l_email}</b> is not registered. Please sign up first.</p></div>", "👤 Guest User", "₹ 0.00", "Login failed: Account not found.", ""
-
-    u_name = matched_user.get("name", matched_user.get("Name", "User"))
-    u_phone = matched_user.get("phone", matched_user.get("Phone", "N/A"))
+        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", "👤 Guest User", "₹ 0.00", "No active sessions."
 
     save_log({
         "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
-        "service": "Member Login",
-        "details": f"Email Logged In: {l_email}",
-        "payment_status": "Active Session"
+        "service": "Manual Account Registration",
+        "details": f"Email: {u_email} | Phone: {u_phone}",
+        "payment_status": "Registered & Active"
     })
 
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back, {u_name}!</h3><p style='margin:0;'>You have successfully logged into your AccAstroForge account.</p></div>"
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='margin:0;'>Your account has been created successfully with <b>{u_email}</b> (Phone: {u_phone}).</p></div>"
+    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
+    wallet_box = "₹ 0.00"
+    history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
 
-    profile_box = f"""
-    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <div>
-            👤 <b>{u_name}</b> ({l_email})<br>
-            <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Cloud Backup Protected)</span>
-        </div>
-        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-            🚪 Logout / Switch Account
-        </button>
-    </div>
-    """
-    session_token = f"{l_email}|{u_name}|{u_phone}"
-    return success_msg, profile_box, "₹ 0.00", f"• Member Login Successful<br>• Account Active<br>• Contact: {u_phone}", session_token
-
-def handle_logout():
-    guest_profile = """
-    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <div>
-            <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
-            <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
-        </div>
-        <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-            📝 SIGN UP / LOGIN
-        </button>
-    </div>
-    """
-    guest_wallet = """
-    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
-        <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
-        <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
-    </div>
-    """
-    guest_history = """
-    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-        <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
-        <p style="color: #cbd5e1 !important; font-size: 0.85rem; margin: 0;">No previous orders found for current guest session. Please register or login.</p>
-    </div>
-    """
-    logout_msg = "<div style='background:rgba(59,130,246,0.15); border:1px solid #3b82f6; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#60a5fa; margin:0 0 5px 0;'>🔒 Logged Out Successfully</h3><p style='margin:0;'>You have been logged out of your session. You can sign up or switch accounts anytime.</p></div>"
-    return logout_msg, guest_profile, guest_wallet, guest_history, ""
-
-def restore_session_from_token(token):
-    if not token or "|" not in token:
-        return gr.update(), gr.update(), gr.update()
-    try:
-        parts = token.split("|")
-        u_email, u_name, u_phone = parts[0], parts[1], parts[2] if len(parts) > 2 else "N/A"
-        profile_box = f"""
-        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div>
-                👤 <b>{u_name}</b> ({u_email})<br>
-                <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-                <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Persistent Session)</span>
-            </div>
-            <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                🚪 Logout / Switch Account
-            </button>
-        </div>
-        """
-        wallet_box = """
-        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
-            <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
-            <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
-        </div>
-        """
-        history_box = f"""
-        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-            <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
-            <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Active Persistent Session Restored<br>• Email: {u_email}<br>• Phone: {u_phone}</p>
-        </div>
-        """
-        return profile_box, wallet_box, history_box
-    except Exception as e:
-        print(f"Session error: {e}")
-        return gr.update(), gr.update(), gr.update()
+    return success_msg, profile_box, wallet_box, history_box
 
 def run_daily_horoscope(sign):
     return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
@@ -649,17 +378,17 @@ def recharge_wallet(amount):
 def admin_login_and_view(password):
     if password != ADMIN_PASSWORD:
         return "<span style='color:#ef4444; font-weight:bold;'>❌ Incorrect Password! Access Denied.</span>"
-    logs, users = load_logs(), load_users()
-    summary_html = f"<div style='color:#fff;'><h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3><p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>"
-    summary_html += "<h4 style='color:#4ade80; margin-top:15px;'>📋 Registered Users Database</h4><table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; margin-bottom:20px;' border='1'><tr style='background:#5b21b6; color:#fff;'><th>Name</th><th>Email</th><th>Phone</th><th>Verified At</th></tr>"
-    for u in reversed(users):
-        if isinstance(u, dict):
-            summary_html += f"<tr><td>{u.get('name', u.get('Name', ''))}</td><td>{u.get('email', u.get('Email', ''))}</td><td>{u.get('phone', u.get('Phone', ''))}</td><td>{str(u.get('verified_at', u.get('Verified_At', '')))[:19]}</td></tr>"
+    logs = load_logs()
+    if not logs:
+        return "<span style='color:#fde047;'>📭 No user logs found yet.</span>"
+    summary_html = f"<div style='color:#fff;'><h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3><p><b>Total User Entries:</b> {len(logs)}</p><table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'><tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>"
+    for log in reversed(logs):
+        summary_html += f"<tr><td>{log.get('timestamp', '')[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
     summary_html += "</table></div>"
     return summary_html
 
 # ---------------------------------------------------------
-# 6. CSS & GRADIO BLOCKS
+# 5. CSS & GRADIO BLOCKS
 # ---------------------------------------------------------
 custom_css = """
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -678,7 +407,7 @@ html, body, .gr-root, .gradio-container, gradio-app {
     min-height: 100vh;
 }
 
-footer, header, #footer, .footer, .built-with {
+footer, header, #footer, .footer, .built-with, a[href*="huggingface.co/space"] {
     display: none !important;
 }
 
@@ -721,6 +450,50 @@ button[role="tab"][aria-selected="true"] {
     border-color: #fde047 !important;
 }
 
+.progress-bar, .loading, .spinner, svg.spinner, .generating-panel, .generating, .meta-text, .eta-bar, div[data-testid="status-tracker"] {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    pointer-events: none !important;
+}
+
+#acc-3d-spinning-screen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(3, 0, 20, 0.94) !important;
+    backdrop-filter: blur(14px) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 2147483647 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s ease-in-out !important;
+}
+
+#acc-3d-spinning-screen.active {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+.acc-spinning-logo-target {
+    width: 250px !important;
+    height: 250px !important;
+    animation: acc3DSpinAnimation 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+    filter: drop-shadow(0 0 50px rgba(244, 114, 182, 1)) !important;
+}
+
+@keyframes acc3DSpinAnimation {
+    0% { transform: rotateY(0deg) scale(0.65); }
+    50% { transform: rotateY(180deg) scale(1.35); }
+    100% { transform: rotateY(360deg) scale(0.65); }
+}
+
 .gr-accordion, .accordion, div[data-testid="accordion"] {
     background: rgba(14, 5, 35, 0.95) !important;
     border: 1px solid rgba(244, 114, 182, 0.6) !important;
@@ -757,10 +530,14 @@ input::placeholder, textarea::placeholder { color: rgba(255, 255, 255, 0.65) !im
 .password-box-wrapper { position: relative !important; width: 100% !important; display: flex !important; align-items: center !important; }
 .password-eye-btn { position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; cursor: pointer !important; font-size: 1.2rem !important; z-index: 9999 !important; background: rgba(124, 58, 237, 0.3) !important; border: 1px solid #fde047 !important; border-radius: 50% !important; padding: 2px 6px !important; }
 
-#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn { display: none !important; }
+#manual-signup-trigger, #real-hidden-trigger { display: none !important; }
 """
 
 head_html = """
+<div id="acc-3d-spinning-screen">
+    <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" class="acc-spinning-logo-target" alt="AccAstroForge Spinning Logo">
+</div>
+
 <script>
 function attachEyeToggle() {
     const passInputs = document.querySelectorAll('input[type="password"]');
@@ -785,27 +562,27 @@ function attachEyeToggle() {
     });
 }
 
-function handlePersistentSession() {
-    const savedSession = localStorage.getItem('accastroforge_session');
-    if (savedSession) {
-        const hiddenInput = document.querySelector('#session-token-box input');
-        if (hiddenInput && hiddenInput.value !== savedSession) {
-            hiddenInput.value = savedSession;
-            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
-            setTimeout(() => { document.querySelector('#session-sync-btn').click(); }, 500);
-        }
+let spinnerTimer = null;
+function trigger3DLogoOverlay(duration = 2800) {
+    const overlay = document.getElementById('acc-3d-spinning-screen');
+    if (overlay) {
+        overlay.classList.add('active');
+        if (spinnerTimer) clearTimeout(spinnerTimer);
+        spinnerTimer = setTimeout(() => { overlay.classList.remove('active'); }, duration);
     }
 }
 
-setInterval(() => { attachEyeToggle(); handlePersistentSession(); }, 400);
-document.addEventListener("DOMContentLoaded", () => { attachEyeToggle(); handlePersistentSession(); });
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('button, [role="tab"], a, input[type="submit"]');
+    if (target) { trigger3DLogoOverlay(3000); }
+}, true);
+
+setInterval(() => { attachEyeToggle(); }, 400);
+document.addEventListener("DOMContentLoaded", () => { attachEyeToggle(); });
 </script>
 """
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
-    otp_state = gr.State(value="")
-    session_token_state = gr.Textbox(value="", elem_id="session-token-box", visible=False)
-
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=8, min_width=300):
@@ -840,47 +617,34 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 with gr.Row():
                     with gr.Column():
                         user_profile_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <div>
                                 <h4 style="color: #fde047 !important; margin-bottom: 4px;">👤 Active User Session</h4>
                                 <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
                             </div>
                             <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-                                📝 SIGN UP / LOGIN
+                                📝 SIGN UP
                             </button>
                         </div>
                         """)
                     with gr.Column():
                         wallet_balance_display = gr.HTML("""
-                        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
                             <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
                             <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
                         </div>
                         """)
 
                 with gr.Group(visible=False) as signup_group:
-                    with gr.Tabs():
-                        with gr.TabItem("📝 Sign Up & Verify OTP"):
-                            with gr.Row():
-                                signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                                signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
-                            with gr.Row():
-                                signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
-                                signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                            signup_btn = gr.Button("✨ 1. Register & Send Verification OTP to Email", variant="primary")
-                            signup_output = gr.HTML()
-                            
-                            with gr.Row():
-                                user_otp_input = gr.Textbox(label="Enter 6-Digit Email OTP", placeholder="e.g. 123456", max_lines=1)
-                                verify_otp_btn = gr.Button("🔑 2. Verify OTP & Activate Account", variant="primary")
-
-                        with gr.TabItem("🔐 Member Sign In / Login"):
-                            gr.HTML("<p style='color:#fde047; font-size:0.9rem;'>Already registered? Enter your email and password to log in directly without OTP.</p>")
-                            with gr.Row():
-                                login_email_input = gr.Textbox(label="Registered Email Address", placeholder="e.g. user@gmail.com")
-                                login_pass_input = gr.Textbox(label="Password", type="password", placeholder="Enter your password")
-                            login_btn = gr.Button("🚀 Sign In to Account", variant="primary")
-                            login_output = gr.HTML()
+                    with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
+                        with gr.Row():
+                            signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                            signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
+                        with gr.Row():
+                            signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
+                            signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
+                        signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
+                        signup_output = gr.HTML()
 
                 order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
@@ -895,9 +659,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                 wallet_pay_output = gr.HTML()
                 topup_btn.click(fn=recharge_wallet, inputs=[topup_amount], outputs=[wallet_pay_output])
 
-                signup_btn.click(fn=handle_manual_signup, inputs=[signup_name, signup_email, signup_phone, signup_pass], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, otp_state])
-                verify_otp_btn.click(fn=verify_user_otp, inputs=[user_otp_input, otp_state, signup_name, signup_email, signup_phone], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state])
-                login_btn.click(fn=handle_login, inputs=[login_email_input, login_pass_input], outputs=[login_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state])
+                signup_btn.click(fn=handle_manual_signup, inputs=[signup_name, signup_email, signup_phone, signup_pass], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display])
 
             with gr.TabItem("🌟 LIFE PREDICTION"):
                 gr.HTML("<h3 style='color:#fde047;'>🌌 Vedic Astrology & Deep Life Forecast</h3>")
@@ -986,9 +748,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
             with gr.TabItem("⚖️ LEGAL"):
                 gr.HTML("""
                 <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px; color: #ffffff;">
-                    <h4 style="color: #fde047 !important;">📜 Terms of Service & Privacy</h4>
-                    <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. All reports are intended for personal guidance and spiritual insight.</p>
-                    <p style="font-size: 0.85rem; margin-top: 10px;">For support, reach out to: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important;">support@accastroforge.in</a></p>
+                    <h4 style="color: #fde047 !important;">📜 Terms of Service</h4>
+                    <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines.</p>
                 </div>
                 """)
 
@@ -996,18 +757,10 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
     manual_signup_trigger = gr.Button("Trigger Signup", elem_id="manual-signup-trigger")
     manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
 
-    logout_trigger = gr.Button("Trigger Logout", elem_id="logout-trigger")
-    logout_trigger.click(fn=handle_logout, outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state])
-
-    session_sync_btn = gr.Button("Sync Session", elem_id="session-sync-btn")
-    session_sync_btn.click(fn=restore_session_from_token, inputs=[session_token_state], outputs=[user_profile_display, wallet_balance_display, order_history_display])
-
-    session_token_state.change(fn=None, inputs=[session_token_state], outputs=None, js="(token) => { if(token) localStorage.setItem('accastroforge_session', token); else localStorage.removeItem('accastroforge_session'); }")
-
     with gr.Group(visible=False) as admin_group:
-        with gr.Accordion("🔒 Owner Portal", open=True):
-            secret_pass = gr.Textbox(label="Password", type="password")
-            unlock_btn = gr.Button("Unlock", variant="primary")
+        with gr.Accordion("🔒 Owner Portal (Admin Dashboard)", open=True):
+            secret_pass = gr.Textbox(label="Admin Secret Password", type="password", placeholder="Enter Password")
+            unlock_btn = gr.Button("Unlock Dashboard", variant="primary")
             secret_output = gr.HTML()
             unlock_btn.click(fn=admin_login_and_view, inputs=secret_pass, outputs=secret_output)
 

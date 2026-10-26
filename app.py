@@ -21,10 +21,7 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
-BREVO_API_KEY = os.getenv(
-    "BREVO_API_KEY",
-    "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",
-)
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
@@ -1184,7 +1181,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
         fn=None,
         inputs=[session_token_state],
         outputs=None,
-        js="(token) => { if(token) localStorage.setItem('accastroforge_session', token); else localStorage.setItem('accastroforge_session'); }"
+        js="(token) => { if(token) localStorage.setItem('accastroforge_session', token); else localStorage.removeItem('accastroforge_session'); }"
     )
 
     with gr.Group(visible=False) as admin_group:

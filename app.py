@@ -12,8 +12,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import razorpay
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
@@ -40,30 +38,8 @@ except Exception:
 
 LOG_FILE = "admin_logs.json"
 
-# GOOGLE SHEETS INITIALIZATION
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-sheet = None
-try:
-    if os.path.exists("credentials.json"):
-        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-        client = gspread.authorize(creds)
-        sheet = client.open("AccAstroForge_DB").worksheet("AdminLogs")
-    elif "GOOGLE_CREDENTIALS_JSON" in os.environ:
-        creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-        client = gspread.authorize(creds)
-        sheet = client.open("AccAstroForge_DB").worksheet("AdminLogs")
-except Exception as e:
-    print(f"Google Sheets Init Warning: {e}")
-
 
 def load_logs():
-    if sheet:
-        try:
-            records = sheet.get_all_records()
-            return records
-        except Exception:
-            pass
     if not os.path.exists(LOG_FILE):
         return []
     try:
@@ -74,31 +50,13 @@ def load_logs():
 
 
 def save_log(user_data):
-    timestamp_str = str(datetime.datetime.now())
-    full_name = user_data.get("full_name", "User")
-    service = user_data.get("service", "General")
-    details = user_data.get("details", "N/A")
-    payment_status = user_data.get("payment_status", "Pending")
-
-    if sheet:
-        try:
-            sheet.append_row([timestamp_str, full_name, service, details, payment_status])
-        except Exception as e:
-            print(f"Error appending to Google Sheets: {e}")
-
     logs = load_logs()
-    logs.append({
-        "timestamp": timestamp_str,
-        "full_name": full_name,
-        "service": service,
-        "details": details,
-        "payment_status": payment_status
-    })
+    logs.append(user_data)
     try:
         with open(LOG_FILE, "w", encoding="utf-8") as f:
             json.dump(logs, f, indent=4, ensure_ascii=False)
     except Exception as e:
-        print(f"Error saving local log: {e}")
+        print(f"Error saving log: {e}")
 
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
@@ -321,7 +279,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
         
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
@@ -349,96 +307,76 @@ def handle_manual_signup(name, email, phone, password):
         return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid 10-digit Phone Number.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
     
     save_log({
+        "timestamp": str(datetime.datetime.now()),
         "full_name": u_name,
         "service": "Manual Account Registration",
         "details": f"Email: {u_email} | Phone: {u_phone}",
         "payment_status": "Registered & Active"
     })
     
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='color:#ffffff; margin:0;'>Your account has been created successfully with <b style='color:#4ade80;'>{u_email}</b> (Phone: <b style='color:#4ade80;'>{u_phone}</b>).</p></div>"
-    profile_box = f"👤 <b style='color:#ffffff;'>{u_name}</b> (<b style='color:#fde047;'>{u_email}</b>)<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
+    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>✨ Welcome to AccAstroForge, {u_name}!</h3><p style='margin:0;'>Your account has been created successfully with <b>{u_email}</b> (Phone: {u_phone}).</p></div>"
+    profile_box = f"👤 <b>{u_name}</b> ({u_email})<br><span style='color: #4ade80;'>Phone: {u_phone}</span><br><span style='color: #fde047;'>Status: Active Member</span>"
     wallet_box = "₹ 0.00"
     history_box = f"• Account Registered Successfully<br>• Contact: {u_phone}<br>• Initial Wallet: ₹0.00"
     
     return success_msg, profile_box, wallet_box, history_box
 
 
-def handle_login(login_email, login_pass):
-    l_email = login_email.strip() if login_email else "N/A"
-    if not l_email or "@" not in l_email:
-        return "<span style='color:#ef4444; font-weight:bold;'>❌ Please enter a valid registered email.</span>", f"👤 Guest User", "₹ 0.00", "No active sessions."
-    
-    # FIXED: SAVE LOG TO BOTH LOCAL FILE AND GOOGLE SHEETS ON MEMBER LOGIN
-    save_log({
-        "full_name": "Arnab Chaudhuri",
-        "service": "Member Login",
-        "details": f"Email Logged In: {l_email}",
-        "payment_status": "Active Session"
-    })
-    
-    success_msg = f"<div style='background:rgba(34,197,94,0.15); border:1px solid #22c55e; padding:15px; border-radius:12px; color:#ffffff;'><h3 style='color:#4ade80; margin:0 0 5px 0;'>🎉 Welcome Back!</h3><p style='color:#ffffff; margin:0;'>You have successfully logged into your AccAstroForge account with <b style='color:#4ade80;'>{l_email}</b>.</p></div>"
-    profile_box = f"👤 <b style='color:#ffffff;'>Arnab Chaudhuri</b> (<b style='color:#fde047;'>{l_email}</b>)<br><span style='color: #4ade80; font-weight:bold;'>Status: Active Session</span>"
-    wallet_box = "₹ 0.00"
-    history_box = f"• Member Login Successful<br>• Account Active"
-    
-    return success_msg, profile_box, wallet_box, history_box
-
-
 def run_daily_horoscope(sign):
-    return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p style='color:#ffffff;'>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
+    return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
 
 
 def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
     b_name = boy_name.strip() if boy_name else "Boy"
     g_name = girl_name.strip() if girl_name else "Girl"
-    save_log({"full_name": f"{b_name} & {g_name}", "service": "Kundali Matching", "details": f"Boy: {boy_dob}, Girl: {girl_dob}", "payment_status": "Pending (₹399)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b_name} & {g_name}", "service": "Kundali Matching", "payment_status": "Pending (₹399)"})
     
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p style='color:#ffffff;'>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
     return teaser_text, get_paywall_html("Complete Kundali Matching Report", 399, f"{b_name} & {g_name}")
 
 
 def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email, address):
     u_name = name.strip() if name else "User"
-    save_log({"full_name": u_name, "service": "Complete Life Prediction", "details": f"DOB: {dob}, Focus: {focus_area}", "payment_status": "Pending (₹499)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Complete Life Prediction", "payment_status": "Pending (₹499)"})
     
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
     teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🌟 ASTROLOGICAL TEASER FOR {u_name.upper()}</h3>
     <ul style='list-style:none; padding:0; line-height:2;'>
-        <li><b style='color:#fde047;'>Rashi:</b> <span style='color:#ffffff;'>{profile['zodiac']}</span></li>
-        <li><b style='color:#fde047;'>Nakshatra:</b> <span style='color:#ffffff;'>{profile['nakshatra']}</span></li>
-        <li><b style='color:#fde047;'>Dasha:</b> <span style='color:#ffffff;'>{profile['dasha']}</span></li>
-        <li><b style='color:#fde047;'>Insight:</b> <span style='color:#ffffff;'>Great growth indicated in {focus_area}.</span></li>
+        <li><b style='color:#fde047;'>Rashi:</b> {profile['zodiac']}</li>
+        <li><b style='color:#fde047;'>Nakshatra:</b> {profile['nakshatra']}</li>
+        <li><b style='color:#fde047;'>Dasha:</b> {profile['dasha']}</li>
+        <li><b style='color:#fde047;'>Insight:</b> Great growth indicated in {focus_area}.</li>
     </ul></div>"""
     return teaser_text, get_paywall_html("Complete Deep Life Forecast & PDF", 499, u_name)
 
 
 def run_gemstone_remedy(dob, zodiac):
-    save_log({"full_name": "User", "service": "Gemstone Remedy", "details": f"DOB: {dob} | Zodiac: {zodiac}", "payment_status": "Pending (₹299)"})
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p style='color:#ffffff;'>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
+    save_log({"timestamp": str(datetime.datetime.now()), "service": "Gemstone Remedy", "details": f"DOB: {dob} | Zodiac: {zodiac}", "payment_status": "Pending (₹299)"})
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>💎 Gemstone Guidance Teaser</h3><p>Favorable alignment detected for {zodiac}. Emerald (Panna) or Yellow Sapphire (Pukhraj) recommended to boost career clarity.</p></div>"""
     return teaser_text, get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
 
 
 def run_kundali_pdf(name, dob, tob, pob):
     u_name = name.strip() if name else "User"
-    save_log({"full_name": u_name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Pending (₹299)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Janam Kundali PDF", "payment_status": "Pending (₹299)"})
     
     chart_html = generate_visual_kundali_chart_html(u_name, dob if dob else "2000-01-01", tob, pob)
     pdf_file = create_kundali_pdf_file(u_name, dob if dob else "2000-01-01", tob, pob)
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p style='color:#ffffff;'>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
     return teaser_text, chart_html, pdf_file, get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, u_name)
 
 
 def run_numerology(name, dob):
     u_name = name.strip() if name else "User"
-    save_log({"full_name": u_name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Pending (₹249)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Numerology", "payment_status": "Pending (₹249)"})
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
-    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p style='color:#ffffff;'>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
+    teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔢 Numerology Preview for {u_name}</h3><p>Your Destiny Psychic Number is <b style='color:#fde047; font-size:1.2rem;'>{profile['psychic_num']}</b>. High leadership potential and creative focus.</p></div>"""
     return teaser_text, get_paywall_html("Detailed Numerology & Name Correction Report", 249, u_name)
 
 
 def run_panchang(date_str, city, mode="free"):
     teaser = f"""<div style='color:#ffffff;'><p><b style='color:#fde047;'>Complete Vedic Panchang for {city} on {date_str}:</b></p>
-    <ul style='line-height:1.8; color:#ffffff;'>
+    <ul style='line-height:1.8;'>
         <li><b style='color:#fde047;'>Tithi:</b> Shukla Paksha Navami</li>
         <li><b style='color:#fde047;'>Nakshatra:</b> Rohini</li>
         <li><b style='color:#fde047;'>Rahu Kalam:</b> 10:30 AM - 12:00 PM</li>
@@ -471,12 +409,11 @@ def simple_astro_query(user_query):
         ]
         reply = random.choice(responses)
 
-    return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p style='color:#ffffff;'>{reply}</p></div>"
+    return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p>{reply}</p></div>"
 
 
 def recharge_wallet(amount):
     pay_url = get_robust_razorpay_link(f"AccAstroForge Wallet Topup (₹{amount})", amount, "Valued Customer")
-    save_log({"full_name": "Valued Customer", "service": "Wallet Topup", "details": f"Amount: ₹{amount}", "payment_status": "Pending"})
     return f"""
     <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #4ade80; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
         <h4 style="color: #4ade80 !important; margin-bottom: 5px;">💳 Add ₹{amount} to AccAstroForge Credits</h4>
@@ -496,12 +433,9 @@ def admin_login_and_view(password):
     if not logs:
         return "<span style='color:#fde047;'>📭 No user logs found yet.</span>"
 
-    summary_html = f"<div style='color:#fff;'><h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Google Sheets Synced)</h3><p><b>Total User Entries:</b> {len(logs)}</p><table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'><tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>"
+    summary_html = f"<div style='color:#fff;'><h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3><p><b>Total User Entries:</b> {len(logs)}</p><table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed;' border='1'><tr style='background:#5b21b6; color:#fff;'><th>Timestamp</th><th>Name/Service</th><th>Details</th><th>Status</th></tr>"
     for log in reversed(logs):
-        if isinstance(log, dict):
-            summary_html += f"<tr><td>{str(log.get('Timestamp', log.get('timestamp', '')))}</td><td>{str(log.get('FullName', log.get('full_name', 'N/A')))} ({str(log.get('Service', log.get('service', 'General')))})</td><td>{str(log.get('Details', log.get('details', 'N/A')))}</td><td>{str(log.get('PaymentStatus', log.get('payment_status', 'Pending')))}</td></tr>"
-        elif isinstance(log, list) and len(log) >= 5:
-            summary_html += f"<tr><td>{log[0]}</td><td>{log[1]} ({log[2]})</td><td>{log[3]}</td><td>{log[4]}</td></tr>"
+        summary_html += f"<tr><td>{log.get('timestamp', '')[:19]}</td><td>{log.get('full_name', 'N/A')} ({log.get('service', 'General')})</td><td>{log.get('details', 'N/A')}</td><td>{log.get('payment_status', 'Pending')}</td></tr>"
     summary_html += "</table></div>"
     return summary_html
 
@@ -656,7 +590,6 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
-/* PASSWORD EYE TOGGLE STYLING */
 .password-box-wrapper {
     position: relative !important;
     width: 100% !important;
@@ -692,11 +625,10 @@ head_html = """
 
 <script>
 function attachEyeToggle() {
-    const passInputs = document.querySelectorAll('input[type="password"], input[id*="pass"], input[placeholder*="password"], input[placeholder*="Password"]');
+    const passInputs = document.querySelectorAll('input[type="password"]');
     passInputs.forEach(input => {
         if (!input.classList.contains('eye-attached')) {
             input.classList.add('eye-attached');
-            input.type = 'password';
             
             const parent = input.parentElement;
             if(parent) {
@@ -737,6 +669,7 @@ function trigger3DLogoOverlay(duration = 2800) {
     }
 }
 
+// 1. Intercept all Clicks on Tabs, Buttons and Links
 document.addEventListener('click', function(e) {
     const target = e.target.closest('button, [role="tab"], a, input[type="submit"]');
     if (target) {
@@ -744,6 +677,7 @@ document.addEventListener('click', function(e) {
     }
 }, true);
 
+// 2. MutationObserver to instantly hide Gradio's default spinners & trigger our 3D logo
 const nativeKillObserver = new MutationObserver((mutations) => {
     const gradioSpinners = document.querySelectorAll('.generating, .loading, .progress-bar, [data-testid="status-tracker"]');
     gradioSpinners.forEach(el => {
@@ -760,7 +694,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 setInterval(() => {
     attachEyeToggle();
-}, 300);
+}, 400);
 </script>
 """
 
@@ -799,7 +733,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                                 <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
                             </div>
                             <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-                                📝 SIGN UP & LOGIN
+                                📝 SIGN UP
                             </button>
                         </div>
                         """)
@@ -812,24 +746,15 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                         """)
 
                 with gr.Group(visible=False) as signup_group:
-                    with gr.Tabs():
-                        with gr.TabItem("📝 Sign Up"):
-                            with gr.Row():
-                                signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
-                                signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
-                            with gr.Row():
-                                signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
-                                signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
-                            signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
-                            signup_output = gr.HTML()
-
-                        with gr.TabItem("🔐 Member Login"):
-                            gr.HTML("<p style='color:#fde047; font-size:0.9rem;'>Already registered? Enter your email and password to log in.</p>")
-                            with gr.Row():
-                                login_email_input = gr.Textbox(label="Registered Email Address", placeholder="e.g. user@gmail.com")
-                                login_pass_input = gr.Textbox(label="Password", type="password", placeholder="Enter your password")
-                            login_btn = gr.Button("🚀 Sign In to Account", variant="primary")
-                            login_output = gr.HTML()
+                    with gr.Accordion("📝 Create Your AccAstroForge Account (Manual Registration)", open=True):
+                        with gr.Row():
+                            signup_name = gr.Textbox(label="Full Name", placeholder="e.g. Rajesh Sharma")
+                            signup_email = gr.Textbox(label="Email Address", placeholder="e.g. user@gmail.com")
+                        with gr.Row():
+                            signup_phone = gr.Textbox(label="Phone Number (Mandatory)", placeholder="e.g. 9876543210")
+                            signup_pass = gr.Textbox(label="Create Password", type="password", placeholder="Enter secure password")
+                        signup_btn = gr.Button("✨ Complete Manual Registration", variant="primary")
+                        signup_output = gr.HTML()
 
                 order_history_display = gr.HTML("""
                 <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
@@ -848,12 +773,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     fn=handle_manual_signup, 
                     inputs=[signup_name, signup_email, signup_phone, signup_pass], 
                     outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display]
-                )
-
-                login_btn.click(
-                    fn=handle_login,
-                    inputs=[login_email_input, login_pass_input],
-                    outputs=[login_output, user_profile_display, wallet_balance_display, order_history_display]
                 )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -954,14 +873,14 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 gr.HTML("""
                 <div style="background: rgba(14, 5, 35, 0.9); border: 1px solid rgba(232, 121, 249, 0.5); padding: 20px; border-radius: 14px; color: #ffffff;">
                     <h4 style="color: #fde047 !important;">📜 Terms of Service</h4>
-                    <p style="font-size: 0.85rem; color: #ffffff;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
+                    <p style="font-size: 0.85rem;">Welcome to AccAstroForge.in. By using our Vedic astrology and Kundali services, you agree to these usage guidelines. All reports are intended for personal guidance and spiritual insight.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">🔒 Privacy Policy & Data Deletion</h4>
-                    <p style="font-size: 0.85rem; color: #ffffff;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
+                    <p style="font-size: 0.85rem;">We value user privacy. User profile data collected during Google/Facebook login is stored securely and never shared with third parties.</p>
                     <hr style="border-color: rgba(244, 114, 182, 0.2); margin: 15px 0;">
                     <h4 style="color: #fde047 !important;">📧 Support Contact & Official Handles</h4>
-                    <p style="font-size: 0.85rem; margin-bottom: 8px; color: #ffffff;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
-                    <p style="font-size: 0.85rem; color: #ffffff;">Connect with us on our official social platforms:</p>
+                    <p style="font-size: 0.85rem; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
+                    <p style="font-size: 0.85rem;">Connect with us on our official social platforms:</p>
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
                         <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
                         <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>

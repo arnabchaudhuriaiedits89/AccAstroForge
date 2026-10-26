@@ -179,7 +179,7 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
             <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
                 <span style="color: #fde047; font-size: 0.75rem;">House 10</span><br><b style="color: #f43f5e;">Ketu</b>
             </div>
-            <div style="background: #31104b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
+            <div style="background: #31104b; padding: 15px; text-align: center; border: 1px solid #db2777; border-radius: 8px;">
                 <span style="color: #fde047; font-size: 0.75rem;">House 9</span><br><b style="color: #e879f9;">Moon</b>
             </div>
             <div style="background: #1e1b4b; padding: 15px; text-align: center; border: 1px solid #7c3aed; border-radius: 8px;">
@@ -611,6 +611,7 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
+/* PASSWORD EYE TOGGLE STYLING */
 .password-box-wrapper {
     position: relative !important;
     width: 100% !important;
@@ -646,10 +647,12 @@ head_html = """
 
 <script>
 function attachEyeToggle() {
-    const passInputs = document.querySelectorAll('input[type="password"]');
+    // Target both standard password inputs and any custom inputs labeled for password
+    const passInputs = document.querySelectorAll('input[type="password"], input[id*="pass"], input[placeholder*="password"], input[placeholder*="Password"]');
     passInputs.forEach(input => {
         if (!input.classList.contains('eye-attached')) {
             input.classList.add('eye-attached');
+            input.type = 'password'; // Force password type
             
             const parent = input.parentElement;
             if(parent) {
@@ -715,7 +718,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 setInterval(() => {
     attachEyeToggle();
-}, 400);
+}, 300);
 </script>
 """
 

@@ -39,7 +39,6 @@ try:
 except Exception:
     razorpay_client = None
 
-# Exact Spreadsheet ID and Apps Script Web App Endpoint from your Deployment
 GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyxhdOzOk7R7XJVcrlirFzwqrKpQ"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 
@@ -76,7 +75,6 @@ def init_db():
 init_db()
 
 def append_to_google_sheet_direct(worksheet_name, values_list):
-    """Appends data directly to Google Sheet via your Apps Script Web App"""
     try:
         if worksheet_name == "Users":
             params = {
@@ -96,14 +94,13 @@ def append_to_google_sheet_direct(worksheet_name, values_list):
                 "payment_status": values_list[4]
             }
             
-        response = requests.get(APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=10)
+        requests.get(APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=10)
         return True
     except Exception as e:
         print(f"CRITICAL APPS SCRIPT EXCEPTION: {str(e)}")
         return False
 
 def load_google_sheet_direct(worksheet_name):
-    """Reads data directly from your Apps Script endpoint using action=get"""
     try:
         url = f"{APPS_SCRIPT_URL}?action=get&worksheet={worksheet_name}"
         res = requests.get(url, timeout=8)
@@ -135,11 +132,9 @@ def save_user_db_single(u_name, u_email, u_phone):
 def load_users():
     users_dict = {}
     
-    # 1. First fetch from Google Sheet Users Tab
     sheet_rows = load_google_sheet_direct("Users")
     for row in sheet_rows:
         if isinstance(row, dict):
-            # Your Apps Script returns keys in lowercase: 'email', 'name', 'phone'
             email = str(row.get("email", row.get("Email", ""))).strip().lower()
             if email:
                 users_dict[email] = {
@@ -149,7 +144,6 @@ def load_users():
                     "verified_at": row.get("verified_at", row.get("Verified_At", str(datetime.datetime.now())))
                 }
 
-    # 2. Merge with Local SQLite DB Backup
     try:
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
@@ -348,7 +342,7 @@ def generate_visual_kundali_chart_html(name, dob, tob, pob):
     """
 
 # ---------------------------------------------------------
-# 4. REPORTLAB PDF & ROBUST RAZORPAY PAYWALL
+# 4. REPORTLAB PDF & RAZORPAY ME URL PAYWALL (WITH SCANNER & UPI APPS)
 # ---------------------------------------------------------
 def create_kundali_pdf_file(name, dob, tob, pob):
     profile = calculate_astrological_profile(name, dob)
@@ -403,27 +397,7 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     return filename
 
 def get_robust_razorpay_link(service_name, price, user_name):
-    try:
-        if razorpay_client:
-            data = {
-                "amount": int(price) * 100,
-                "currency": "INR",
-                "accept_partial": False,
-                "description": f"Payment for {service_name}",
-                "customer": {
-                    "name": user_name if user_name else "User"
-                },
-                "notify": {"sms": False, "email": False},
-                "reminder_enable": False,
-                "callback_url": "https://accastroforge.in/",
-                "callback_method": "get"
-            }
-            response = razorpay_client.payment_link.create(data)
-            if response and "short_url" in response:
-                return response["short_url"]
-    except Exception as e:
-        print(f"Razorpay API fallback triggered due to: {e}")
-    
+    # Direct Razorpay Me URL to ensure QR Scanner and UPI app buttons appear instantly
     return RAZORPAY_ME_URL
 
 def get_paywall_html(service_name, price, user_name="User"):
@@ -433,11 +407,11 @@ def get_paywall_html(service_name, price, user_name="User"):
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout (with QR Scanner, Google Pay, PhonePe, BHIM & Cards).</p>
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
         
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
-            🚀 Proceed to Pay ₹{price} (UPI, GPay, PhonePe & Cards)
+            🚀 Proceed to Pay ₹{price} (QR Scanner, GPay, PhonePe & UPI)
         </a>
     </div>
     """
@@ -548,7 +522,6 @@ def handle_login(login_email, login_pass):
                 matched_user = u
                 break
 
-    # Direct fallback search if exact email string match
     if not matched_user and (l_email == "arnabkolkatarailfan@gmail.com" or l_email == "onabkolkatarailband@gmail.com"):
         matched_user = {"name": "Arnab Chaudhuri", "email": l_email, "phone": "9874316613"}
 
@@ -764,7 +737,7 @@ def recharge_wallet(amount):
     return f"""
     <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #4ade80; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
         <h4 style="color: #4ade80 !important; margin-bottom: 5px;">💳 Add ₹{amount} to AccAstroForge Credits</h4>
-        <p style="color: #ffffff !important; font-size: 0.85rem; margin-bottom: 10px;">Click below to add credits via Razorpay UPI or Cards instantly.</p>
+        <p style="color: #ffffff !important; font-size: 0.85rem; margin-bottom: 10px;">Click below to add credits via Razorpay QR Scanner, GPay, PhonePe & UPI.</p>
         <a href="{pay_url}" target="_blank" style="background: #22c55e; color: white !important; padding: 8px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block;">
             ⚡ Pay ₹{amount} & Top Up Wallet
         </a>

@@ -35,7 +35,7 @@ GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOO
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
 # Google Sheets Configuration via Spreadsheet ID & Updated Apps Script Web App URL
-GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyxhdOzOk7R7XJVcrlirFzwqrKpQ"
+GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 
 # ---------------------------------------------------------
@@ -131,7 +131,6 @@ def save_user_db_single(u_name, u_email, u_phone):
 def load_users():
     users_dict = {}
     
-    # 1. Load from Google Sheet first (Permanent cloud persistence)
     sheet_rows = load_google_sheet_direct("Users")
     for row in sheet_rows:
         if isinstance(row, dict):
@@ -144,7 +143,6 @@ def load_users():
                     "verified_at": row.get("verified_at", row.get("Verified_At", str(datetime.datetime.now())))
                 }
 
-    # 2. Load from local SQLite DB (Fallback / Speed)
     try:
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
@@ -558,7 +556,7 @@ def handle_logout():
             <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
         </div>
         <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-            📝 SIGN UP / SWITCH
+            📝 SIGN UP / LOGIN
         </button>
     </div>
     """
@@ -870,6 +868,7 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
+/* ROBUST PASSWORD EYE TOGGLE STYLING */
 .password-box-wrapper {
     position: relative !important;
     width: 100% !important;
@@ -879,17 +878,17 @@ input::placeholder, textarea::placeholder {
 
 .password-eye-btn {
     position: absolute !important;
-    right: 12px !important;
+    right: 15px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     cursor: pointer !important;
-    font-size: 1.2rem !important;
-    z-index: 9999 !important;
+    font-size: 1.25rem !important;
+    z-index: 99999 !important;
     user-select: none !important;
-    background: rgba(124, 58, 237, 0.3) !important;
+    background: rgba(124, 58, 237, 0.4) !important;
     border: 1px solid #fde047 !important;
     border-radius: 50% !important;
-    padding: 2px 6px !important;
+    padding: 4px 8px !important;
     line-height: 1 !important;
 }
 
@@ -918,29 +917,32 @@ function syncToGoogleSheetDirect(worksheet, dataObj) {
 }
 
 function attachEyeToggle() {
-    const passInputs = document.querySelectorAll('input[type="password"]');
+    const passInputs = document.querySelectorAll('input[type="password"], input[type="text"][placeholder*="password"], input[type="text"][placeholder*="Password"], input[id*="pass"]');
     passInputs.forEach(input => {
         if (!input.classList.contains('eye-attached')) {
             input.classList.add('eye-attached');
+            input.type = 'password';
             const parent = input.parentElement;
             if(parent) {
                 parent.style.position = 'relative';
-                const toggleBtn = document.createElement('span');
-                toggleBtn.className = 'password-eye-btn';
-                toggleBtn.innerHTML = '👁️';
-                toggleBtn.title = 'Show/Hide Password';
-                toggleBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        toggleBtn.innerHTML = '🙈';
-                    } else {
-                        input.type = 'password';
-                        toggleBtn.innerHTML = '👁️';
-                    }
-                });
-                parent.appendChild(toggleBtn);
+                if (!parent.querySelector('.password-eye-btn')) {
+                    const toggleBtn = document.createElement('span');
+                    toggleBtn.className = 'password-eye-btn';
+                    toggleBtn.innerHTML = '👁️';
+                    toggleBtn.title = 'Show/Hide Password';
+                    toggleBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            toggleBtn.innerHTML = '🙈';
+                        } else {
+                            input.type = 'password';
+                            toggleBtn.innerHTML = '👁️';
+                        }
+                    });
+                    parent.appendChild(toggleBtn);
+                }
             }
         }
     });
@@ -964,7 +966,7 @@ function handlePersistentSession() {
 setInterval(() => {
     attachEyeToggle();
     handlePersistentSession();
-}, 400);
+}, 250);
 
 document.addEventListener("DOMContentLoaded", () => {
     attachEyeToggle();
@@ -974,7 +976,7 @@ document.addEventListener("DOMContentLoaded", () => {
 """
 )
 
-with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
+with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
     otp_state = gr.State(value="")
     session_token_state = gr.Textbox(value="", elem_id="session-token-box", visible=False)
     browser_sync_trigger = gr.Textbox(value="", elem_id="browser-sync-box", visible=False)
@@ -1013,7 +1015,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance") as demo:
                                 <p style="color: #ffffff !important; font-size: 0.95rem; margin: 0;">Guest User (Please Sign Up / Login)</p>
                             </div>
                             <button onclick="document.querySelector('#manual-signup-trigger').click()" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 0 15px rgba(219, 39, 119, 0.6); white-space: nowrap;">
-                                📝 SIGN UP / SWITCH
+                                📝 SIGN UP / LOGIN
                             </button>
                         </div>
                         """)

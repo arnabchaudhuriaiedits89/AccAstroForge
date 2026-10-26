@@ -436,7 +436,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{amt_val}</p>
         
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
@@ -1046,6 +1046,25 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <p style="color: #f39c12 !important; font-size: 0.88rem; font-weight: 600; margin: 0; line-height: 1.5;">
                         💡 <b style="color: #ffffff !important;">Mobile View Notice:</b> If you are trying to access the site through mobile version, look at the extreme end of the visible tabs for three dots (<span style="color: #fff; font-weight: bold; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">...</span>) to open the drop-down menu.
                     </p>
+                </div>
+                """)
+
+                # ---------------------------------------------------------
+                # NEW BIG EXCLAMATION WARNING NOTICE FOR USERS & TRANSACTIONS
+                # ---------------------------------------------------------
+                gr.HTML("""
+                <div style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.95), rgba(127, 29, 29, 0.9)); border: 2.5px solid #f87171; padding: 20px 24px; border-radius: 16px; margin: 15px 0 20px 0; box-shadow: 0 0 30px rgba(239, 68, 68, 0.4); display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+                    <div style="background: #fde047; color: #7f1d1d; width: 55px; height: 55px; min-width: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; box-shadow: 0 0 15px #fde047; border: 2px solid #fff;">
+                        ⚠️
+                    </div>
+                    <div style="flex: 1; min-width: 280px;">
+                        <h3 style="color: #fef08a !important; font-size: 1.25rem; font-family: 'Cinzel', serif; margin: 0 0 6px 0; letter-spacing: 0.5px;">
+                            ⚠️ CRITICAL WARNING: DO NOT REFRESH PAGE!
+                        </h3>
+                        <p style="color: #ffffff !important; font-size: 0.98rem; font-weight: 600; margin: 0; line-height: 1.6;">
+                            <span style="color: #fde047; font-weight: 800; font-size: 1.05rem;">ATTENTION:</span> When you are logged in or performing <b style="color: #4ade80;">Money Transactions / Wallet Topups</b>, <span style="color: #fca5a5; text-decoration: underline;">NEVER REFRESH THE PAGE</span>. Refreshing will automatically log you out, clear active session data, and can disrupt payment gateway redirects!
+                        </p>
+                    </div>
                 </div>
                 """)
 

@@ -395,21 +395,52 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     doc.build(story)
     return filename
 
+try:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+except Exception:
+    razorpay_client = None
+
 def get_robust_razorpay_link(service_name, price, user_name):
+    try:
+        if razorpay_client:
+            data = {
+                "amount": int(float(price)) * 100,
+                "currency": "INR",
+                "accept_partial": False,
+                "description": f"Payment for {service_name}",
+                "customer": {
+                    "name": user_name if user_name else "User"
+                },
+                "notify": {"sms": False, "email": False},
+                "reminder_enable": False,
+                "callback_url": "https://accastroforge.in/",
+                "callback_method": "get"
+            }
+            response = razorpay_client.payment_link.create(data)
+            if response and "short_url" in response:
+                return response["short_url"]
+    except Exception as e:
+        print(f"Razorpay API fallback triggered due to: {e}")
+    
     return RAZORPAY_ME_URL
 
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"
-    pay_url = get_robust_razorpay_link(service_name, price, display_name)
+    try:
+        amt_val = int(float(price))
+    except Exception:
+        amt_val = price
+        
+    pay_url = get_robust_razorpay_link(service_name, amt_val, display_name)
     
     return f"""
     <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
-        <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{price} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePay, BHIM or Cards.</p>
-        <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{price}</p>
+        <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h3>
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
+        <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{amt_val}</p>
         
         <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
-            🚀 Proceed to Pay ₹{price} (UPI, GPay, PhonePe & Cards)
+            🚀 Proceed to Pay ₹{amt_val} (UPI, GPay, PhonePe & Cards)
         </a>
     </div>
     """
@@ -722,13 +753,25 @@ def simple_astro_query(user_query):
     return f"<div style='color:#ffffff; line-height:1.6;'><p><b style='color:#fde047;'>Your Query:</b> {user_query}</p><hr style='border-color:rgba(244,114,182,0.3);'><p>{reply}</p></div>"
 
 def recharge_wallet(amount):
-    pay_url = get_robust_razorpay_link(f"AccAstroForge Wallet Topup (₹{amount})", amount, "Valued Customer")
+    try:
+        amt_int = int(float(amount))
+    except Exception:
+        amt_int = 250
+        
+    pay_url = get_robust_razorpay_link(f"AccAstroForge Wallet Topup (₹{amt_int})", amt_int, "Valued Customer")
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": "Valued Customer",
+        "service": "Wallet Topup",
+        "details": f"Amount: ₹{amt_int}",
+        "payment_status": "Pending"
+    })
     return f"""
     <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #4ade80; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px;">
-        <h4 style="color: #4ade80 !important; margin-bottom: 5px;">💳 Add ₹{amount} to AccAstroForge Credits</h4>
-        <p style="color: #ffffff !important; font-size: 0.85rem; margin-bottom: 10px;">Click below to add credits via Razorpay UPI or Cards instantly.</p>
+        <h4 style="color: #4ade80 !important; margin-bottom: 5px;">💳 Add ₹{amt_int} to AccAstroForge Credits</h4>
+        <p style="color: #ffffff !important; font-size: 0.85rem; margin-bottom: 10px;">Click below to add credits via Razorpay UPI, GPay, PhonePe & Cards instantly.</p>
         <a href="{pay_url}" target="_blank" style="background: #22c55e; color: white !important; padding: 8px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block;">
-            ⚡ Pay ₹{amount} & Top Up Wallet
+            ⚡ Pay ₹{amt_int} & Top Up Wallet (UPI, GPay, PhonePe & Cards)
         </a>
     </div>
     """

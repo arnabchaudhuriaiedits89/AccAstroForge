@@ -39,7 +39,7 @@ GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyxhdOzOk7R7XJVcrlirFzwqrKpQ"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 
 # ---------------------------------------------------------
-# 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM
+# 1. DATABASE & GOOGLE SHEETS SYSTEM
 # ---------------------------------------------------------
 DB_FILE = "accastroforge.db"
 
@@ -386,9 +386,8 @@ def create_kundali_pdf_file(name, dob, tob, pob):
     return filename
 
 def get_robust_razorpay_link(service_name, price, user_name):
-    clean_service = quote_plus(str(service_name).strip())
-    clean_user = quote_plus(str(user_name).strip())
-    return f"{RAZORPAY_ME_URL}?amount={price}&notes[service]={clean_service}&notes[user]={clean_user}"
+    # Fixed: Clean Razorpay.me URL without breaking parameters
+    return f"{RAZORPAY_ME_URL}?amount={price}"
 
 def get_paywall_html(service_name, price, user_name="User"):
     display_name = user_name.strip() if user_name and user_name.strip() else "User"

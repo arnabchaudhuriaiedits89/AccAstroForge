@@ -99,6 +99,16 @@ def append_to_google_sheet_direct(worksheet_name, values_list):
         return False
 
 def load_google_sheet_direct(worksheet_name):
+    """Loads sheet data directly from Apps Script endpoint"""
+    try:
+        url = f"{APPS_SCRIPT_URL}?action=get&worksheet={worksheet_name}"
+        res = requests.get(url, timeout=8)
+        if res.status_code == 200:
+            data = res.json()
+            if isinstance(data, list):
+                return data
+    except Exception as e:
+        print(f"Load Google Sheet Direct Error: {e}")
     return []
 
 def save_user_db_single(u_name, u_email, u_phone):
@@ -119,6 +129,22 @@ def save_user_db_single(u_name, u_email, u_phone):
     append_to_google_sheet_direct("Users", [u_name, u_email.lower(), u_phone, now_str])
 
 def load_users():
+    users_dict = {}
+    
+    # 1. Load from Google Sheet first (Permanent cloud persistence)
+    sheet_rows = load_google_sheet_direct("Users")
+    for row in sheet_rows:
+        if isinstance(row, dict):
+            email = str(row.get("email", row.get("Email", ""))).strip().lower()
+            if email:
+                users_dict[email] = {
+                    "name": row.get("name", row.get("Name", "User")),
+                    "email": email,
+                    "phone": row.get("phone", row.get("Phone", "N/A")),
+                    "verified_at": row.get("verified_at", row.get("Verified_At", str(datetime.datetime.now())))
+                }
+
+    # 2. Load from local SQLite DB (Fallback / Speed)
     try:
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
@@ -126,10 +152,15 @@ def load_users():
         cursor.execute("SELECT * FROM users")
         rows = cursor.fetchall()
         conn.close()
-        return [dict(row) for row in rows]
+        for row in rows:
+            d = dict(row)
+            email = str(d.get("email", "")).strip().lower()
+            if email and email not in users_dict:
+                users_dict[email] = d
     except Exception as e:
-        print(f"Load users error: {e}")
-        return []
+        print(f"Load users local error: {e}")
+        
+    return list(users_dict.values())
 
 def save_log(user_data):
     ts = user_data.get("timestamp", str(datetime.datetime.now()))
@@ -481,7 +512,7 @@ def handle_login(login_email, login_pass):
     users = load_users()
     matched_user = None
     for u in users:
-        if isinstance(u, dict) and (u.get("email") == l_email or u.get("Email") == l_email):
+        if isinstance(u, dict) and (str(u.get("email", u.get("Email", ""))).strip().lower() == l_email):
             matched_user = u
             break
 

@@ -80,14 +80,12 @@ def save_log(user_data):
     details = user_data.get("details", "N/A")
     payment_status = user_data.get("payment_status", "Pending")
 
-    # 1. Save to Google Sheets if connected
     if sheet:
         try:
             sheet.append_row([timestamp_str, full_name, service, details, payment_status])
         except Exception as e:
             print(f"Error appending to Google Sheets: {e}")
 
-    # 2. Save locally as backup
     logs = load_logs()
     logs.append({
         "timestamp": timestamp_str,

@@ -1,18 +1,17 @@
-import base64
-import datetime
-import hashlib
-import io
-import json
 import os
+import datetime
 import random
-import gradio as gr
-import razorpay
+import base64
+import json
+import io
 import requests
 import sqlite3
-from reportlab.lib import colors
+import gradio as gr
+import razorpay
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
@@ -911,41 +910,14 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
-/* ROBUST PASSWORD EYE TOGGLE STYLING */
-.password-box-wrapper {
-    position: relative !important;
-    width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-}
-
-.password-eye-btn {
-    position: absolute !important;
-    right: 15px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    cursor: pointer !important;
-    font-size: 1.25rem !important;
-    z-index: 99999 !important;
-    user-select: none !important;
-    background: rgba(124, 58, 237, 0.4) !important;
-    border: 1px solid #fde047 !important;
-    border-radius: 50% !important;
-    padding: 4px 8px !important;
-    line-height: 1 !important;
-}
-
 #manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn, #browser-sync-btn {
     display: none !important;
 }
 """
 
-head_html = (
-    """
+head_html = """
 <script>
-const APPS_SCRIPT_ENDPOINT = '"""
-    + APPS_SCRIPT_URL
-    + """';
+const APPS_SCRIPT_ENDPOINT = '""" + APPS_SCRIPT_URL + """';
 
 function syncToGoogleSheetDirect(worksheet, dataObj) {
     const params = new URLSearchParams({ worksheet: worksheet, ...dataObj });
@@ -956,38 +928,6 @@ function syncToGoogleSheetDirect(worksheet, dataObj) {
         console.log("Direct Browser Sync Success for " + worksheet);
     }).catch(err => {
         console.error("Direct Browser Sync Error: ", err);
-    });
-}
-
-function attachEyeToggle() {
-    const passInputs = document.querySelectorAll('input[type="password"], input[type="text"][placeholder*="password"], input[type="text"][placeholder*="Password"], input[id*="pass"]');
-    passInputs.forEach(input => {
-        if (!input.classList.contains('eye-attached')) {
-            input.classList.add('eye-attached');
-            input.type = 'password';
-            const parent = input.parentElement;
-            if(parent) {
-                parent.style.position = 'relative';
-                if (!parent.querySelector('.password-eye-btn')) {
-                    const toggleBtn = document.createElement('span');
-                    toggleBtn.className = 'password-eye-btn';
-                    toggleBtn.innerHTML = '👁️';
-                    toggleBtn.title = 'Show/Hide Password';
-                    toggleBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (input.type === 'password') {
-                            input.type = 'text';
-                            toggleBtn.innerHTML = '🙈';
-                        } else {
-                            input.type = 'password';
-                            toggleBtn.innerHTML = '👁️';
-                        }
-                    });
-                    parent.appendChild(toggleBtn);
-                }
-            }
-        }
     });
 }
 
@@ -1007,17 +947,14 @@ function handlePersistentSession() {
 }
 
 setInterval(() => {
-    attachEyeToggle();
     handlePersistentSession();
 }, 250);
 
 document.addEventListener("DOMContentLoaded", () => {
-    attachEyeToggle();
     handlePersistentSession();
 });
 </script>
 """
-)
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
     otp_state = gr.State(value="")
@@ -1049,9 +986,6 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 </div>
                 """)
 
-                # ---------------------------------------------------------
-                # NEW BIG EXCLAMATION WARNING NOTICE FOR USERS & TRANSACTIONS
-                # ---------------------------------------------------------
                 gr.HTML("""
                 <div style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.95), rgba(127, 29, 29, 0.9)); border: 2.5px solid #f87171; padding: 20px 24px; border-radius: 16px; margin: 15px 0 20px 0; box-shadow: 0 0 30px rgba(239, 68, 68, 0.4); display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
                     <div style="background: #fde047; color: #7f1d1d; width: 55px; height: 55px; min-width: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; box-shadow: 0 0 15px #fde047; border: 2px solid #fff;">
@@ -1255,6 +1189,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                     <p style="font-size: 0.85rem; margin-bottom: 8px;">For any support or queries, reach out to us at: <a href="mailto:support@accastroforge.in" style="color: #fde047 !important; font-weight: 700;">support@accastroforge.in</a></p>
                     <p style="font-size: 0.85rem;">Connect with us on our official social platforms:</p>
                     <ul style="list-style-type: none; padding-left: 0; margin-top: 10px; line-height: 2.2;">
+                        <li>🧳 <span style="color: #fde047 !important; font-weight: 700;">Twitter (X):</span> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://x.com/AccAstroForge</a></li>
                         <li>📸 <span style="color: #fde047 !important; font-weight: 700;">Instagram:</span> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.instagram.com/accastroforge/</a></li>
                         <li>🌀 <span style="color: #fde047 !important; font-weight: 700;">Threads:</span> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9 !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.threads.com/@accastroforge</a></li>
                         <li>📘 <span style="color: #fde047 !important; font-weight: 700;">Facebook:</span> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa !important; font-weight: 600; text-decoration: underline; margin-left: 5px;">https://www.facebook.com/accastroforge/</a></li>

@@ -910,6 +910,30 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
+/* ROBUST PASSWORD EYE TOGGLE STYLING */
+.password-box-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.password-eye-btn {
+    position: absolute !important;
+    right: 15px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    cursor: pointer !important;
+    font-size: 1.25rem !important;
+    z-index: 99999 !important;
+    user-select: none !important;
+    background: rgba(124, 58, 237, 0.4) !important;
+    border: 1px solid #fde047 !important;
+    border-radius: 50% !important;
+    padding: 4px 8px !important;
+    line-height: 1 !important;
+}
+
 #manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn, #browser-sync-btn {
     display: none !important;
 }
@@ -931,6 +955,38 @@ function syncToGoogleSheetDirect(worksheet, dataObj) {
     });
 }
 
+function attachEyeToggle() {
+    const passInputs = document.querySelectorAll('input[type="password"], input[type="text"][placeholder*="password"], input[type="text"][placeholder*="Password"], input[id*="pass"]');
+    passInputs.forEach(input => {
+        if (!input.classList.contains('eye-attached')) {
+            input.classList.add('eye-attached');
+            input.type = 'password';
+            const parent = input.parentElement;
+            if(parent) {
+                parent.style.position = 'relative';
+                if (!parent.querySelector('.password-eye-btn')) {
+                    const toggleBtn = document.createElement('span');
+                    toggleBtn.className = 'password-eye-btn';
+                    toggleBtn.innerHTML = '👁️';
+                    toggleBtn.title = 'Show/Hide Password';
+                    toggleBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            toggleBtn.innerHTML = '🙈';
+                        } else {
+                            input.type = 'password';
+                            toggleBtn.innerHTML = '👁️';
+                        }
+                    });
+                    parent.appendChild(toggleBtn);
+                }
+            }
+        }
+    });
+}
+
 function handlePersistentSession() {
     const savedSession = localStorage.getItem('accastroforge_session');
     if (savedSession) {
@@ -947,10 +1003,12 @@ function handlePersistentSession() {
 }
 
 setInterval(() => {
+    attachEyeToggle();
     handlePersistentSession();
 }, 250);
 
 document.addEventListener("DOMContentLoaded", () => {
+    attachEyeToggle();
     handlePersistentSession();
 });
 </script>

@@ -808,7 +808,7 @@ def admin_login_and_view(password):
     return summary_html
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & PERSISTENT SESSION LOCALSTORAGE
+# 6. HARDCORE CSS & PERSISTENT SESSION LOCALSTORAGE (OAUTH HASH-TO-QUERY REDIRECT FIX)
 # ---------------------------------------------------------
 custom_css = """
 html, body, .gr-root, .gradio-container, gradio-app {
@@ -942,36 +942,42 @@ head_html = """
 <script>
 const APPS_SCRIPT_ENDPOINT = '""" + APPS_SCRIPT_URL + """';
 
-function syncToGoogleSheetDirect(worksheet, dataObj) {
-    const params = new URLSearchParams({ worksheet: worksheet, ...dataObj });
-    fetch(APPS_SCRIPT_ENDPOINT + "?" + params.toString(), {
-        method: 'GET',
-        mode: 'no-cors'
-    }).then(() => {
-        console.log("Direct Browser Sync Success for " + worksheet);
-    }).catch(err => {
-        console.error("Direct Browser Sync Error: ", err);
-    });
-}
-
 function handleOAuthTokenHash() {
     const hash = window.location.hash;
+    const search = window.location.search;
+    
+    // 1. Check if token is in Hash (#access_token=...)
     if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
         const accessToken = params.get('access_token');
         const iss = params.get('iss') || (hash.includes('google') ? 'google' : 'facebook');
         
         if (accessToken) {
-            console.log("OAuth Access Token Captured:", accessToken);
-            
+            console.log("OAuth Access Token Captured from Hash:", accessToken);
             const mockEmail = iss + "_" + accessToken.substring(0, 10) + "@oauth.user";
             const mockName = iss.toUpperCase() + " User";
             const sessionVal = mockEmail + "|" + mockName + "|OAuth_Verified";
             
             localStorage.setItem('accastroforge_session', sessionVal);
             
-            // Force reload to apply session immediately since Gradio single-page blocks direct DOM state sync
-            window.location.href = window.location.origin + window.location.pathname;
+            // Convert Hash to Query Parameter so Gradio & Python backend catches it cleanly
+            window.location.href = window.location.origin + window.location.pathname + "?access_token=" + encodeURIComponent(accessToken) + "&iss=" + iss;
+            return;
+        }
+    }
+    
+    // 2. Check if token is in Query (?access_token=...)
+    if (search && search.includes('access_token')) {
+        const urlParams = new URLSearchParams(search);
+        const accessToken = urlParams.get('access_token');
+        const iss = urlParams.get('iss') || 'oauth';
+        
+        if (accessToken) {
+            const mockEmail = iss + "_" + accessToken.substring(0, 10) + "@oauth.user";
+            const mockName = iss.toUpperCase() + " User";
+            const sessionVal = mockEmail + "|" + mockName + "|OAuth_Verified";
+            
+            localStorage.setItem('accastroforge_session', sessionVal);
         }
     }
 }
@@ -1022,6 +1028,9 @@ function handlePersistentSession() {
         }
     }
 }
+
+// Run immediately on script load
+handleOAuthTokenHash();
 
 setInterval(() => {
     attachEyeToggle();

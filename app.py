@@ -960,14 +960,27 @@ function handleOAuthTokenHash() {
     if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
         const accessToken = params.get('access_token');
-        const tokenType = params.get('token_type') || 'Bearer';
-        const iss = params.get('iss') || 'OAuth Provider';
+        const iss = params.get('iss') || (hash.includes('google') ? 'google' : 'facebook');
         
         if (accessToken) {
             console.log("OAuth Access Token Captured:", accessToken);
-            localStorage.setItem('oauth_access_token', accessToken);
             
-            // Clean URL hash without reloading page
+            const mockEmail = iss + "_" + accessToken.substring(0, 10) + "@oauth.user";
+            const mockName = iss.toUpperCase() + " User";
+            const sessionVal = mockEmail + "|" + mockName + "|OAuth_Verified";
+            
+            localStorage.setItem('accastroforge_session', sessionVal);
+            
+            const hiddenInput = document.querySelector('#session-token-box input');
+            if (hiddenInput) {
+                hiddenInput.value = sessionVal;
+                hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+                setTimeout(() => {
+                    const syncBtn = document.querySelector('#session-sync-btn');
+                    if (syncBtn) syncBtn.click();
+                }, 500);
+            }
+            
             if (window.history && window.history.replaceState) {
                 window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
             }

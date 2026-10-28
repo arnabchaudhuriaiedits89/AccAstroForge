@@ -970,19 +970,8 @@ function handleOAuthTokenHash() {
             
             localStorage.setItem('accastroforge_session', sessionVal);
             
-            const hiddenInput = document.querySelector('#session-token-box input');
-            if (hiddenInput) {
-                hiddenInput.value = sessionVal;
-                hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
-                setTimeout(() => {
-                    const syncBtn = document.querySelector('#session-sync-btn');
-                    if (syncBtn) syncBtn.click();
-                }, 500);
-            }
-            
-            if (window.history && window.history.replaceState) {
-                window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-            }
+            // Force reload to apply session immediately since Gradio single-page blocks direct DOM state sync
+            window.location.href = window.location.origin + window.location.pathname;
         }
     }
 }

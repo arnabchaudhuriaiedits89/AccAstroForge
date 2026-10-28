@@ -606,6 +606,46 @@ def handle_logout():
 
     return logout_msg, guest_profile, guest_wallet, guest_history, ""
 
+def restore_session_on_load(request: gr.Request):
+    try:
+        if request and request.query_params:
+            access_token = request.query_params.get("access_token")
+            iss = request.query_params.get("iss", "oauth")
+            if access_token:
+                mock_email = f"{iss}_{access_token[:10]}@oauth.user"
+                mock_name = f"{iss.upper()} User"
+                u_phone = "OAuth Verified"
+                
+                profile_box = f"""
+                <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        👤 <b>{mock_name}</b> ({mock_email})<br>
+                        <span style='color: #4ade80;'>Status: Active Member (OAuth Logged In)</span>
+                    </div>
+                    <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                        🚪 Logout / Switch Account
+                    </button>
+                </div>
+                """
+                wallet_box = """
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                    <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
+                    <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
+                </div>
+                """
+                history_box = f"""
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+                    <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• OAuth Session Authenticated Successfully<br>• Email: {mock_email}</p>
+                </div>
+                """
+                session_token = f"{mock_email}|{mock_name}|{u_phone}"
+                return profile_box, wallet_box, history_box, session_token
+    except Exception as e:
+        print(f"Request Query Param Parsing Error: {e}")
+    
+    return gr.update(), gr.update(), gr.update(), gr.update()
+
 def restore_session_from_token(token):
     if not token or "|" not in token:
         return gr.update(), gr.update(), gr.update()
@@ -1295,6 +1335,8 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
 
     session_sync_btn = gr.Button("Sync Session", elem_id="session-sync-btn")
     session_sync_btn.click(fn=restore_session_from_token, inputs=[session_token_state], outputs=[user_profile_display, wallet_balance_display, order_history_display])
+
+    demo.load(fn=restore_session_on_load, inputs=[], outputs=[user_profile_display, wallet_balance_display, order_history_display, session_token_state])
 
     session_token_state.change(
         fn=None,

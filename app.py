@@ -811,8 +811,6 @@ def admin_login_and_view(password):
 # 6. HARDCORE CSS & PERSISTENT SESSION LOCALSTORAGE
 # ---------------------------------------------------------
 custom_css = """
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
-
 html, body, .gr-root, .gradio-container, gradio-app {
     background-color: #030014 !important;
     background-image: 
@@ -940,6 +938,7 @@ input::placeholder, textarea::placeholder {
 """
 
 head_html = """
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
 const APPS_SCRIPT_ENDPOINT = '""" + APPS_SCRIPT_URL + """';
 

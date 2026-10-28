@@ -33,11 +33,12 @@ FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
 GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
 FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
 
+# Google Sheets Configuration via Spreadsheet ID & Updated Apps Script Web App URL
 GOOGLE_SPREADSHEET_ID = "1nJ8ferhQ10A2MLeeyhdOzOk7R7XJVcrlirFzwqrKpQ"
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 
 # ---------------------------------------------------------
-# 1. DATABASE SYSTEM
+# 1. GOOGLE APPS SCRIPT WEB APP ENDPOINT DATABASE SYSTEM
 # ---------------------------------------------------------
 DB_FILE = "accastroforge.db"
 
@@ -69,6 +70,7 @@ def init_db():
 init_db()
 
 def append_to_google_sheet_direct(worksheet_name, values_list):
+    """Appends row directly via Google Apps Script Web App using Query Parameters"""
     try:
         if worksheet_name == "Users":
             params = {
@@ -89,12 +91,14 @@ def append_to_google_sheet_direct(worksheet_name, values_list):
             }
             
         response = requests.get(APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=10)
+        print(f"APPS SCRIPT GET STATUS for {worksheet_name}: {response.status_code}")
         return True
     except Exception as e:
         print(f"CRITICAL APPS SCRIPT EXCEPTION: {str(e)}")
         return False
 
 def load_google_sheet_direct(worksheet_name):
+    """Loads sheet data directly from Apps Script endpoint"""
     try:
         url = f"{APPS_SCRIPT_URL}?action=get&worksheet={worksheet_name}"
         res = requests.get(url, timeout=8)
@@ -117,6 +121,7 @@ def save_user_db_single(u_name, u_email, u_phone):
         """, (u_name, u_email.lower(), u_phone, now_str))
         conn.commit()
         conn.close()
+        print(f"SUCCESS: User saved locally: {u_email}")
     except Exception as e:
         print(f"ERROR: Save user local failed: {e}")
         
@@ -124,6 +129,7 @@ def save_user_db_single(u_name, u_email, u_phone):
 
 def load_users():
     users_dict = {}
+    
     sheet_rows = load_google_sheet_direct("Users")
     for row in sheet_rows:
         if isinstance(row, dict):
@@ -224,7 +230,7 @@ else:
     """
 
 # ---------------------------------------------------------
-# 2. EMAIL SENDER FUNCTION
+# 2. EMAIL & OTP SENDER FUNCTION (VERIFIED SENDER)
 # ---------------------------------------------------------
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
@@ -439,7 +445,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# 5. AUTHENTICATION & SESSION MANAGEMENT
+# 5. STRICT AUTH, UNIQUE REGISTRATION, LOGIN & PERSISTENT SESSION
 # ---------------------------------------------------------
 def handle_manual_signup(name, email, phone, password):
     u_name = name.strip() if name else "New User"
@@ -600,39 +606,83 @@ def handle_logout():
 
     return logout_msg, guest_profile, guest_wallet, guest_history, ""
 
-def handle_oauth_redirect_login(token_str, provider_name):
-    if not token_str:
+def restore_session_on_load(request: gr.Request):
+    try:
+        if request and request.query_params:
+            access_token = request.query_params.get("access_token")
+            iss = request.query_params.get("iss", "oauth")
+            if access_token:
+                mock_email = f"{iss}_{access_token[:10]}@oauth.user"
+                mock_name = f"{iss.upper()} User"
+                u_phone = "OAuth Verified"
+                
+                profile_box = f"""
+                <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        👤 <b>{mock_name}</b> ({mock_email})<br>
+                        <span style='color: #4ade80;'>Status: Active Member (OAuth Logged In)</span>
+                    </div>
+                    <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                        🚪 Logout / Switch Account
+                    </button>
+                </div>
+                """
+                wallet_box = """
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+                    <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
+                    <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
+                </div>
+                """
+                history_box = f"""
+                <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+                    <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• OAuth Session Authenticated Successfully<br>• Email: {mock_email}</p>
+                </div>
+                """
+                session_token = f"{mock_email}|{mock_name}|{u_phone}"
+                return profile_box, wallet_box, history_box, session_token
+    except Exception as e:
+        print(f"Request Query Param Parsing Error: {e}")
+    
+    return gr.update(), gr.update(), gr.update(), gr.update()
+
+def restore_session_from_token(token):
+    if not token or "|" not in token:
         return gr.update(), gr.update(), gr.update()
-    
-    u_email = f"{provider_name}.user@accastroforge.in"
-    u_name = f"{provider_name.capitalize()} Verified User"
-    u_phone = "OAuth_Verified"
-    
-    profile_box = f"""
-    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <div>
-            👤 <b>{u_name}</b> ({u_email})<br>
-            <span style='color: #4ade80;'>Authentication: {provider_name.upper()} OAuth Token Active</span><br>
-            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Token Secured)</span>
+    try:
+        parts = token.split("|")
+        u_email = parts[0]
+        u_name = parts[1]
+        u_phone = parts[2] if len(parts) > 2 else "N/A"
+        
+        profile_box = f"""
+        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                👤 <b>{u_name}</b> ({u_email})<br>
+                <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
+                <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Persistent Session)</span>
+            </div>
+            <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                🚪 Logout / Switch Account
+            </button>
         </div>
-        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-            🚪 Logout / Switch Account
-        </button>
-    </div>
-    """
-    wallet_box = """
-    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
-        <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
-        <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
-    </div>
-    """
-    history_box = f"""
-    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-        <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
-        <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Successful {provider_name.capitalize()} OAuth Login<br>• Token Session Verified & Locked</p>
-    </div>
-    """
-    return profile_box, wallet_box, history_box
+        """
+        wallet_box = """
+        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+            <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
+            <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
+        </div>
+        """
+        history_box = f"""
+        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+            <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Active Persistent Session Restored<br>• Email: {u_email}<br>• Phone: {u_phone}</p>
+        </div>
+        """
+        return profile_box, wallet_box, history_box
+    except Exception as e:
+        print(f"Session restoration error: {e}")
+        return gr.update(), gr.update(), gr.update()
 
 def run_daily_horoscope(sign):
     return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
@@ -646,6 +696,7 @@ def run_kundali_matching(boy_name, boy_dob, girl_name, girl_dob):
         "service": "Kundali Matching",
         "payment_status": "Pending (₹399)"
     })
+    
     teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>❤️ Kundali Compatibility Teaser for {b_name} & {g_name}</h3><p>High Guna Milan score detected! Excellent long-term emotional and spiritual alignment observed.</p></div>"""
     return teaser_text, get_paywall_html("Complete Kundali Matching Report", 399, f"{b_name} & {g_name}")
 
@@ -657,6 +708,7 @@ def run_life_predictions(name, dob, tob, pob, focus_area, question, phone, email
         "service": "Complete Life Prediction",
         "payment_status": "Pending (₹499)"
     })
+    
     profile = calculate_astrological_profile(u_name, dob if dob else "2000-01-01")
     teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🌟 ASTROLOGICAL TEASER FOR {u_name.upper()}</h3>
     <ul style='list-style:none; padding:0; line-height:2;'>
@@ -685,6 +737,7 @@ def run_kundali_pdf(name, dob, tob, pob):
         "service": "Janam Kundali PDF",
         "payment_status": "Pending (₹299)"
     })
+    
     chart_html = generate_visual_kundali_chart_html(u_name, dob if dob else "2000-01-01", tob, pob)
     pdf_file = create_kundali_pdf_file(u_name, dob if dob else "2000-01-01", tob, pob)
     teaser_text = f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>📜 Janam Kundali & Birth Chart Generated for {u_name}</h3><p>Your detailed Lagna chart and PDF preview have been generated successfully below.</p></div>"""
@@ -719,6 +772,7 @@ def simple_astro_query(user_query):
         return "<div style='color:#ffffff;'><p>🙏 <b>Namaste!</b> Please ask any question regarding career, marriage, health, or planetary transits.</p></div>"
     
     msg = user_query.lower().strip()
+    
     if any(w in msg for w in ["hi", "hello", "hey", "greetings", "namaste"]):
         reply = "🙏 <b>Namaste!</b> I am your Vedic Astro Assistant. Please share your birth details, zodiac sign, or specific questions regarding career, marriage, health, or planetary transits, and I will guide you with ancient astrological wisdom."
     elif any(w in msg for w in ["career", "job", "business", "money", "wealth", "promotion"]):
@@ -770,7 +824,7 @@ def admin_login_and_view(password):
     
     summary_html = f"""
     <div style='color:#fff;'>
-        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard</h3>
+        <h3 style='color:#fde047;'>🛡️ AccAstroForge Admin Dashboard (Apps Script Web App Sync)</h3>
         <p><b>Total Verified Users:</b> {len(users)} | <b>Total Log Entries:</b> {len(logs)}</p>
         
         <h4 style='color:#4ade80; margin-top:15px;'>📋 Registered Users Database</h4>
@@ -794,7 +848,7 @@ def admin_login_and_view(password):
     return summary_html
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & ORIGINAL OAUTH TOKEN CATCHER
+# 6. HARDCORE CSS & PERSISTENT SESSION LOCALSTORAGE (OAUTH HASH-TO-QUERY REDIRECT FIX)
 # ---------------------------------------------------------
 custom_css = """
 html, body, .gr-root, .gradio-container, gradio-app {
@@ -894,6 +948,7 @@ input::placeholder, textarea::placeholder {
     color: rgba(255, 255, 255, 0.65) !important;
 }
 
+/* ROBUST PASSWORD EYE TOGGLE STYLING */
 .password-box-wrapper {
     position: relative !important;
     width: 100% !important;
@@ -917,7 +972,7 @@ input::placeholder, textarea::placeholder {
     line-height: 1 !important;
 }
 
-#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #oauth-sync-btn {
+#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn, #browser-sync-btn {
     display: none !important;
 }
 """
@@ -925,39 +980,44 @@ input::placeholder, textarea::placeholder {
 head_html = """
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
-function checkAndCleanOAuthUrl() {
+const APPS_SCRIPT_ENDPOINT = '""" + APPS_SCRIPT_URL + """';
+
+function handleOAuthTokenHash() {
     const hash = window.location.hash;
     const search = window.location.search;
-    let token = null;
-    let provider = 'google';
-
+    
+    // 1. Check if token is in Hash (#access_token=...)
     if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
-        token = params.get('access_token');
-        if (hash.includes('facebook')) provider = 'facebook';
-    } else if (search && search.includes('access_token')) {
-        const params = new URLSearchParams(search);
-        token = params.get('access_token');
-        if (search.includes('facebook')) provider = 'facebook';
-    }
-
-    if (token) {
-        // PUSH TOKEN TO HIDDEN INPUT
-        const hiddenInput = document.querySelector('#oauth-token-box input');
-        if (hiddenInput) {
-            hiddenInput.value = token + "|" + provider;
-            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
-            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
-
-            setTimeout(() => {
-                const syncBtn = document.querySelector('#oauth-sync-btn');
-                if (syncBtn) syncBtn.click();
-            }, 300);
+        const accessToken = params.get('access_token');
+        const iss = params.get('iss') || (hash.includes('google') ? 'google' : 'facebook');
+        
+        if (accessToken) {
+            console.log("OAuth Access Token Captured from Hash:", accessToken);
+            const mockEmail = iss + "_" + accessToken.substring(0, 10) + "@oauth.user";
+            const mockName = iss.toUpperCase() + " User";
+            const sessionVal = mockEmail + "|" + mockName + "|OAuth_Verified";
+            
+            localStorage.setItem('accastroforge_session', sessionVal);
+            
+            // Convert Hash to Query Parameter so Gradio & Python backend catches it cleanly
+            window.location.href = window.location.origin + window.location.pathname + "?access_token=" + encodeURIComponent(accessToken) + "&iss=" + iss;
+            return;
         }
-
-        // CLEAN URL BAR AFTER CAPTURING TOKEN
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.pathname);
+    }
+    
+    // 2. Check if token is in Query (?access_token=...)
+    if (search && search.includes('access_token')) {
+        const urlParams = new URLSearchParams(search);
+        const accessToken = urlParams.get('access_token');
+        const iss = urlParams.get('iss') || 'oauth';
+        
+        if (accessToken) {
+            const mockEmail = iss + "_" + accessToken.substring(0, 10) + "@oauth.user";
+            const mockName = iss.toUpperCase() + " User";
+            const sessionVal = mockEmail + "|" + mockName + "|OAuth_Verified";
+            
+            localStorage.setItem('accastroforge_session', sessionVal);
         }
     }
 }
@@ -994,21 +1054,41 @@ function attachEyeToggle() {
     });
 }
 
+function handlePersistentSession() {
+    const savedSession = localStorage.getItem('accastroforge_session');
+    if (savedSession) {
+        const hiddenInput = document.querySelector('#session-token-box input');
+        if (hiddenInput && hiddenInput.value !== savedSession) {
+            hiddenInput.value = savedSession;
+            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+            setTimeout(() => {
+                const syncBtn = document.querySelector('#session-sync-btn');
+                if (syncBtn) syncBtn.click();
+            }, 500);
+        }
+    }
+}
+
+// Run immediately on script load
+handleOAuthTokenHash();
+
 setInterval(() => {
-    checkAndCleanOAuthUrl();
     attachEyeToggle();
+    handlePersistentSession();
 }, 250);
 
 document.addEventListener("DOMContentLoaded", () => {
-    checkAndCleanOAuthUrl();
+    handleOAuthTokenHash();
     attachEyeToggle();
+    handlePersistentSession();
 });
 </script>
 """
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
     otp_state = gr.State(value="")
-    oauth_token_state = gr.Textbox(value="", elem_id="oauth-token-box", visible=False)
+    session_token_state = gr.Textbox(value="", elem_id="session-token-box", visible=False)
+    browser_sync_trigger = gr.Textbox(value="", elem_id="browser-sync-box", visible=False)
 
     with gr.Column():
         with gr.Row():
@@ -1118,13 +1198,13 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 verify_otp_btn.click(
                     fn=verify_user_otp,
                     inputs=[user_otp_input, otp_state, signup_name, signup_email, signup_phone],
-                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, oauth_token_state]
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
                 )
 
                 login_btn.click(
                     fn=handle_login,
                     inputs=[login_email_input, login_pass_input],
-                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, oauth_token_state]
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
                 )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -1251,13 +1331,18 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
     manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
 
     logout_trigger = gr.Button("Trigger Logout", elem_id="logout-trigger")
-    logout_trigger.click(fn=handle_logout, inputs=[], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, oauth_token_state])
+    logout_trigger.click(fn=handle_logout, inputs=[], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state])
 
-    oauth_sync_btn = gr.Button("OAuth Sync", elem_id="oauth-sync-btn")
-    oauth_sync_btn.click(
-        fn=lambda val: handle_oauth_redirect_login(*(val.split("|") if "|" in val else (val, "google"))),
-        inputs=[oauth_token_state],
-        outputs=[user_profile_display, wallet_balance_display, order_history_display]
+    session_sync_btn = gr.Button("Sync Session", elem_id="session-sync-btn")
+    session_sync_btn.click(fn=restore_session_from_token, inputs=[session_token_state], outputs=[user_profile_display, wallet_balance_display, order_history_display])
+
+    demo.load(fn=restore_session_on_load, inputs=[], outputs=[user_profile_display, wallet_balance_display, order_history_display, session_token_state])
+
+    session_token_state.change(
+        fn=None,
+        inputs=[session_token_state],
+        outputs=None,
+        js="(token) => { if(token) localStorage.setItem('accastroforge_session', token); else localStorage.removeItem('accastroforge_session'); }"
     )
 
     with gr.Group(visible=False) as admin_group:

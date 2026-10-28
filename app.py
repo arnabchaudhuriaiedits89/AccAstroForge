@@ -798,7 +798,7 @@ def admin_login_and_view(password):
     return summary_html
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & PERMANENT OAUTH PERSISTENCE
+# 6. HARDCORE CSS & BULLETPROOF OAUTH FIX
 # ---------------------------------------------------------
 custom_css = """
 html, body, .gr-root, .gradio-container, gradio-app {
@@ -929,7 +929,7 @@ input::placeholder, textarea::placeholder {
 head_html = """
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
-function handleOAuthAndPersistence() {
+function interceptAndLockOAuth() {
     const hash = window.location.hash;
     const search = window.location.search;
     let token = null;
@@ -948,19 +948,20 @@ function handleOAuthAndPersistence() {
     if (token) {
         const mockEmail = provider + ".user@accastroforge.in";
         const mockName = (provider === 'google' ? 'Google Verified User' : 'Facebook Verified User');
-        const sessionVal = mockEmail + "|" + mockName + "|OAuth_Verified";
+        const sessionVal = mockEmail + "|" + mockName + "|OAuth_Locked";
         
-        // SAVE PERMANENTLY IN LOCALSTORAGE
+        // PERSISTENT STORAGE LOCK
         localStorage.setItem('accastroforge_session', sessionVal);
+        sessionStorage.setItem('accastroforge_session', sessionVal);
 
-        // CLEAN URL BAR INSTANTLY WITHOUT REFRESHING
+        // CLEAN URL BAR INSTANTLY
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.pathname);
         }
     }
 
-    // ALWAYS SYNC WITH GRADIO HIDDEN STATE
-    const activeSession = localStorage.getItem('accastroforge_session');
+    // ENSURE GRADIO INPUT SYNC
+    const activeSession = localStorage.getItem('accastroforge_session') || sessionStorage.getItem('accastroforge_session');
     if (activeSession) {
         const hiddenInput = document.querySelector('#session-token-box input');
         if (hiddenInput && hiddenInput.value !== activeSession) {
@@ -971,7 +972,7 @@ function handleOAuthAndPersistence() {
             setTimeout(() => {
                 const syncBtn = document.querySelector('#session-sync-btn');
                 if (syncBtn) syncBtn.click();
-            }, 300);
+            }, 250);
         }
     }
 }
@@ -1008,14 +1009,13 @@ function attachEyeToggle() {
     });
 }
 
-// EXECUTE CONTINUOUSLY TO LOCK SESSION
 setInterval(() => {
-    handleOAuthAndPersistence();
+    interceptAndLockOAuth();
     attachEyeToggle();
-}, 250);
+}, 200);
 
 document.addEventListener("DOMContentLoaded", () => {
-    handleOAuthAndPersistence();
+    interceptAndLockOAuth();
     attachEyeToggle();
 });
 </script>
@@ -1275,7 +1275,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
         fn=None,
         inputs=[session_token_state],
         outputs=None,
-        js="(token) => { if(token) localStorage.setItem('accastroforge_session', token); else localStorage.removeItem('accastroforge_session'); }"
+        js="(token) => { if(token) { localStorage.setItem('accastroforge_session', token); sessionStorage.setItem('accastroforge_session', token); } else { localStorage.removeItem('accastroforge_session'); sessionStorage.removeItem('accastroforge_session'); } }"
     )
 
     with gr.Group(visible=False) as admin_group:

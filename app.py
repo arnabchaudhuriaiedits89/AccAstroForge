@@ -798,7 +798,7 @@ def admin_login_and_view(password):
     return summary_html
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & ZERO-RELOAD OAUTH TRIGGER
+# 6. HARDCORE CSS & PERMANENT OAUTH PERSISTENCE
 # ---------------------------------------------------------
 custom_css = """
 html, body, .gr-root, .gradio-container, gradio-app {
@@ -929,9 +929,7 @@ input::placeholder, textarea::placeholder {
 head_html = """
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
-const APPS_SCRIPT_ENDPOINT = '""" + APPS_SCRIPT_URL + """';
-
-function captureOAuthWithoutReload() {
+function handleOAuthAndPersistence() {
     const hash = window.location.hash;
     const search = window.location.search;
     let token = null;
@@ -950,30 +948,30 @@ function captureOAuthWithoutReload() {
     if (token) {
         const mockEmail = provider + ".user@accastroforge.in";
         const mockName = (provider === 'google' ? 'Google Verified User' : 'Facebook Verified User');
-        const sessionVal = mockEmail + "|" + mockName + "|OAuth_Quick_Login";
+        const sessionVal = mockEmail + "|" + mockName + "|OAuth_Verified";
         
+        // SAVE PERMANENTLY IN LOCALSTORAGE
         localStorage.setItem('accastroforge_session', sessionVal);
 
-        // CLEAN ADDRESS BAR IMMEDIATELY WITHOUT RELOADING
+        // CLEAN URL BAR INSTANTLY WITHOUT REFRESHING
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.pathname);
         }
     }
-}
 
-function syncGradioSession() {
-    const savedSession = localStorage.getItem('accastroforge_session');
-    if (savedSession) {
+    // ALWAYS SYNC WITH GRADIO HIDDEN STATE
+    const activeSession = localStorage.getItem('accastroforge_session');
+    if (activeSession) {
         const hiddenInput = document.querySelector('#session-token-box input');
-        if (hiddenInput && hiddenInput.value !== savedSession) {
-            hiddenInput.value = savedSession;
+        if (hiddenInput && hiddenInput.value !== activeSession) {
+            hiddenInput.value = activeSession;
             hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
             hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
 
             setTimeout(() => {
                 const syncBtn = document.querySelector('#session-sync-btn');
                 if (syncBtn) syncBtn.click();
-            }, 200);
+            }, 300);
         }
     }
 }
@@ -1010,18 +1008,14 @@ function attachEyeToggle() {
     });
 }
 
-// RUN ONCE IMMEDIATELY
-captureOAuthWithoutReload();
-
+// EXECUTE CONTINUOUSLY TO LOCK SESSION
 setInterval(() => {
-    captureOAuthWithoutReload();
-    syncGradioSession();
+    handleOAuthAndPersistence();
     attachEyeToggle();
-}, 300);
+}, 250);
 
 document.addEventListener("DOMContentLoaded", () => {
-    captureOAuthWithoutReload();
-    syncGradioSession();
+    handleOAuthAndPersistence();
     attachEyeToggle();
 });
 </script>

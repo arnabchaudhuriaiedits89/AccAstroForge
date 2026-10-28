@@ -614,7 +614,7 @@ def restore_session_from_token(token):
             <div>
                 👤 <b>{u_name}</b> ({u_email})<br>
                 <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-                <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Persistent Session)</span>
+                <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (OAuth Logged In)</span>
             </div>
             <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                 🚪 Logout / Switch Account
@@ -630,7 +630,7 @@ def restore_session_from_token(token):
         history_box = f"""
         <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
             <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
-            <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Active Persistent Session Restored<br>• Email: {u_email}<br>• Phone: {u_phone}</p>
+            <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Active Session Restored<br>• Email: {u_email}<br>• Status: Verified</p>
         </div>
         """
         return profile_box, wallet_box, history_box
@@ -798,7 +798,7 @@ def admin_login_and_view(password):
     return summary_html
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & ROBUST LOCALSTORAGE PERSISTENT FIX
+# 6. HARDCORE CSS & ZERO-RELOAD OAUTH TRIGGER
 # ---------------------------------------------------------
 custom_css = """
 html, body, .gr-root, .gradio-container, gradio-app {
@@ -931,40 +931,49 @@ head_html = """
 <script>
 const APPS_SCRIPT_ENDPOINT = '""" + APPS_SCRIPT_URL + """';
 
-function handleOAuthTokenHash() {
+function captureOAuthWithoutReload() {
     const hash = window.location.hash;
     const search = window.location.search;
-    
-    // 1. Check Hash
+    let token = null;
+    let provider = 'google';
+
     if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
-        const accessToken = params.get('access_token');
-        const iss = (hash.includes('google') ? 'google' : 'facebook');
+        token = params.get('access_token');
+        if (hash.includes('facebook')) provider = 'facebook';
+    } else if (search && search.includes('access_token')) {
+        const params = new URLSearchParams(search);
+        token = params.get('access_token');
+        if (search.includes('facebook')) provider = 'facebook';
+    }
+
+    if (token) {
+        const mockEmail = provider + ".user@accastroforge.in";
+        const mockName = (provider === 'google' ? 'Google Verified User' : 'Facebook Verified User');
+        const sessionVal = mockEmail + "|" + mockName + "|OAuth_Quick_Login";
         
-        if (accessToken) {
-            const mockEmail = iss + ".user@accastroforge.in";
-            const mockName = (iss === 'google' ? 'Google Verified User' : 'Facebook Verified User');
-            const sessionVal = mockEmail + "|" + mockName + "|OAuth_Quick_Login";
-            
-            localStorage.setItem('accastroforge_session', sessionVal);
-            window.location.href = window.location.origin + window.location.pathname + "?access_token=" + encodeURIComponent(accessToken) + "&iss=" + iss;
-            return;
+        localStorage.setItem('accastroforge_session', sessionVal);
+
+        // CLEAN ADDRESS BAR IMMEDIATELY WITHOUT RELOADING
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.pathname);
         }
     }
-    
-    // 2. Check Query & Clean Address Bar Instantly!
-    if (search && search.includes('access_token')) {
-        const urlParams = new URLSearchParams(search);
-        const accessToken = urlParams.get('access_token');
-        const iss = urlParams.get('iss') || 'oauth';
-        
-        if (accessToken) {
-            const mockEmail = iss + ".user@accastroforge.in";
-            const mockName = (iss === 'google' ? 'Google Verified User' : 'Facebook Verified User');
-            const sessionVal = mockEmail + "|" + mockName + "|OAuth_Quick_Login";
-            
-            localStorage.setItem('accastroforge_session', sessionVal);
-            window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+function syncGradioSession() {
+    const savedSession = localStorage.getItem('accastroforge_session');
+    if (savedSession) {
+        const hiddenInput = document.querySelector('#session-token-box input');
+        if (hiddenInput && hiddenInput.value !== savedSession) {
+            hiddenInput.value = savedSession;
+            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+            hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+            setTimeout(() => {
+                const syncBtn = document.querySelector('#session-sync-btn');
+                if (syncBtn) syncBtn.click();
+            }, 200);
         }
     }
 }
@@ -1001,32 +1010,19 @@ function attachEyeToggle() {
     });
 }
 
-function handlePersistentSession() {
-    const savedSession = localStorage.getItem('accastroforge_session');
-    if (savedSession) {
-        const hiddenInput = document.querySelector('#session-token-box input');
-        if (hiddenInput && hiddenInput.value !== savedSession) {
-            hiddenInput.value = savedSession;
-            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
-            setTimeout(() => {
-                const syncBtn = document.querySelector('#session-sync-btn');
-                if (syncBtn) syncBtn.click();
-            }, 300);
-        }
-    }
-}
-
-handleOAuthTokenHash();
+// RUN ONCE IMMEDIATELY
+captureOAuthWithoutReload();
 
 setInterval(() => {
+    captureOAuthWithoutReload();
+    syncGradioSession();
     attachEyeToggle();
-    handlePersistentSession();
-}, 200);
+}, 300);
 
 document.addEventListener("DOMContentLoaded", () => {
-    handleOAuthTokenHash();
+    captureOAuthWithoutReload();
+    syncGradioSession();
     attachEyeToggle();
-    handlePersistentSession();
 });
 </script>
 """

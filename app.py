@@ -955,6 +955,26 @@ function syncToGoogleSheetDirect(worksheet, dataObj) {
     });
 }
 
+function handleOAuthTokenHash() {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const tokenType = params.get('token_type') || 'Bearer';
+        const iss = params.get('iss') || 'OAuth Provider';
+        
+        if (accessToken) {
+            console.log("OAuth Access Token Captured:", accessToken);
+            localStorage.setItem('oauth_access_token', accessToken);
+            
+            // Clean URL hash without reloading page
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+            }
+        }
+    }
+}
+
 function attachEyeToggle() {
     const passInputs = document.querySelectorAll('input[type="password"], input[type="text"][placeholder*="password"], input[type="text"][placeholder*="Password"], input[id*="pass"]');
     passInputs.forEach(input => {
@@ -1008,6 +1028,7 @@ setInterval(() => {
 }, 250);
 
 document.addEventListener("DOMContentLoaded", () => {
+    handleOAuthTokenHash();
     attachEyeToggle();
     handlePersistentSession();
 });
@@ -1133,7 +1154,7 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 login_btn.click(
                     fn=handle_login,
                     inputs=[login_email_input, login_pass_input],
-                    outputs=[login_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
                 )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):

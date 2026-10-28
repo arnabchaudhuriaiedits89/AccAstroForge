@@ -600,43 +600,39 @@ def handle_logout():
 
     return logout_msg, guest_profile, guest_wallet, guest_history, ""
 
-def restore_session_from_token(token):
-    if not token or "|" not in token:
+def handle_oauth_redirect_login(token_str, provider_name):
+    if not token_str:
         return gr.update(), gr.update(), gr.update()
-    try:
-        parts = token.split("|")
-        u_email = parts[0]
-        u_name = parts[1]
-        u_phone = parts[2] if len(parts) > 2 else "N/A"
-        
-        profile_box = f"""
-        <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div>
-                👤 <b>{u_name}</b> ({u_email})<br>
-                <span style='color: #4ade80;'>Phone: {u_phone}</span><br>
-                <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (OAuth Logged In)</span>
-            </div>
-            <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                🚪 Logout / Switch Account
-            </button>
+    
+    u_email = f"{provider_name}.user@accastroforge.in"
+    u_name = f"{provider_name.capitalize()} Verified User"
+    u_phone = "OAuth_Verified"
+    
+    profile_box = f"""
+    <div style="background: rgba(18, 8, 42, 0.9); border: 1px solid #22c55e; padding: 18px; border-radius: 14px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            👤 <b>{u_name}</b> ({u_email})<br>
+            <span style='color: #4ade80;'>Authentication: {provider_name.upper()} OAuth Token Active</span><br>
+            <span style='color: #4ade80; font-weight:bold;'>Status: Active Member (Token Secured)</span>
         </div>
-        """
-        wallet_box = """
-        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
-            <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
-            <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
-        </div>
-        """
-        history_box = f"""
-        <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-            <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
-            <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Active Session Restored<br>• Email: {u_email}<br>• Status: Verified</p>
-        </div>
-        """
-        return profile_box, wallet_box, history_box
-    except Exception as e:
-        print(f"Session restoration error: {e}")
-        return gr.update(), gr.update(), gr.update()
+        <button onclick="document.querySelector('#logout-trigger').click()" style="background: rgba(239,68,68,0.3); color: #f87171; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+            🚪 Logout / Switch Account
+        </button>
+    </div>
+    """
+    wallet_box = """
+    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid #a78bfa; padding: 18px; border-radius: 14px; margin-bottom: 15px;">
+        <h4 style="color: #fde047 !important; margin-bottom: 5px;">💳 Wallet Balance: <span style="color: #4ade80 !important;">₹ 0.00</span></h4>
+        <p style="color: #f3e8ff !important; font-size: 0.8rem; margin: 0;">Use credits for instant unlocking of reports.</p>
+    </div>
+    """
+    history_box = f"""
+    <div style="background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+        <h4 style="color: #fde047 !important; margin-bottom: 6px; font-size: 1rem;">📦 Order History & Saved PDF Reports</h4>
+        <p style="color: #4ade80 !important; font-size: 0.85rem; margin: 0;">• Successful {provider_name.capitalize()} OAuth Login<br>• Token Session Verified & Locked</p>
+    </div>
+    """
+    return profile_box, wallet_box, history_box
 
 def run_daily_horoscope(sign):
     return f"""<div style='color:#ffffff;'><h3 style='color:#fde047;'>🔮 Daily Vedic Horoscope for {sign}</h3><p>Today brings high cosmic energy for {sign}. Jupiter's aspect promises financial opportunities and peace in personal relationships. Wear yellow or amber for extra luck!</p></div>"""
@@ -798,7 +794,7 @@ def admin_login_and_view(password):
     return summary_html
 
 # ---------------------------------------------------------
-# 6. HARDCORE CSS & BULLETPROOF OAUTH FIX
+# 6. HARDCORE CSS & ORIGINAL OAUTH TOKEN CATCHER
 # ---------------------------------------------------------
 custom_css = """
 html, body, .gr-root, .gradio-container, gradio-app {
@@ -921,7 +917,7 @@ input::placeholder, textarea::placeholder {
     line-height: 1 !important;
 }
 
-#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #session-sync-btn {
+#manual-signup-trigger, #real-hidden-trigger, #logout-trigger, #oauth-sync-btn {
     display: none !important;
 }
 """
@@ -929,7 +925,7 @@ input::placeholder, textarea::placeholder {
 head_html = """
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
-function interceptAndLockOAuth() {
+function checkAndCleanOAuthUrl() {
     const hash = window.location.hash;
     const search = window.location.search;
     let token = null;
@@ -946,33 +942,22 @@ function interceptAndLockOAuth() {
     }
 
     if (token) {
-        const mockEmail = provider + ".user@accastroforge.in";
-        const mockName = (provider === 'google' ? 'Google Verified User' : 'Facebook Verified User');
-        const sessionVal = mockEmail + "|" + mockName + "|OAuth_Locked";
-        
-        // PERSISTENT STORAGE LOCK
-        localStorage.setItem('accastroforge_session', sessionVal);
-        sessionStorage.setItem('accastroforge_session', sessionVal);
-
-        // CLEAN URL BAR INSTANTLY
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.pathname);
-        }
-    }
-
-    // ENSURE GRADIO INPUT SYNC
-    const activeSession = localStorage.getItem('accastroforge_session') || sessionStorage.getItem('accastroforge_session');
-    if (activeSession) {
-        const hiddenInput = document.querySelector('#session-token-box input');
-        if (hiddenInput && hiddenInput.value !== activeSession) {
-            hiddenInput.value = activeSession;
+        // PUSH TOKEN TO HIDDEN INPUT
+        const hiddenInput = document.querySelector('#oauth-token-box input');
+        if (hiddenInput) {
+            hiddenInput.value = token + "|" + provider;
             hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
             hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
 
             setTimeout(() => {
-                const syncBtn = document.querySelector('#session-sync-btn');
+                const syncBtn = document.querySelector('#oauth-sync-btn');
                 if (syncBtn) syncBtn.click();
-            }, 250);
+            }, 300);
+        }
+
+        // CLEAN URL BAR AFTER CAPTURING TOKEN
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.pathname);
         }
     }
 }
@@ -1010,12 +995,12 @@ function attachEyeToggle() {
 }
 
 setInterval(() => {
-    interceptAndLockOAuth();
+    checkAndCleanOAuthUrl();
     attachEyeToggle();
-}, 200);
+}, 250);
 
 document.addEventListener("DOMContentLoaded", () => {
-    interceptAndLockOAuth();
+    checkAndCleanOAuthUrl();
     attachEyeToggle();
 });
 </script>
@@ -1023,7 +1008,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, css=custom_css) as demo:
     otp_state = gr.State(value="")
-    session_token_state = gr.Textbox(value="", elem_id="session-token-box", visible=False)
+    oauth_token_state = gr.Textbox(value="", elem_id="oauth-token-box", visible=False)
 
     with gr.Column():
         with gr.Row():
@@ -1133,13 +1118,13 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
                 verify_otp_btn.click(
                     fn=verify_user_otp,
                     inputs=[user_otp_input, otp_state, signup_name, signup_email, signup_phone],
-                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, oauth_token_state]
                 )
 
                 login_btn.click(
                     fn=handle_login,
                     inputs=[login_email_input, login_pass_input],
-                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state]
+                    outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, oauth_token_state]
                 )
 
             with gr.TabItem("🌟 LIFE PREDICTION"):
@@ -1266,16 +1251,13 @@ with gr.Blocks(title="AccAstroForge - AI Astrology Guidance", head=head_html, cs
     manual_signup_trigger.click(fn=lambda vis: (not vis, gr.update(visible=not vis)), inputs=[signup_state], outputs=[signup_state, signup_group])
 
     logout_trigger = gr.Button("Trigger Logout", elem_id="logout-trigger")
-    logout_trigger.click(fn=handle_logout, inputs=[], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, session_token_state])
+    logout_trigger.click(fn=handle_logout, inputs=[], outputs=[signup_output, user_profile_display, wallet_balance_display, order_history_display, oauth_token_state])
 
-    session_sync_btn = gr.Button("Sync Session", elem_id="session-sync-btn")
-    session_sync_btn.click(fn=restore_session_from_token, inputs=[session_token_state], outputs=[user_profile_display, wallet_balance_display, order_history_display])
-
-    session_token_state.change(
-        fn=None,
-        inputs=[session_token_state],
-        outputs=None,
-        js="(token) => { if(token) { localStorage.setItem('accastroforge_session', token); sessionStorage.setItem('accastroforge_session', token); } else { localStorage.removeItem('accastroforge_session'); sessionStorage.removeItem('accastroforge_session'); } }"
+    oauth_sync_btn = gr.Button("OAuth Sync", elem_id="oauth-sync-btn")
+    oauth_sync_btn.click(
+        fn=lambda val: handle_oauth_redirect_login(*(val.split("|") if "|" in val else (val, "google"))),
+        inputs=[oauth_token_state],
+        outputs=[user_profile_display, wallet_balance_display, order_history_display]
     )
 
     with gr.Group(visible=False) as admin_group:

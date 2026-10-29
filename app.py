@@ -251,7 +251,7 @@ def get_paywall_html(service_name, price, user_name="User"):
         amt_val = price
     pay_url = get_robust_razorpay_link(service_name, amt_val, display_name)
     return f"""
-    <div style="background: rgba(18, 8, 42, 0.90); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.4); backdrop-filter: blur(10px);">
+    <div style="background: rgba(18, 8, 42, 0.70); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.4); backdrop-filter: blur(8px);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h3>
         <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{amt_val}</p>
@@ -331,7 +331,7 @@ HTML_TEMPLATE = """
         .quick-logins {
             display: flex;
             align-items: center;
-            background: rgba(18, 8, 42, 0.85);
+            background: rgba(18, 8, 42, 0.70);
             backdrop-filter: blur(8px);
             padding: 8px 16px;
             border-radius: 14px;
@@ -346,7 +346,7 @@ HTML_TEMPLATE = """
             width: 100% !important;
             gap: 4px !important;
             padding: 6px !important;
-            background: rgba(10, 3, 25, 0.85) !important;
+            background: rgba(10, 3, 25, 0.70) !important;
             backdrop-filter: blur(8px);
             border-radius: 14px !important;
             border: 1px solid rgba(244, 114, 182, 0.4) !important;
@@ -354,7 +354,7 @@ HTML_TEMPLATE = """
         }
 
         .tab-btn {
-            background: rgba(18, 8, 42, 0.85) !important;
+            background: rgba(18, 8, 42, 0.75) !important;
             border: 1px solid rgba(244, 114, 182, 0.35) !important;
             color: #fef08a !important;
             font-family: 'Cinzel', serif !important;
@@ -375,9 +375,9 @@ HTML_TEMPLATE = """
 
         .tab-content {
             display: none;
-            background: rgba(14, 5, 35, 0.82);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(14, 5, 35, 0.70);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(244, 114, 182, 0.45);
             border-radius: 16px;
             padding: 25px;
@@ -415,10 +415,10 @@ HTML_TEMPLATE = """
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media(max-width: 768px) { .row { grid-template-columns: 1fr; } }
         .card { 
-            background: rgba(18, 8, 42, 0.78); 
-            backdrop-filter: blur(10px); 
-            -webkit-backdrop-filter: blur(10px); 
-            border: 1px solid rgba(124, 58, 237, 0.6); 
+            background: rgba(18, 8, 42, 0.70); 
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px); 
+            border: 1px solid rgba(124, 58, 237, 0.5); 
             padding: 18px; 
             border-radius: 14px; 
             margin-bottom: 15px; 
@@ -427,8 +427,8 @@ HTML_TEMPLATE = """
         
         .auth-container {
             border: 2px solid #db2777;
-            background: rgba(18, 8, 42, 0.90);
-            backdrop-filter: blur(12px);
+            background: rgba(18, 8, 42, 0.75);
+            backdrop-filter: blur(8px);
             padding: 15px;
             border-radius: 14px;
             margin-top: 15px;
@@ -508,29 +508,29 @@ HTML_TEMPLATE = """
                     <!-- REGISTRATION SECTION -->
                     <div id="auth-reg-section">
                         <div class="row">
-                            <input type="text" id="su-name" placeholder="Full Name (e.g. Rajesh Sharma)" autocomplete="off">
-                            <input type="email" id="su-email" placeholder="Email Address (e.g. user@gmail.com)" autocomplete="off" name="custom_email_field_x">
+                            <input type="text" id="su-name" name="new_user_full_name_xyz" placeholder="Full Name (e.g. Rajesh Sharma)" autocomplete="off">
+                            <input type="email" id="su-email" name="new_user_email_address_xyz" placeholder="Email Address (e.g. user@gmail.com)" autocomplete="off">
                         </div>
                         <div class="row">
-                            <input type="text" id="su-phone" placeholder="Phone Number (e.g. 9876543210)" autocomplete="off">
+                            <input type="text" id="su-phone" name="new_user_phone_no_xyz" placeholder="Phone Number (e.g. 9876543210)" autocomplete="off">
                             <div class="password-container">
-                                <input type="password" id="su-pass" placeholder="Create Secure Password" autocomplete="new-password">
+                                <input type="password" id="su-pass" name="new_user_password_xyz" placeholder="Create Secure Password" autocomplete="new-password">
                                 <span class="eye-icon" onclick="togglePassword('su-pass', this)">👁️</span>
                             </div>
                         </div>
                         <button class="primary-btn" onclick="registerUser()">✨ 1. Register & Send Verification OTP</button>
                         <div id="su-output" style="margin-top: 10px;"></div>
                         <div style="margin-top: 15px;" class="row">
-                            <input type="text" id="su-otp" placeholder="Enter 6-Digit Email OTP" autocomplete="off">
+                            <input type="text" id="su-otp" name="user_otp_verification_xyz" placeholder="Enter 6-Digit Email OTP" autocomplete="off">
                             <button class="primary-btn" onclick="verifyOtp()">🔑 2. Verify OTP & Activate Account</button>
                         </div>
                     </div>
 
                     <!-- LOGIN SECTION -->
                     <div id="auth-log-section" style="display: none;">
-                        <input type="email" id="li-email" placeholder="Registered Email Address (e.g. user@gmail.com)" autocomplete="off">
+                        <input type="email" id="li-email" name="login_member_email_xyz" placeholder="Registered Email Address (e.g. user@gmail.com)" autocomplete="off">
                         <div class="password-container">
-                            <input type="password" id="li-pass" placeholder="Password" autocomplete="current-password">
+                            <input type="password" id="li-pass" name="login_member_password_xyz" placeholder="Password" autocomplete="off">
                             <span class="eye-icon" onclick="togglePassword('li-pass', this)">👁️</span>
                         </div>
                         <button class="primary-btn" onclick="loginUser()">🚀 Sign In to Account</button>
@@ -564,7 +564,7 @@ HTML_TEMPLATE = """
                 </div>
                 <div id="admin-panel" style="margin-top: 15px;">
                     <div class="password-container">
-                        <input type="password" id="admin-pass" placeholder="Enter Admin Secret Password" autocomplete="new-password">
+                        <input type="password" id="admin-pass" name="admin_secret_pass_xyz" placeholder="Enter Admin Secret Password" autocomplete="off">
                         <span class="eye-icon" onclick="togglePassword('admin-pass', this)">👁️</span>
                     </div>
                     <button class="primary-btn" onclick="loadAdminDashboard()">Unlock Dashboard</button>
@@ -1043,7 +1043,6 @@ async def api_ai(request: Request):
     data = await request.json()
     query = data.get("query", "").strip().lower()
     
-    # Smart keyword-based dynamic astrological response logic
     if any(k in query for k in ["kundali", "birth chart", "lagna", "janam"]):
         ai_reply = "📜 Janam Kundali Insight: Your planetary positions indicate a strong Lagna house. Focus on consistent efforts in your professional sphere for optimal growth."
     elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna"]):

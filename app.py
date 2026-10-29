@@ -93,12 +93,12 @@ def load_google_sheet_direct(worksheet_name):
         print(f"Load Sheet Error: {e}")
     return []
 
-def save_user_db_single(u_name, u_email, u_phone):
+def save_user_db_single(u_name, u_email, u_phone="N/A"):
     now_str = str(datetime.datetime.now())
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
-        cursor.execute("INSERT OR REPLACE INTO users (name, email, phone, verified_at) VALUES (?, ?, ?, ?)", (u_name, u_email.lower(), u_phone, now_str))
+        cursor.execute("INSERT OR IGNORE INTO users (name, email, phone, verified_at) VALUES (?, ?, ?, ?)", (u_name, u_email.lower(), u_phone, now_str))
         conn.commit()
         conn.close()
     except Exception as e:
@@ -467,7 +467,6 @@ HTML_TEMPLATE = """
             user-select: none;
         }
 
-        /* MAGICAL SPINNING & ZOOMING LOADER OVERLAY */
         #loader-overlay {
             position: fixed;
             top: 0;
@@ -513,7 +512,6 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <!-- MAGICAL SPINNING LOADER OVERLAY -->
     <div id="loader-overlay">
         <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" alt="Cosmic Loader" class="loader-logo">
     </div>
@@ -786,6 +784,17 @@ HTML_TEMPLATE = """
                         console.log("Profile Fetch Error:", e);
                     }
 
+                    // Automatically register / log social login in backend & sheets
+                    try {
+                        await fetch('/api/social-login', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({name: realName, email: realEmail})
+                        });
+                    } catch(err) {
+                        console.log("Social sync error:", err);
+                    }
+
                     setLoggedInUI(realName, realEmail);
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
@@ -798,14 +807,13 @@ HTML_TEMPLATE = """
             }
         };
 
-        // MAGIC SPINNING LOADER TRIGGER FOR TABS & PAYMENTS
         function showMagicLoader(callback) {
             let overlay = document.getElementById('loader-overlay');
             overlay.classList.add('active');
             setTimeout(() => {
                 overlay.classList.remove('active');
                 if(callback) callback();
-            }, 800); // 0.8s smooth magical spin duration
+            }, 800);
         }
 
         function switchTab(evt, tabId) {
@@ -1084,6 +1092,22 @@ async def api_admin(request: Request):
 
     return JSONResponse({"html": summary_html})
 
+@app.post("/api/social-login")
+async def api_social_login(request: Request):
+    data = await request.json()
+    name = data.get("name", "Social User")
+    email = data.get("email", "").strip().lower()
+    if email:
+        save_user_db_single(name, email, "Social Quick Login")
+        save_log({
+            "timestamp": str(datetime.datetime.now()),
+            "full_name": name,
+            "service": "Quick Social Login",
+            "details": f"Email: {email}",
+            "payment_status": "Active & Verified"
+        })
+    return JSONResponse({"success": True})
+
 @app.post("/api/register")
 async def api_register(request: Request):
     data = await request.json()
@@ -1209,7 +1233,7 @@ async def api_ai(request: Request):
         ai_reply = "📜 Janam Kundali Insight: Your planetary positions indicate a strong Lagna house. Focus on consistent efforts in your professional sphere for optimal growth."
     elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna"]):
         ai_reply = "💎 Gemstone Recommendation: Based on cosmic alignments, wearing a certified Emerald (Panna) or Yellow Sapphire on an auspicious day will enhance focus and prosperity."
-    elif any(k in query for k in ["career", "job", "business", "money", "finance", "success"]):
+    elif any(k in query for k:: ["career", "job", "business", "money", "finance", "success"]):
         ai_reply = "💼 Career & Wealth Forecast: Jupiter's transit brings favorable opportunities for career advancement and financial stability. Avoid impulsive investments."
     elif any(k in query for k in ["marriage", "love", "relationship", "match", "partner"]):
         ai_reply = "❤️ Relationship & Marriage Guidance: Venus harmony indicates positive emotional bonding. Transparent communication will resolve ongoing misunderstandings."

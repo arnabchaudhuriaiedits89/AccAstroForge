@@ -138,7 +138,7 @@ def save_log(user_data):
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status, payment_status) VALUES (?, ?, ?, ?, ?)", (ts, fn, srv, dtl, pst))
+        cursor.execute("INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status) VALUES (?, ?, ?, ?, ?)", (ts, fn, srv, dtl, pst))
         conn.commit()
         conn.close()
     except Exception as e:
@@ -692,24 +692,52 @@ HTML_TEMPLATE = """
         let generatedOtpStorage = "";
         let verifiedEmailStorage = "";
 
-        window.onload = function() {
-            // Handle OAuth Token Hash redirect for Google & Facebook Quick Logins
+        window.onload = async function() {
+            // Handle OAuth Token Hash redirect for Google & Facebook Quick Logins & fetch real profile info
             let hash = window.location.hash;
             if (hash && hash.includes("access_token")) {
                 let params = new URLSearchParams(hash.substring(1));
                 let accessToken = params.get("access_token");
                 if (accessToken) {
-                    // Fetch user info using token or set a default Quick Login member identity
-                    let quickUserEmail = "social.member@accastroforge.in";
-                    setLoggedInUI(quickUserEmail);
+                    let realEmail = "social.user@accastroforge.in";
+                    let realName = "Social Member";
+
+                    // Check if it's Google or Facebook token and fetch profile
+                    try {
+                        if (window.location.href.includes("google") || accessToken.startsWith("ya29.")) {
+                            let gRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                                headers: { "Authorization": `Bearer ${accessToken}` }
+                            });
+                            let gData = await gRes.json();
+                            if (gData && gData.email) {
+                                realEmail = gData.email;
+                                realName = gData.name || gData.email.split('@')[0];
+                            }
+                        } else {
+                            // Facebook Graph API
+                            let fbRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`);
+                            let fbData = await fbRes.json();
+                            if (fbData && fbData.name) {
+                                realName = fbData.name;
+                                realEmail = fbData.email || `${fbData.name.toLowerCase().replace(/\\s+/g, '')}@facebook.com`;
+                            }
+                        }
+                    } catch(e) {
+                        console.log("Profile Fetch Error:", e);
+                    }
+
+                    // Register/Save user session dynamically
+                    setLoggedInUI(realName, realEmail);
+                    
                     // Clean URL hash without reloading
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
             }
 
             let savedEmail = localStorage.getItem('accastroforge_user');
+            let savedName = localStorage.getItem('accastroforge_username') || savedEmail;
             if(savedEmail) {
-                setLoggedInUI(savedEmail);
+                setLoggedInUI(savedName, savedEmail);
             }
         };
 
@@ -758,11 +786,12 @@ HTML_TEMPLATE = """
             }
         }
 
-        function setLoggedInUI(email) {
+        function setLoggedInUI(name, email) {
             verifiedEmailStorage = email;
             localStorage.setItem('accastroforge_user', email);
+            localStorage.setItem('accastroforge_username', name);
             document.getElementById('session-display').innerHTML = `
-                <h4 style="color: #fde047; font-family: 'Cinzel', serif; margin: 0 0 4px 0;">🌟 ACTIVE MEMBER</h4>
+                <h4 style="color: #fde047; font-family: 'Cinzel', serif; margin: 0 0 4px 0;">🌟 ACTIVE MEMBER (${name})</h4>
                 <p style="margin: 0; color: #4ade80; font-weight: 600; font-size: 1.05rem;">Logged In: ${email}</p>
             `;
             document.getElementById('auth-btn-area').innerHTML = `
@@ -776,6 +805,7 @@ HTML_TEMPLATE = """
 
         function logoutUser() {
             localStorage.removeItem('accastroforge_user');
+            localStorage.removeItem('accastroforge_username');
             verifiedEmailStorage = "";
             document.getElementById('session-display').innerHTML = `
                 <h4>Active User Session</h4>
@@ -789,6 +819,7 @@ HTML_TEMPLATE = """
 
         function switchAccount() {
             localStorage.removeItem('accastroforge_user');
+            localStorage.removeItem('accastroforge_username');
             verifiedEmailStorage = "";
             document.getElementById('session-display').innerHTML = `
                 <h4>Active User Session</h4>
@@ -828,7 +859,7 @@ HTML_TEMPLATE = """
             let data = await res.json();
             document.getElementById('su-output').innerHTML = data.msg;
             if(data.success) {
-                setLoggedInUI(email);
+                setLoggedInUI(name, email);
             }
         }
 
@@ -838,7 +869,7 @@ HTML_TEMPLATE = """
             let data = await res.json();
             document.getElementById('li-output').innerHTML = data.msg;
             if(data.success) {
-                setLoggedInUI(email);
+                setLoggedInUI(email.split('@')[0], email);
             }
         }
 

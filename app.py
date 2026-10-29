@@ -146,11 +146,25 @@ def save_log(user_data):
     append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
 
 def load_logs():
+    sheet_logs = load_google_sheet_direct("AdminLogs")
+    if sheet_logs and len(sheet_logs) > 0:
+        formatted_logs = []
+        for r in sheet_logs:
+            if isinstance(r, dict):
+                formatted_logs.append({
+                    "timestamp": r.get("timestamp", r.get("Timestamp", "N/A")),
+                    "full_name": r.get("full_name", r.get("Full_Name", r.get("Name", "N/A"))),
+                    "service": r.get("service", r.get("Service", "N/A")),
+                    "details": r.get("details", r.get("Details", "N/A")),
+                    "payment_status": r.get("payment_status", r.get("Payment_Status", "Pending"))
+                })
+        if formatted_logs:
+            return formatted_logs
     try:
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM admin_logs")
+        cursor.execute("SELECT * FROM admin_logs ORDER BY id DESC LIMIT 50")
         rows = cursor.fetchall()
         conn.close()
         return [dict(row) for row in rows]
@@ -693,7 +707,6 @@ HTML_TEMPLATE = """
         let verifiedEmailStorage = "";
 
         window.onload = async function() {
-            // Handle OAuth Token Hash redirect for Google & Facebook Quick Logins & fetch real profile info
             let hash = window.location.hash;
             if (hash && hash.includes("access_token")) {
                 let params = new URLSearchParams(hash.substring(1));
@@ -702,7 +715,6 @@ HTML_TEMPLATE = """
                     let realEmail = "social.user@accastroforge.in";
                     let realName = "Social Member";
 
-                    // Check if it's Google or Facebook token and fetch profile
                     try {
                         if (window.location.href.includes("google") || accessToken.startsWith("ya29.")) {
                             let gRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
@@ -714,7 +726,6 @@ HTML_TEMPLATE = """
                                 realName = gData.name || gData.email.split('@')[0];
                             }
                         } else {
-                            // Facebook Graph API
                             let fbRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`);
                             let fbData = await fbRes.json();
                             if (fbData && fbData.name) {
@@ -726,10 +737,7 @@ HTML_TEMPLATE = """
                         console.log("Profile Fetch Error:", e);
                     }
 
-                    // Register/Save user session dynamically
                     setLoggedInUI(realName, realEmail);
-                    
-                    // Clean URL hash without reloading
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
             }
@@ -971,12 +979,23 @@ async def api_admin(request: Request):
     logs = load_logs()
     
     summary_html = f"""<div style='color:#fff;'>
-        <h4 style='color:#4ade80;'>📋 Registered Users ({len(users)})</h4>
-        <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; margin-bottom:15px;' border='1'>
+        <h4 style='color:#4ade80; margin-bottom: 8px;'>📋 Registered Users ({len(users)})</h4>
+        <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; margin-bottom:20px; font-size: 0.85rem;' border='1'>
             <tr style='background:#5b21b6;'><th>Name</th><th>Email</th><th>Phone</th></tr>"""
     for u in users:
         summary_html += f"<tr><td>{u.get('name', '')}</td><td>{u.get('email', '')}</td><td>{u.get('phone', '')}</td></tr>"
-    summary_html += "</table></div>"
+    summary_html += "</table>"
+
+    summary_html += f"""
+        <h4 style='color:#fde047; margin-bottom: 8px;'>📊 Live Activity & Payment Logs from Google Sheet ({len(logs)})</h4>
+        <div style='max-height: 350px; overflow-y: auto;'>
+        <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; font-size: 0.82rem;' border='1'>
+            <tr style='background:#5b21b6; position: sticky; top: 0;'><th>Timestamp</th><th>User / Name</th><th>Service / Action</th><th>Details</th><th>Status</th></tr>
+    """
+    for l in logs:
+        summary_html += f"<tr><td>{l.get('timestamp', '')}</td><td>{l.get('full_name', '')}</td><td>{l.get('service', '')}</td><td>{l.get('details', '')}</td><td>{l.get('payment_status', '')}</td></tr>"
+    summary_html += "</table></div></div>"
+
     return JSONResponse({"html": summary_html})
 
 @app.post("/api/register")
@@ -996,6 +1015,7 @@ async def api_verify_otp(request: Request):
     if str(data.get("otp")) != str(data.get("gen_otp")):
         return JSONResponse({"success": False, "msg": "<p style='color:#ef4444;'>❌ Invalid OTP!</p>"})
     save_user_db_single(data.get("name"), data.get("email"), data.get("phone"))
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": data.get("name", "User"), "service": "Account Verified", "details": f"Email: {data.get('email')}", "payment_status": "Active Session"})
     return JSONResponse({"success": True, "msg": "<p style='color:#4ade80;'>🎉 Account Verified & Active!</p>"})
 
 @app.post("/api/login")
@@ -1003,8 +1023,10 @@ async def api_login(request: Request):
     data = await request.json()
     email = data.get("email", "").strip().lower()
     users = load_users()
-    found = any(u.get("email") == email or u.get("Email") == email for u in users)
-    if found:
+    found_user = next((u for u in users if u.get("email") == email or u.get("Email") == email), None)
+    if found_user:
+        u_name = found_user.get("name", found_user.get("Name", "Member"))
+        save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Member Sign In", "details": f"Email: {email}", "payment_status": "Active Session"})
         return JSONResponse({"success": True, "msg": "<p style='color:#4ade80;'>🎉 Login Successful!</p>"})
     return JSONResponse({"success": False, "msg": "<p style='color:#ef4444;'>❌ Account not found. Please register first.</p>"})
 
@@ -1012,6 +1034,7 @@ async def api_login(request: Request):
 async def api_topup(request: Request):
     data = await request.json()
     amt = data.get("amount", 250)
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Valued Customer", "service": "Wallet Topup", "details": f"Amount: ₹{amt}", "payment_status": "Pending"})
     paywall = get_paywall_html(f"Wallet Topup (₹{amt})", amt, "User")
     return JSONResponse({"paywall": paywall})
 
@@ -1020,6 +1043,7 @@ async def api_life(request: Request):
     data = await request.json()
     name = data.get("name", "User")
     dob = data.get("dob", "2000-01-01")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Pending (₹499)"})
     profile = calculate_astrological_profile(name, dob)
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🌟 Astrological Teaser for {name.upper()}</h4><p><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p></div>"""
     paywall = get_paywall_html("Complete Deep Life Forecast & PDF", 499, name)
@@ -1029,6 +1053,7 @@ async def api_life(request: Request):
 async def api_horoscope(request: Request):
     data = await request.json()
     sign = data.get("sign", "Aries")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Guest/Member", "service": "Horoscope", "details": f"Sign: {sign}", "payment_status": "Free"})
     html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔮 Daily Horoscope for {sign}</h4><p>Today brings high cosmic energy. Jupiter's aspect promises financial opportunities and peace.</p></div>"""
     return JSONResponse({"html": html})
 
@@ -1037,6 +1062,7 @@ async def api_matching(request: Request):
     data = await request.json()
     b = data.get("boy_name", "Boy")
     g = data.get("girl_name", "Girl")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Kundali Matching", "details": "Guna Milan Check", "payment_status": "Pending (₹399)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>❤️ Compatibility Teaser for {b} & {g}</h4><p>High Guna Milan score detected! Excellent long-term emotional alignment.</p></div>"""
     paywall = get_paywall_html("Complete Kundali Matching Report", 399, f"{b} & {g}")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
@@ -1045,6 +1071,7 @@ async def api_matching(request: Request):
 async def api_gemstone(request: Request):
     data = await request.json()
     z = data.get("zodiac", "Aries")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Gemstone Remedy", "details": f"Zodiac: {z}", "payment_status": "Pending (₹299)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>💎 Gemstone Guidance for {z}</h4><p>Emerald (Panna) or Yellow Sapphire recommended for career success.</p></div>"""
     paywall = get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
@@ -1056,6 +1083,7 @@ async def api_kundali_pdf(request: Request):
     dob = data.get("dob", "2000-01-01")
     tob = data.get("tob", "10:00")
     pob = data.get("pob", "Kolkata")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Generated (₹299)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     paywall = get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
@@ -1066,6 +1094,7 @@ async def api_numerology(request: Request):
     data = await request.json()
     name = data.get("name", "User")
     dob = data.get("dob", "2000-01-01")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Pending (₹249)"})
     profile = calculate_astrological_profile(name, dob)
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
     paywall = get_paywall_html("Detailed Numerology & Name Correction Report", 249, name)
@@ -1077,6 +1106,7 @@ async def api_panchang(request: Request):
     city = data.get("city", "Kolkata")
     date = data.get("date", "Today")
     mode = data.get("mode", "free")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Panchang", "details": f"City: {city}, Mode: {mode}", "payment_status": "Free/Pending"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📅 Vedic Panchang for {city} ({date})</h4><p><b>Tithi:</b> Shukla Paksha Navami<br><b>Nakshatra:</b> Rohini<br><b>Rahu Kalam:</b> 10:30 AM - 12:00 PM</p></div>"""
     paywall = ""
     if mode == "detailed":
@@ -1087,6 +1117,7 @@ async def api_panchang(request: Request):
 async def api_ai(request: Request):
     data = await request.json()
     query = data.get("query", "").strip().lower()
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Assistant", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
     if any(k in query for k in ["kundali", "birth chart", "lagna", "janam"]):
         ai_reply = "📜 Janam Kundali Insight: Your planetary positions indicate a strong Lagna house. Focus on consistent efforts in your professional sphere for optimal growth."

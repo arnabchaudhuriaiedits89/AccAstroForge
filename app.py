@@ -7,7 +7,7 @@ import requests
 import sqlite3
 import razorpay
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -62,6 +62,15 @@ def init_db():
     conn.close()
 
 init_db()
+
+# ---------------------------------------------------------
+# FASTAPI FAVICON & STATIC SERVING
+# ---------------------------------------------------------
+@app.get("/favicon.ico")
+async def favicon():
+    if os.path.exists("favicon.png"):
+        return FileResponse("favicon.png")
+    return JSONResponse({"error": "Not found"}, status_code=404)
 
 def append_to_google_sheet_direct(worksheet_name, values_list):
     try:
@@ -164,9 +173,6 @@ def get_base64(file_path):
 logo_b64 = get_base64("logo.png")
 logo_src = "data:image/png;base64," + logo_b64 if logo_b64 else ""
 
-favicon_b64 = get_base64("favicon.png")
-favicon_src = "data:image/png;base64," + favicon_b64 if favicon_b64 else ""
-
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {"accept": "application/json", "api-key": BREVO_API_KEY, "content-type": "application/json"}
@@ -265,7 +271,7 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AccAstroForge - AI Astrology Guidance</title>
-    <link rel="icon" type="image/png" href="FAVICON_SRC_PLACEHOLDER">
+    <link rel="icon" type="image/png" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -756,7 +762,6 @@ def index(request: Request):
     
     rendered_html = (
         HTML_TEMPLATE
-        .replace("FAVICON_SRC_PLACEHOLDER", favicon_src)
         .replace("LOGO_SRC_PLACEHOLDER", logo_html)
         .replace("GOOGLE_URL_PLACEHOLDER", GOOGLE_OAUTH_URL)
         .replace("FB_URL_PLACEHOLDER", FACEBOOK_OAUTH_URL)

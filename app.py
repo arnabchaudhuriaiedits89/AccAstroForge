@@ -301,11 +301,31 @@ HTML_TEMPLATE = """
             gap: 15px;
         }
 
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .logo-area img {
             height: 75px;
             filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9));
             mix-blend-mode: screen;
             background: transparent !important;
+        }
+
+        .admin-dot {
+            width: 14px;
+            height: 14px;
+            min-width: 14px;
+            min-height: 14px;
+            background: radial-gradient(circle, #fde047 0%, #d97706 100%);
+            border: 1.5px solid #fef08a;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+            box-shadow: 0 0 12px #fde047;
+            margin-left: 8px;
         }
 
         .quick-logins {
@@ -404,10 +424,11 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <!-- HEADER WITH LOGO & QUICK LOGINS -->
+        <!-- HEADER WITH LOGO, SECRET ADMIN DOT & QUICK LOGINS -->
         <div class="header-container">
             <div class="logo-area">
                 LOGO_SRC_PLACEHOLDER
+                <span class="admin-dot" title="Click to open Admin Portal" onclick="toggleAdminPanel()"></span>
             </div>
             <div class="quick-logins">
                 <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
@@ -444,11 +465,11 @@ HTML_TEMPLATE = """
 
             <div class="card" id="profile-box">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div>
+                    <div id="session-display">
                         <h4>Active User Session</h4>
                         <p style="margin: 0;">Guest User (Please Sign Up / Login)</p>
                     </div>
-                    <button class="primary-btn" style="width: auto; padding: 10px 20px;" onclick="toggleAuthBox()">✨ SIGN UP / LOGIN</button>
+                    <button id="auth-toggle-btn" class="primary-btn" style="width: auto; padding: 10px 20px;" onclick="toggleAuthBox()">✨ SIGN UP / LOGIN</button>
                 </div>
 
                 <!-- COLLAPSIBLE AUTH CONTAINER -->
@@ -503,13 +524,13 @@ HTML_TEMPLATE = """
                 <p>No previous orders found for current guest session. Please register or login.</p>
             </div>
 
-            <!-- ADMIN PORTAL MOVED TO THE BOTTOM -->
-            <div class="card" style="border: 1.5px dashed #fde047; margin-top: 30px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleAdminPanel()">
+            <!-- HIDDEN ADMIN PORTAL AT THE BOTTOM (TRIGGERED BY LOGO DOT) -->
+            <div id="admin-wrapper" class="card" style="display: none; border: 1.5px dashed #fde047; margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h4 style="margin: 0; color: #fde047;">🛡️ Owner Portal (Admin Dashboard)</h4>
-                    <span style="font-size: 1.2rem; color: #fde047;">▼</span>
+                    <span style="font-size: 1.2rem; color: #fde047; cursor: pointer;" onclick="toggleAdminPanel()">✕</span>
                 </div>
-                <div id="admin-panel" style="display: none; margin-top: 15px;">
+                <div id="admin-panel" style="margin-top: 15px;">
                     <input type="password" id="admin-pass" placeholder="Enter Admin Secret Password">
                     <button class="primary-btn" onclick="loadAdminDashboard()">Unlock Dashboard</button>
                     <div id="admin-output" style="margin-top: 15px;"></div>
@@ -636,6 +657,14 @@ HTML_TEMPLATE = """
         let generatedOtpStorage = "";
         let verifiedEmailStorage = "";
 
+        // Check LocalStorage on load to persist session across page refreshes
+        window.onload = function() {
+            let savedEmail = localStorage.getItem('accastroforge_user');
+            if(savedEmail) {
+                setLoggedInUI(savedEmail);
+            }
+        };
+
         function switchTab(evt, tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -663,8 +692,36 @@ HTML_TEMPLATE = """
         }
 
         function toggleAdminPanel() {
-            let panel = document.getElementById('admin-panel');
-            panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'block' : 'none';
+            let wrapper = document.getElementById('admin-wrapper');
+            wrapper.style.display = wrapper.style.display === 'none' || wrapper.style.display === '' ? 'block' : 'none';
+            if(wrapper.style.display === 'block') {
+                wrapper.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function setLoggedInUI(email) {
+            verifiedEmailStorage = email;
+            localStorage.setItem('accastroforge_user', email);
+            document.getElementById('session-display').innerHTML = `
+                <h4>🌟 ACTIVE MEMBER</h4>
+                <p style="margin: 0; color: #4ade80; font-weight: 600;">Logged In: ${email}</p>
+            `;
+            document.getElementById('auth-toggle-btn').innerText = "🚪 LOG OUT";
+            document.getElementById('auth-toggle-btn').setAttribute("onclick", "logoutUser()");
+            document.getElementById('auth-container').style.display = 'none';
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('accastroforge_user');
+            verifiedEmailStorage = "";
+            document.getElementById('session-display').innerHTML = `
+                <h4>Active User Session</h4>
+                <p style="margin: 0;">Guest User (Please Sign Up / Login)</p>
+            `;
+            document.getElementById('auth-toggle-btn সন্ত্রাসী' || 'auth-toggle-btn').innerText = "✨ SIGN UP / LOGIN";
+            document.getElementById('auth-toggle-btn').setAttribute("onclick", "toggleAuthBox()");
+            alert("Logged out successfully!");
+            location.reload();
         }
 
         async function loadAdminDashboard() {
@@ -694,7 +751,7 @@ HTML_TEMPLATE = """
             let data = await res.json();
             document.getElementById('su-output').innerHTML = data.msg;
             if(data.success) {
-                document.getElementById('profile-box').innerHTML = `<h4>👤 Active Member</h4><p>Verified: ${email}</p>`;
+                setLoggedInUI(email);
             }
         }
 
@@ -704,7 +761,7 @@ HTML_TEMPLATE = """
             let data = await res.json();
             document.getElementById('li-output').innerHTML = data.msg;
             if(data.success) {
-                document.getElementById('profile-box').innerHTML = `<h4>👤 Active Member</h4><p>Logged In: ${email}</p>`;
+                setLoggedInUI(email);
             }
         }
 

@@ -251,40 +251,127 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AccAstroForge - AI Astrology Guidance</title>
-    <link rel="icon" type="image/png" href="{{ favicon_src }}">
+    <link rel="icon" type="image/png" href="FAVICON_SRC_PLACEHOLDER">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #030014;
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        html, body {
+            background-color: #030014 !important;
             background-image: 
                 linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)),
-                url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg");
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-attachment: fixed;
-            color: #ffffff;
-            font-family: 'Poppins', sans-serif;
+                url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg") !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+            background-attachment: fixed !important;
+            color: #ffffff !important;
+            font-family: 'Poppins', sans-serif !important;
+            min-height: 100vh;
             margin: 0;
             padding: 20px;
-            min-height: 100vh;
         }
-        .container { max-width: 1100px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .logo-area img { height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important; }
-        .social-links a { color: #fff; background: #ea4335; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; margin-left: 5px; }
-        .social-links a.fb { background: #1877f2; }
+
+        .container { max-width: 1150px; margin: 0 auto; }
         
-        .tab-list { display: flex; flex-wrap: wrap; gap: 4px; background: rgba(10, 3, 25, 0.9); padding: 6px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.4); margin-bottom: 20px; }
-        .tab-btn { background: rgba(18, 8, 42, 0.9); border: 1px solid rgba(244, 114, 182, 0.45); color: #fef08a; font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.75rem; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.3s; }
-        .tab-btn.active { background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border-color: #fde047; }
-        
-        .tab-content { display: none; background: rgba(14, 5, 35, 0.95); border: 1px solid rgba(244, 114, 182, 0.6); border-radius: 16px; padding: 25px; box-shadow: 0 0 30px rgba(124, 58, 237, 0.3); }
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo-area img {
+            height: 75px;
+            filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.8));
+            mix-blend-mode: screen;
+            background: transparent !important;
+        }
+
+        .quick-logins {
+            display: flex;
+            align-items: center;
+            background: rgba(18, 8, 42, 0.9);
+            padding: 8px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(244, 114, 182, 0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            gap: 10px;
+        }
+
+        /* Tab Navigation Bar matching Gradio style */
+        .tab-list {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            width: 100% !important;
+            gap: 4px !important;
+            padding: 6px !important;
+            background: rgba(10, 3, 25, 0.9) !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(244, 114, 182, 0.5) !important;
+            margin-bottom: 25px !important;
+        }
+
+        .tab-btn {
+            background: rgba(18, 8, 42, 0.9) !important;
+            border: 1px solid rgba(244, 114, 182, 0.45) !important;
+            color: #fef08a !important;
+            font-family: 'Cinzel', serif !important;
+            font-weight: 700 !important;
+            font-size: 0.72rem !important;
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
+            color: #ffffff !important;
+            border-color: #fde047 !important;
+            box-shadow: 0 0 15px rgba(219, 39, 119, 0.6);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(14, 5, 35, 0.95);
+            border: 1px solid rgba(244, 114, 182, 0.6);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+        }
+
         .tab-content.active { display: block; }
-        
-        h3, h4 { color: #fde047; font-family: 'Cinzel', serif; }
-        input, select, textarea { background: rgba(22, 10, 48, 0.95); border: 1.5px solid rgba(244, 114, 182, 0.7); color: #ffffff; border-radius: 12px; padding: 12px 16px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
-        button.primary-btn { background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; font-weight: 700; border-radius: 12px; padding: 12px 24px; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); }
+
+        h3, h4 { color: #fde047 !important; font-family: 'Cinzel', serif !important; }
+        input, select, textarea {
+            background: rgba(22, 10, 48, 0.95) !important;
+            border: 1.5px solid rgba(244, 114, 182, 0.7) !important;
+            color: #ffffff !important;
+            border-radius: 14px !important;
+            padding: 12px 16px !important;
+            width: 100%;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        button.primary-btn {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid #fde047 !important;
+            font-weight: 700 !important;
+            border-radius: 12px !important;
+            padding: 12px 24px !important;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            box-shadow: 0 6px 20px rgba(219,39,119,0.8);
+        }
+
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media(max-width: 768px) { .row { grid-template-columns: 1fr; } }
         .card { background: rgba(18, 8, 42, 0.9); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; }
@@ -292,21 +379,19 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <div class="header">
+        <!-- HEADER WITH LOGO & QUICK LOGINS -->
+        <div class="header-container">
             <div class="logo-area">
-                {% if logo_src %}
-                <img src="{{ logo_src }}" alt="AccAstroForge Logo">
-                {% else %}
-                <span style="font-size: 26px; font-weight: 800; color: #fbcfe8; font-family: 'Cinzel', serif;">AccAstroForge</span>
-                {% endif %}
+                LOGO_SRC_PLACEHOLDER
             </div>
-            <div class="social-links" style="display: flex; align-items: center; background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 8px 14px; border-radius: 14px;">
-                <span style="font-size: 0.8rem; color: #fde047; font-weight: 600; margin-right: 6px;">🔐 Quick Logins:</span>
-                <a href="{{ google_url }}" target="_blank">Google</a>
-                <a href="{{ fb_url }}" target="_blank" class="fb">Facebook</a>
+            <div class="quick-logins">
+                <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
+                <a href="GOOGLE_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
+                <a href="FB_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
             </div>
         </div>
 
+        <!-- TABS BAR -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIFE PREDICTION</button>
@@ -390,9 +475,7 @@ HTML_TEMPLATE = """
         <div id="tab-horoscope" class="tab-content">
             <h3>🔮 Daily Zodiac Predictions</h3>
             <select id="horo-sign">
-                {% for s in zodiacs %}
-                <option value="{{ s }}">{{ s }}</option>
-                {% endfor %}
+                ZODIAC_OPTIONS_PLACEHOLDER
             </select>
             <button class="primary-btn" onclick="getHoroscope()">🔮 Get Horoscope</button>
             <div id="horo-result" style="margin-top: 15px;"></div>
@@ -474,9 +557,12 @@ HTML_TEMPLATE = """
             <h3>⚖️ Terms & Social Handles</h3>
             <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
             <p><b>Support Email:</b> support@accastroforge.in</p>
-            <ul>
-                <li>Twitter: <a href="https://x.com/AccAstroForge" target="_blank" style="color:#38bdf8;">https://x.com/AccAstroForge</a></li>
-                <li>Instagram: <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color:#f472b6;">https://www.instagram.com/accastroforge/</a></li>
+            <p>Connect with us on our official social platforms:</p>
+            <ul style="list-style-type: none; padding-left: 0; line-height: 2.2;">
+                <li>🧳 <b style="color: #fde047;">Twitter (X):</b> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8;">https://x.com/AccAstroForge</a></li>
+                <li>📸 <b style="color: #fde047;">Instagram:</b> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6;">https://www.instagram.com/accastroforge/</a></li>
+                <li>🌀 <b style="color: #fde047;">Threads:</b> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9;">https://www.threads.com/@accastroforge</a></li>
+                <li>📘 <b style="color: #fde047;">Facebook:</b> <a href="https://www.facebook.com/accastroforge/" target="_blank" style="color: #60a5fa;">https://www.facebook.com/accastroforge/</a></li>
             </ul>
         </div>
     </div>
@@ -596,10 +682,18 @@ HTML_TEMPLATE = """
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    rendered_html = HTML_TEMPLATE.replace("{{ favicon_src }}", favicon_src).replace("{{ logo_src }}", logo_src).replace("{{ google_url }}", GOOGLE_OAUTH_URL).replace("{{ fb_url }}", FACEBOOK_OAUTH_URL)
-    for s in ZODIAC_SIGNS:
-        rendered_html = rendered_html.replace("{% for s in zodiacs %}", f"<option value='{s}'>{s}</option>\n{{% for s in zodiacs %}}", 1)
-    rendered_html = rendered_html.replace("{% for s in zodiacs %}", "").replace("{% endfor %}", "")
+    logo_html = f'<img src="{logo_src}" alt="AccAstroForge Logo">' if logo_src else '<span style="font-size: 26px; font-weight: 800; color: #fbcfe8; font-family: \'Cinzel\', serif;">AccAstroForge</span>'
+    
+    zodiac_options_html = "".join([f'<option value="{s}">{s}</option>' for s in ZODIAC_SIGNS])
+    
+    rendered_html = (
+        HTML_TEMPLATE
+        .replace("FAVICON_SRC_PLACEHOLDER", favicon_src)
+        .replace("LOGO_SRC_PLACEHOLDER", logo_html)
+        .replace("GOOGLE_URL_PLACEHOLDER", GOOGLE_OAUTH_URL)
+        .replace("FB_URL_PLACEHOLDER", FACEBOOK_OAUTH_URL)
+        .replace("ZODIAC_OPTIONS_PLACEHOLDER", zodiac_options_html)
+    )
     return HTMLResponse(content=rendered_html)
 
 @app.post("/api/register")

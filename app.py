@@ -494,29 +494,29 @@ HTML_TEMPLATE = """
                     <!-- REGISTRATION SECTION -->
                     <div id="auth-reg-section">
                         <div class="row">
-                            <input type="text" id="su-name" placeholder="Full Name (e.g. Rajesh Sharma)">
-                            <input type="email" id="su-email" placeholder="Email Address (e.g. user@gmail.com)">
+                            <input type="text" id="su-name" placeholder="Full Name (e.g. Rajesh Sharma)" autocomplete="off">
+                            <input type="email" id="su-email" placeholder="Email Address (e.g. user@gmail.com)" autocomplete="off">
                         </div>
                         <div class="row">
-                            <input type="text" id="su-phone" placeholder="Phone Number (e.g. 9876543210)">
+                            <input type="text" id="su-phone" placeholder="Phone Number (e.g. 9876543210)" autocomplete="off">
                             <div class="password-container">
-                                <input type="password" id="su-pass" placeholder="Create Secure Password">
+                                <input type="password" id="su-pass" placeholder="Create Secure Password" autocomplete="new-password">
                                 <span class="eye-icon" onclick="togglePassword('su-pass', this)">👁️</span>
                             </div>
                         </div>
                         <button class="primary-btn" onclick="registerUser()">✨ 1. Register & Send Verification OTP</button>
                         <div id="su-output" style="margin-top: 10px;"></div>
                         <div style="margin-top: 15px;" class="row">
-                            <input type="text" id="su-otp" placeholder="Enter 6-Digit Email OTP">
+                            <input type="text" id="su-otp" placeholder="Enter 6-Digit Email OTP" autocomplete="off">
                             <button class="primary-btn" onclick="verifyOtp()">🔑 2. Verify OTP & Activate Account</button>
                         </div>
                     </div>
 
                     <!-- LOGIN SECTION -->
                     <div id="auth-log-section" style="display: none;">
-                        <input type="email" id="li-email" placeholder="Registered Email Address (e.g. user@gmail.com)">
+                        <input type="email" id="li-email" placeholder="Registered Email Address (e.g. user@gmail.com)" autocomplete="off">
                         <div class="password-container">
-                            <input type="password" id="li-pass" placeholder="Password">
+                            <input type="password" id="li-pass" placeholder="Password" autocomplete="current-password">
                             <span class="eye-icon" onclick="togglePassword('li-pass', this)">👁️</span>
                         </div>
                         <button class="primary-btn" onclick="loginUser()">🚀 Sign In to Account</button>
@@ -549,7 +549,10 @@ HTML_TEMPLATE = """
                     <span style="font-size: 1.2rem; color: #fde047; cursor: pointer;" onclick="toggleAdminPanel()">✕</span>
                 </div>
                 <div id="admin-panel" style="margin-top: 15px;">
-                    <input type="password" id="admin-pass" placeholder="Enter Admin Secret Password">
+                    <div class="password-container">
+                        <input type="password" id="admin-pass" placeholder="Enter Admin Secret Password" autocomplete="new-password">
+                        <span class="eye-icon" onclick="togglePassword('admin-pass', this)">👁️</span>
+                    </div>
                     <button class="primary-btn" onclick="loadAdminDashboard()">Unlock Dashboard</button>
                     <div id="admin-output" style="margin-top: 15px;"></div>
                 </div>

@@ -467,33 +467,36 @@ HTML_TEMPLATE = """
             user-select: none;
         }
 
+        /* MOBILE & DESKTOP RESPONSIVE MAGICAL SPINNING LOADER OVERLAY */
         #loader-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(3, 0, 20, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 99999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(3, 0, 20, 0.90) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            z-index: 999999 !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transition: opacity 0.3s ease !important;
         }
         #loader-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
         .loader-logo {
-            width: 220px;
-            height: 220px;
-            object-fit: contain;
-            animation: spinZoomLoader 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            filter: drop-shadow(0 0 35px rgba(244, 114, 182, 0.9));
+            width: 200px !important;
+            height: 200px !important;
+            max-width: 60vw !important;
+            max-height: 60vh !important;
+            object-fit: contain !important;
+            animation: spinZoomLoader 1.0s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+            filter: drop-shadow(0 0 35px rgba(244, 114, 182, 0.9)) !important;
         }
         @keyframes spinZoomLoader {
             0% {
@@ -512,6 +515,7 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
+    <!-- MAGICAL SPINNING LOADER OVERLAY FOR MOBILE & DESKTOP -->
     <div id="loader-overlay">
         <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" alt="Cosmic Loader" class="loader-logo">
     </div>

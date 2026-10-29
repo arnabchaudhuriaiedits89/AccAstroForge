@@ -420,6 +420,24 @@ HTML_TEMPLATE = """
             margin-top: 15px;
             display: none;
         }
+
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+        .password-container input {
+            padding-right: 45px !important;
+        }
+        .eye-icon {
+            position: absolute;
+            right: 15px;
+            top: 42%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #fde047;
+            font-size: 1.1rem;
+            user-select: none;
+        }
     </style>
 </head>
 <body>
@@ -454,14 +472,6 @@ HTML_TEMPLATE = """
         <!-- TAB 1: DASHBOARD -->
         <div id="tab-dashboard" class="tab-content active">
             <h3>👤 User Profile, Wallet & Order History</h3>
-            
-            <div style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.95), rgba(127, 29, 29, 0.9)); border: 2.5px solid #f87171; padding: 18px 22px; border-radius: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
-                <div style="background: #fde047; color: #7f1d1d; width: 45px; height: 45px; min-width: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900;">⚠️</div>
-                <div>
-                    <h4 style="color: #fef08a !important; margin: 0 0 4px 0; font-family: 'Cinzel', serif;">⚠️ CRITICAL WARNING: DO NOT REFRESH PAGE!</h4>
-                    <p style="color: #ffffff !important; font-size: 0.92rem; margin: 0;">When logged in or performing wallet topups, <span style="color: #fca5a5; text-decoration: underline;">NEVER REFRESH THE PAGE</span> to avoid clearing active sessions.</p>
-                </div>
-            </div>
 
             <div class="card" id="profile-box">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -489,7 +499,10 @@ HTML_TEMPLATE = """
                         </div>
                         <div class="row">
                             <input type="text" id="su-phone" placeholder="Phone Number (e.g. 9876543210)">
-                            <input type="password" id="su-pass" placeholder="Create Secure Password">
+                            <div class="password-container">
+                                <input type="password" id="su-pass" placeholder="Create Secure Password">
+                                <span class="eye-icon" onclick="togglePassword('su-pass', this)">👁️</span>
+                            </div>
                         </div>
                         <button class="primary-btn" onclick="registerUser()">✨ 1. Register & Send Verification OTP</button>
                         <div id="su-output" style="margin-top: 10px;"></div>
@@ -501,8 +514,11 @@ HTML_TEMPLATE = """
 
                     <!-- LOGIN SECTION -->
                     <div id="auth-log-section" style="display: none;">
-                        <input type="email" id="li-email" placeholder="Registered Email Address">
-                        <input type="password" id="li-pass" placeholder="Password">
+                        <input type="email" id="li-email" placeholder="Registered Email Address (e.g. user@gmail.com)">
+                        <div class="password-container">
+                            <input type="password" id="li-pass" placeholder="Password">
+                            <span class="eye-icon" onclick="togglePassword('li-pass', this)">👁️</span>
+                        </div>
                         <button class="primary-btn" onclick="loginUser()">🚀 Sign In to Account</button>
                         <div id="li-output" style="margin-top: 10px;"></div>
                     </div>
@@ -701,17 +717,28 @@ HTML_TEMPLATE = """
             }
         }
 
+        function togglePassword(fieldId, iconEl) {
+            let field = document.getElementById(fieldId);
+            if(field.type === "password") {
+                field.type = "text";
+                iconEl.innerText = "🙈";
+            } else {
+                field.type = "password";
+                iconEl.innerText = "👁️";
+            }
+        }
+
         function setLoggedInUI(email) {
             verifiedEmailStorage = email;
             localStorage.setItem('accastroforge_user', email);
             document.getElementById('session-display').innerHTML = `
-                <h4 style="color: #fde047; font-family: 'Cinzel', serif;">🌟 ACTIVE MEMBER</h4>
-                <p style="margin: 0; color: #4ade80; font-weight: 600;">Logged In: ${email}</p>
+                <h4 style="color: #fde047; font-family: 'Cinzel', serif; margin: 0 0 4px 0;">🌟 ACTIVE MEMBER</h4>
+                <p style="margin: 0; color: #4ade80; font-weight: 600; font-size: 1.05rem;">Logged In: ${email}</p>
             `;
             document.getElementById('auth-btn-area').innerHTML = `
                 <div style="display: flex; gap: 10px;">
-                    <button class="primary-btn" style="width: auto; padding: 10px 16px; background: #2563eb !important;" onclick="switchAccount()">🔄 Switch</button>
-                    <button class="primary-btn" style="width: auto; padding: 10px 16px; background: #dc2626 !important;" onclick="logoutUser()">🚪 Log Out</button>
+                    <button class="primary-btn" style="width: auto; padding: 10px 18px; background: #2563eb !important; font-size: 0.9rem;" onclick="switchAccount()">🔄 Switch Account</button>
+                    <button class="primary-btn" style="width: auto; padding: 10px 18px; background: #dc2626 !important; font-size: 0.9rem;" onclick="logoutUser()">🚪 Log Out</button>
                 </div>
             `;
             document.getElementById('auth-container').style.display = 'none';

@@ -4,3 +4,4 @@ jinja2
 razorpay
 reportlab
 requests
+python-multipart

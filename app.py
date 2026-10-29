@@ -63,9 +63,6 @@ def init_db():
 
 init_db()
 
-# ---------------------------------------------------------
-# FASTAPI FAVICON & STATIC SERVING
-# ---------------------------------------------------------
 @app.get("/favicon.ico")
 async def favicon():
     if os.path.exists("favicon.png"):
@@ -304,31 +301,11 @@ HTML_TEMPLATE = """
             gap: 15px;
         }
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
         .logo-area img {
             height: 75px;
             filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9));
             mix-blend-mode: screen;
             background: transparent !important;
-        }
-
-        .admin-dot {
-            width: 16px;
-            height: 16px;
-            min-width: 16px;
-            min-height: 16px;
-            background: radial-gradient(circle, #fde047 0%, #d97706 100%);
-            border: 1.5px solid #fef08a;
-            border-radius: 50%;
-            display: inline-block;
-            cursor: pointer;
-            box-shadow: 0 0 12px #fde047;
-            margin-left: 10px;
         }
 
         .quick-logins {
@@ -414,29 +391,29 @@ HTML_TEMPLATE = """
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media(max-width: 768px) { .row { grid-template-columns: 1fr; } }
         .card { background: rgba(18, 8, 42, 0.9); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; }
+        
+        .auth-container {
+            border: 2px solid #db2777;
+            background: rgba(18, 8, 42, 0.95);
+            padding: 15px;
+            border-radius: 14px;
+            margin-top: 15px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- HEADER WITH LOGO, SECRET ADMIN DOT & QUICK LOGINS -->
+        <!-- HEADER WITH LOGO & QUICK LOGINS -->
         <div class="header-container">
             <div class="logo-area">
                 LOGO_SRC_PLACEHOLDER
-                <span class="admin-dot" title="Admin Trigger" onclick="toggleAdminPanel()"></span>
             </div>
             <div class="quick-logins">
                 <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
                 <a href="GOOGLE_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
                 <a href="FB_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
             </div>
-        </div>
-
-        <!-- HIDDEN ADMIN PANEL -->
-        <div id="admin-panel" class="card" style="display: none; border: 2px solid #fde047; margin-bottom: 20px;">
-            <h3>🛡️ Owner Portal (Admin Dashboard)</h3>
-            <input type="password" id="admin-pass" placeholder="Enter Admin Secret Password">
-            <button class="primary-btn" onclick="loadAdminDashboard()">Unlock Dashboard</button>
-            <div id="admin-output" style="margin-top: 15px;"></div>
         </div>
 
         <!-- TABS BAR -->
@@ -466,8 +443,47 @@ HTML_TEMPLATE = """
             </div>
 
             <div class="card" id="profile-box">
-                <h4>Active User Session</h4>
-                <p>Guest User (Please Sign Up / Login)</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h4>Active User Session</h4>
+                        <p style="margin: 0;">Guest User (Please Sign Up / Login)</p>
+                    </div>
+                    <button class="primary-btn" style="width: auto; padding: 10px 20px;" onclick="toggleAuthBox()">✨ SIGN UP / LOGIN</button>
+                </div>
+
+                <!-- COLLAPSIBLE AUTH CONTAINER -->
+                <div id="auth-container" class="auth-container">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="tab-btn active" id="subtn-reg" onclick="switchAuthSub('reg')">📝 SIGN UP & VERIFY OTP</button>
+                        <button class="tab-btn" id="subtn-log" onclick="switchAuthSub('log')">🔐 MEMBER SIGN IN</button>
+                    </div>
+
+                    <!-- REGISTRATION SECTION -->
+                    <div id="auth-reg-section">
+                        <div class="row">
+                            <input type="text" id="su-name" placeholder="Full Name (e.g. Rajesh Sharma)">
+                            <input type="email" id="su-email" placeholder="Email Address (e.g. user@gmail.com)">
+                        </div>
+                        <div class="row">
+                            <input type="text" id="su-phone" placeholder="Phone Number (e.g. 9876543210)">
+                            <input type="password" id="su-pass" placeholder="Create Secure Password">
+                        </div>
+                        <button class="primary-btn" onclick="registerUser()">✨ 1. Register & Send Verification OTP</button>
+                        <div id="su-output" style="margin-top: 10px;"></div>
+                        <div style="margin-top: 15px;" class="row">
+                            <input type="text" id="su-otp" placeholder="Enter 6-Digit Email OTP">
+                            <button class="primary-btn" onclick="verifyOtp()">🔑 2. Verify OTP & Activate Account</button>
+                        </div>
+                    </div>
+
+                    <!-- LOGIN SECTION -->
+                    <div id="auth-log-section" style="display: none;">
+                        <input type="email" id="li-email" placeholder="Registered Email Address">
+                        <input type="password" id="li-pass" placeholder="Password">
+                        <button class="primary-btn" onclick="loginUser()">🚀 Sign In to Account</button>
+                        <div id="li-output" style="margin-top: 10px;"></div>
+                    </div>
+                </div>
             </div>
             
             <div class="card">
@@ -483,29 +499,21 @@ HTML_TEMPLATE = """
             </div>
 
             <div class="card">
-                <h4>📝 Sign Up & Verify OTP</h4>
-                <div class="row">
-                    <input type="text" id="su-name" placeholder="Full Name (e.g. Rajesh Sharma)">
-                    <input type="email" id="su-email" placeholder="Email Address (e.g. user@gmail.com)">
-                </div>
-                <div class="row">
-                    <input type="text" id="su-phone" placeholder="Phone Number (e.g. 9876543210)">
-                    <input type="password" id="su-pass" placeholder="Create Secure Password">
-                </div>
-                <button class="primary-btn" onclick="registerUser()">✨ 1. Register & Send Verification OTP</button>
-                <div id="su-output" style="margin-top: 10px;"></div>
-                <div style="margin-top: 15px;" class="row">
-                    <input type="text" id="su-otp" placeholder="Enter 6-Digit Email OTP">
-                    <button class="primary-btn" onclick="verifyOtp()">🔑 2. Verify OTP & Activate Account</button>
-                </div>
+                <h4>📦 Order History & Saved PDF Reports</h4>
+                <p>No previous orders found for current guest session. Please register or login.</p>
             </div>
 
-            <div class="card">
-                <h4>🔐 Member Sign In / Login</h4>
-                <input type="email" id="li-email" placeholder="Registered Email Address">
-                <input type="password" id="li-pass" placeholder="Password">
-                <button class="primary-btn" onclick="loginUser()">🚀 Sign In to Account</button>
-                <div id="li-output" style="margin-top: 10px;"></div>
+            <!-- ADMIN PORTAL MOVED TO THE BOTTOM -->
+            <div class="card" style="border: 1.5px dashed #fde047; margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleAdminPanel()">
+                    <h4 style="margin: 0; color: #fde047;">🛡️ Owner Portal (Admin Dashboard)</h4>
+                    <span style="font-size: 1.2rem; color: #fde047;">▼</span>
+                </div>
+                <div id="admin-panel" style="display: none; margin-top: 15px;">
+                    <input type="password" id="admin-pass" placeholder="Enter Admin Secret Password">
+                    <button class="primary-btn" onclick="loadAdminDashboard()">Unlock Dashboard</button>
+                    <div id="admin-output" style="margin-top: 15px;"></div>
+                </div>
             </div>
         </div>
 
@@ -635,9 +643,28 @@ HTML_TEMPLATE = """
             evt.currentTarget.classList.add('active');
         }
 
+        function toggleAuthBox() {
+            let box = document.getElementById('auth-container');
+            box.style.display = box.style.display === 'none' || box.style.display === '' ? 'block' : 'none';
+        }
+
+        function switchAuthSub(mode) {
+            if(mode === 'reg') {
+                document.getElementById('auth-reg-section').style.display = 'block';
+                document.getElementById('auth-log-section').style.display = 'none';
+                document.getElementById('subtn-reg').classList.add('active');
+                document.getElementById('subtn-log').classList.remove('active');
+            } else {
+                document.getElementById('auth-reg-section').style.display = 'none';
+                document.getElementById('auth-log-section').style.display = 'block';
+                document.getElementById('subtn-log').classList.add('active');
+                document.getElementById('subtn-reg').classList.remove('active');
+            }
+        }
+
         function toggleAdminPanel() {
             let panel = document.getElementById('admin-panel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'block' : 'none';
         }
 
         async function loadAdminDashboard() {

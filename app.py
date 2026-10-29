@@ -784,7 +784,6 @@ HTML_TEMPLATE = """
                         console.log("Profile Fetch Error:", e);
                     }
 
-                    // Automatically register / log social login in backend & sheets
                     try {
                         await fetch('/api/social-login', {
                             method: 'POST',
@@ -1233,7 +1232,7 @@ async def api_ai(request: Request):
         ai_reply = "📜 Janam Kundali Insight: Your planetary positions indicate a strong Lagna house. Focus on consistent efforts in your professional sphere for optimal growth."
     elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna"]):
         ai_reply = "💎 Gemstone Recommendation: Based on cosmic alignments, wearing a certified Emerald (Panna) or Yellow Sapphire on an auspicious day will enhance focus and prosperity."
-    elif any(k in query for k:: ["career", "job", "business", "money", "finance", "success"]):
+    elif any(k in query for k in ["career", "job", "business", "money", "finance", "success"]):
         ai_reply = "💼 Career & Wealth Forecast: Jupiter's transit brings favorable opportunities for career advancement and financial stability. Avoid impulsive investments."
     elif any(k in query for k in ["marriage", "love", "relationship", "match", "partner"]):
         ai_reply = "❤️ Relationship & Marriage Guidance: Venus harmony indicates positive emotional bonding. Transparent communication will resolve ongoing misunderstandings."

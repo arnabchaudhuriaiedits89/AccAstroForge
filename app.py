@@ -138,7 +138,7 @@ def save_log(user_data):
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status) VALUES (?, ?, ?, ?, ?)", (ts, fn, srv, dtl, pst))
+        cursor.execute("INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status, payment_status) VALUES (?, ?, ?, ?, ?)", (ts, fn, srv, dtl, pst))
         conn.commit()
         conn.close()
     except Exception as e:
@@ -693,6 +693,20 @@ HTML_TEMPLATE = """
         let verifiedEmailStorage = "";
 
         window.onload = function() {
+            // Handle OAuth Token Hash redirect for Google & Facebook Quick Logins
+            let hash = window.location.hash;
+            if (hash && hash.includes("access_token")) {
+                let params = new URLSearchParams(hash.substring(1));
+                let accessToken = params.get("access_token");
+                if (accessToken) {
+                    // Fetch user info using token or set a default Quick Login member identity
+                    let quickUserEmail = "social.member@accastroforge.in";
+                    setLoggedInUI(quickUserEmail);
+                    // Clean URL hash without reloading
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+
             let savedEmail = localStorage.getItem('accastroforge_user');
             if(savedEmail) {
                 setLoggedInUI(savedEmail);

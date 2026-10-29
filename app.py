@@ -269,7 +269,7 @@ def get_paywall_html(service_name, price, user_name="User"):
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h3>
         <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{amt_val}</p>
-        <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
+        <a href="{pay_url}" target="_blank" onclick="triggerPaymentLoader(event, this.href)" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
             🚀 Proceed to Pay ₹{amt_val} (UPI, GPay, PhonePe & Cards)
         </a>
     </div>
@@ -466,9 +466,58 @@ HTML_TEMPLATE = """
             font-size: 1.1rem;
             user-select: none;
         }
+
+        /* MAGICAL SPINNING & ZOOMING LOADER OVERLAY */
+        #loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(3, 0, 20, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #loader-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .loader-logo {
+            width: 220px;
+            height: 220px;
+            object-fit: contain;
+            animation: spinZoomLoader 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            filter: drop-shadow(0 0 35px rgba(244, 114, 182, 0.9));
+        }
+        @keyframes spinZoomLoader {
+            0% {
+                transform: scale(0.1) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.15) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5) rotate(360deg);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- MAGICAL SPINNING LOADER OVERLAY -->
+    <div id="loader-overlay">
+        <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" alt="Cosmic Loader" class="loader-logo">
+    </div>
+
     <div class="container">
         <!-- HEADER WITH LOGO, SECRET ADMIN DOT & QUICK LOGINS -->
         <div class="header-container">
@@ -749,11 +798,30 @@ HTML_TEMPLATE = """
             }
         };
 
+        // MAGIC SPINNING LOADER TRIGGER FOR TABS & PAYMENTS
+        function showMagicLoader(callback) {
+            let overlay = document.getElementById('loader-overlay');
+            overlay.classList.add('active');
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                if(callback) callback();
+            }, 800); // 0.8s smooth magical spin duration
+        }
+
         function switchTab(evt, tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            evt.currentTarget.classList.add('active');
+            showMagicLoader(() => {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                evt.currentTarget.classList.add('active');
+            });
+        }
+
+        function triggerPaymentLoader(event, targetUrl) {
+            event.preventDefault();
+            showMagicLoader(() => {
+                window.open(targetUrl, '_blank');
+            });
         }
 
         function toggleAuthBox() {
@@ -882,39 +950,49 @@ HTML_TEMPLATE = """
         }
 
         async function topupWallet(amt) {
-            let res = await fetch('/api/topup', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({amount: amt}) });
-            let data = await res.json();
-            document.getElementById('wallet-result').innerHTML = data.paywall;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/topup', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({amount: amt}) });
+                let data = await res.json();
+                document.getElementById('wallet-result').innerHTML = data.paywall;
+            });
         }
 
         async function submitLifePrediction() {
             let name = document.getElementById('life-name').value;
             let dob = document.getElementById('life-dob').value;
-            let res = await fetch('/api/life', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
-            let data = await res.json();
-            document.getElementById('life-result').innerHTML = data.teaser + data.paywall;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/life', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
+                let data = await res.json();
+                document.getElementById('life-result').innerHTML = data.teaser + data.paywall;
+            });
         }
 
         async function getHoroscope() {
             let sign = document.getElementById('horo-sign').value;
-            let res = await fetch('/api/horoscope', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({sign}) });
-            let data = await res.json();
-            document.getElementById('horo-result').innerHTML = data.html;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/horoscope', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({sign}) });
+                let data = await res.json();
+                document.getElementById('horo-result').innerHTML = data.html;
+            });
         }
 
         async function submitMatching() {
             let boy_name = document.getElementById('b-name').value;
             let girl_name = document.getElementById('g-name').value;
-            let res = await fetch('/api/matching', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({boy_name, girl_name}) });
-            let data = await res.json();
-            document.getElementById('matching-result').innerHTML = data.teaser + data.paywall;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/matching', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({boy_name, girl_name}) });
+                let data = await res.json();
+                document.getElementById('matching-result').innerHTML = data.teaser + data.paywall;
+            });
         }
 
         async function submitGemstone() {
             let zodiac = document.getElementById('gem-zodiac').value;
-            let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({zodiac}) });
-            let data = await res.json();
-            document.getElementById('gem-result').innerHTML = data.teaser + data.paywall;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({zodiac}) });
+                let data = await res.json();
+                document.getElementById('gem-result').innerHTML = data.teaser + data.paywall;
+            });
         }
 
         async function submitKundaliPdf() {
@@ -922,33 +1000,41 @@ HTML_TEMPLATE = """
             let dob = document.getElementById('k-dob').value;
             let tob = document.getElementById('k-tob').value;
             let pob = document.getElementById('k-pob').value;
-            let res = await fetch('/api/kundali-pdf', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob}) });
-            let data = await res.json();
-            document.getElementById('kundali-result').innerHTML = data.teaser + data.chart + data.paywall;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/kundali-pdf', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob}) });
+                let data = await res.json();
+                document.getElementById('kundali-result').innerHTML = data.teaser + data.chart + data.paywall;
+            });
         }
 
         async function submitNumerology() {
             let name = document.getElementById('num-name').value;
             let dob = document.getElementById('num-dob').value;
-            let res = await fetch('/api/numerology', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
-            let data = await res.json();
-            document.getElementById('num-result').innerHTML = data.teaser + data.paywall;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/numerology', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
+                let data = await res.json();
+                document.getElementById('num-result').innerHTML = data.teaser + data.paywall;
+            });
         }
 
         async function submitPanchang() {
             let city = document.getElementById('p-city').value;
             let date = document.getElementById('p-date').value;
             let mode = document.getElementById('p-mode').value;
-            let res = await fetch('/api/panchang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city, date, mode}) });
-            let data = await res.json();
-            document.getElementById('panchang-result').innerHTML = data.html + (data.paywall || '');
+            showMagicLoader(async () => {
+                let res = await fetch('/api/panchang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city, date, mode}) });
+                let data = await res.json();
+                document.getElementById('panchang-result').innerHTML = data.html + (data.paywall || '');
+            });
         }
 
         async function askAi() {
             let query = document.getElementById('ai-query').value;
-            let res = await fetch('/api/ai', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query}) });
-            let data = await res.json();
-            document.getElementById('ai-result').innerHTML = data.html;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/ai', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query}) });
+                let data = await res.json();
+                document.getElementById('ai-result').innerHTML = data.html;
+            });
         }
     </script>
 </body>

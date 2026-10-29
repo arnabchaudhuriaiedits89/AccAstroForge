@@ -469,7 +469,9 @@ HTML_TEMPLATE = """
                         <h4>Active User Session</h4>
                         <p style="margin: 0;">Guest User (Please Sign Up / Login)</p>
                     </div>
-                    <button id="auth-toggle-btn" class="primary-btn" style="width: auto; padding: 10px 20px;" onclick="toggleAuthBox()">✨ SIGN UP / LOGIN</button>
+                    <div id="auth-btn-area">
+                        <button id="auth-toggle-btn" class="primary-btn" style="width: auto; padding: 10px 20px;" onclick="toggleAuthBox()">✨ SIGN UP / LOGIN</button>
+                    </div>
                 </div>
 
                 <!-- COLLAPSIBLE AUTH CONTAINER -->
@@ -703,11 +705,15 @@ HTML_TEMPLATE = """
             verifiedEmailStorage = email;
             localStorage.setItem('accastroforge_user', email);
             document.getElementById('session-display').innerHTML = `
-                <h4>🌟 ACTIVE MEMBER</h4>
+                <h4 style="color: #fde047; font-family: 'Cinzel', serif;">🌟 ACTIVE MEMBER</h4>
                 <p style="margin: 0; color: #4ade80; font-weight: 600;">Logged In: ${email}</p>
             `;
-            document.getElementById('auth-toggle-btn').innerText = "🚪 LOG OUT";
-            document.getElementById('auth-toggle-btn').setAttribute("onclick", "logoutUser()");
+            document.getElementById('auth-btn-area').innerHTML = `
+                <div style="display: flex; gap: 10px;">
+                    <button class="primary-btn" style="width: auto; padding: 10px 16px; background: #2563eb !important;" onclick="switchAccount()">🔄 Switch</button>
+                    <button class="primary-btn" style="width: auto; padding: 10px 16px; background: #dc2626 !important;" onclick="logoutUser()">🚪 Log Out</button>
+                </div>
+            `;
             document.getElementById('auth-container').style.display = 'none';
         }
 
@@ -718,10 +724,24 @@ HTML_TEMPLATE = """
                 <h4>Active User Session</h4>
                 <p style="margin: 0;">Guest User (Please Sign Up / Login)</p>
             `;
-            document.getElementById('auth-toggle-btn সন্ত্রাসী' || 'auth-toggle-btn').innerText = "✨ SIGN UP / LOGIN";
-            document.getElementById('auth-toggle-btn').setAttribute("onclick", "toggleAuthBox()");
-            alert("Logged out successfully!");
-            location.reload();
+            document.getElementById('auth-btn-area').innerHTML = `
+                <button id="auth-toggle-btn" class="primary-btn" style="width: auto; padding: 10px 20px;" onclick="toggleAuthBox()">✨ SIGN UP / LOGIN</button>
+            `;
+            document.getElementById('auth-container').style.display = 'none';
+        }
+
+        function switchAccount() {
+            localStorage.removeItem('accastroforge_user');
+            verifiedEmailStorage = "";
+            document.getElementById('session-display').innerHTML = `
+                <h4>Active User Session</h4>
+                <p style="margin: 0;">Guest User (Please Sign Up / Login)</p>
+            `;
+            document.getElementById('auth-btn-area').innerHTML = `
+                <button id="auth-toggle-btn" class="primary-btn" style="width: auto; padding: 10px 20px;" onclick="toggleAuthBox()">✨ SIGN UP / LOGIN</button>
+            `;
+            document.getElementById('auth-container').style.display = 'block';
+            switchAuthSub('log');
         }
 
         async function loadAdminDashboard() {

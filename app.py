@@ -1,16 +1,20 @@
 import os
 import datetime
 import random
-import sqlite3
+import base64
+import json
 import requests
+import sqlite3
 import razorpay
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+app = FastAPI()
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
@@ -18,15 +22,18 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
+
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+
+GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
+GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
+FACEBOOK_APP_ID = "1487294163221538"
+FACEBOOK_REDIRECT_URI = "https://accastroforge.in/"
+
+GOOGLE_OAUTH_URL = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=token&scope=email%20profile"
+FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&response_type=token&scope=email,public_profile"
+
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
-
-app = FastAPI()
-
-# Mount static files (for logo.png, bg.jpg)
-app.mount("/static", StaticFiles(directory="."), name="static")
-
 DB_FILE = "accastroforge.db"
 
 def init_db():
@@ -56,28 +63,65 @@ def init_db():
 
 init_db()
 
-# ---------------------------------------------------------
-# DATABASE & BREVO / APPS SCRIPT HELPERS
-# ---------------------------------------------------------
-def save_user_local(u_name, u_email, u_phone):
+def append_to_google_sheet_direct(worksheet_name, values_list):
+    try:
+        if worksheet_name == "Users":
+            params = {"worksheet": "Users", "name": values_list[0], "email": values_list[1], "phone": values_list[2], "verified_at": values_list[3]}
+        else:
+            params = {"worksheet": "AdminLogs", "timestamp": values_list[0], "full_name": values_list[1], "service": values_list[2], "details": values_list[3], "payment_status": values_list[4]}
+        requests.get(APPS_SCRIPT_URL, params=params, allow_redirects=True, timeout=10)
+        return True
+    except Exception as e:
+        print(f"Apps Script Error: {e}")
+        return False
+
+def load_google_sheet_direct(worksheet_name):
+    try:
+        url = f"{APPS_SCRIPT_URL}?action=get&worksheet={worksheet_name}"
+        res = requests.get(url, timeout=8)
+        if res.status_code == 200:
+            data = res.json()
+            if isinstance(data, list):
+                return data
+    except Exception as e:
+        print(f"Load Sheet Error: {e}")
+    return []
+
+def save_user_db_single(u_name, u_email, u_phone):
     now_str = str(datetime.datetime.now())
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT OR REPLACE INTO users (name, email, phone, verified_at)
-            VALUES (?, ?, ?, ?)
-        """, (u_name, u_email.lower(), u_phone, now_str))
+        cursor.execute("INSERT OR REPLACE INTO users (name, email, phone, verified_at) VALUES (?, ?, ?, ?)", (u_name, u_email.lower(), u_phone, now_str))
         conn.commit()
         conn.close()
     except Exception as e:
-        print(f"Local Save Error: {e}")
-    
+        print(f"Save User DB Error: {e}")
+    append_to_google_sheet_direct("Users", [u_name, u_email.lower(), u_phone, now_str])
+
+def load_users():
+    users_dict = {}
+    sheet_rows = load_google_sheet_direct("Users")
+    for row in sheet_rows:
+        if isinstance(row, dict):
+            email = str(row.get("email", row.get("Email", ""))).strip().lower()
+            if email:
+                users_dict[email] = {"name": row.get("name", row.get("Name", "User")), "email": email, "phone": row.get("phone", row.get("Phone", "N/A")), "verified_at": row.get("verified_at", row.get("Verified_At", str(datetime.datetime.now())))}
     try:
-        params = {"worksheet": "Users", "name": u_name, "email": u_email.lower(), "phone": u_phone, "verified_at": now_str}
-        requests.get(APPS_SCRIPT_URL, params=params, timeout=5)
-    except Exception:
-        pass
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users")
+        rows = cursor.fetchall()
+        conn.close()
+        for row in rows:
+            d = dict(row)
+            email = str(d.get("email", "")).strip().lower()
+            if email and email not in users_dict:
+                users_dict[email] = d
+    except Exception as e:
+        print(f"Load Users Local Error: {e}")
+    return list(users_dict.values())
 
 def save_log(user_data):
     ts = user_data.get("timestamp", str(datetime.datetime.now()))
@@ -91,40 +135,78 @@ def save_log(user_data):
         cursor.execute("INSERT INTO admin_logs (timestamp, full_name, service, details, payment_status) VALUES (?, ?, ?, ?, ?)", (ts, fn, srv, dtl, pst))
         conn.commit()
         conn.close()
-    except Exception:
-        pass
-    try:
-        params = {"worksheet": "AdminLogs", "timestamp": ts, "full_name": fn, "service": srv, "details": dtl, "payment_status": pst}
-        requests.get(APPS_SCRIPT_URL, params=params, timeout=5)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Save Log Error: {e}")
+    append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
+
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
+logo_path = "logo.png" if os.path.exists("logo.png") else None
+
+def get_base64(file_path):
+    if file_path and os.path.exists(file_path):
+        try:
+            with open(file_path, "rb") as f:
+                return base64.b64encode(f.read()).decode('utf-8')
+        except Exception:
+            return ""
+    return ""
+
+logo_b64 = get_base64(logo_path)
+logo_src = "data:image/png;base64," + logo_b64 if logo_b64 else ""
 
 def send_brevo_email(to_email, user_name, subject, html_content):
-    if not BREVO_API_KEY:
-        return False
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {"accept": "application/json", "api-key": BREVO_API_KEY, "content-type": "application/json"}
-    payload = {
-        "sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"},
-        "to": [{"email": to_email, "name": user_name}],
-        "subject": subject,
-        "htmlContent": html_content
-    }
+    payload = {"sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"}, "to": [{"email": to_email, "name": user_name}], "subject": subject, "htmlContent": html_content}
     try:
-        res = requests.post(url, json=payload, headers=headers, timeout=10)
-        return res.status_code in [200, 201, 202]
-    except Exception:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        return response.status_code in [200, 201, 202]
+    except Exception as e:
+        print(f"Email Error: {e}")
         return False
 
-# ---------------------------------------------------------
-# RAZORPAY & PDF GENERATOR
-# ---------------------------------------------------------
+ZODIAC_SIGNS = [
+    "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
+    "Leo (Simha)", "Virgo (Kanya)", "Libra (Tula)", "Scorpio (Vrischika)",
+    "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"
+]
+
+NAKSHATRAS = [
+    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha",
+    "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
+    "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
+]
+
+def calculate_astrological_profile(name, dob_str):
+    try:
+        dt = datetime.datetime.strptime(dob_str, "%Y-%m-%d")
+        day_sum = sum(int(digit) for digit in dob_str if digit.isdigit())
+        while day_sum > 9:
+            day_sum = sum(int(d) for d in str(day_sum))
+        zodiac_index = (dt.month - 1 + (dt.day // 3)) % 12
+        nakshatra_index = (dt.day + dt.month * 2) % 27
+        return {
+            "name": name if name else "User",
+            "zodiac": ZODIAC_SIGNS[zodiac_index],
+            "nakshatra": NAKSHATRAS[nakshatra_index],
+            "psychic_num": day_sum,
+            "dasha": f"Mahadasha of {['Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu'][day_sum % 9]} is active."
+        }
+    except Exception:
+        return {
+            "name": name if name else "User",
+            "zodiac": "Aries (Mesha)",
+            "nakshatra": "Rohini",
+            "psychic_num": 7,
+            "dasha": "Favorable Planetary Dasha Cycle active."
+        }
+
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 except Exception:
     razorpay_client = None
 
-def get_robust_razorpay_link(service_name, price, user_name="User"):
+def get_robust_razorpay_link(service_name, price, user_name):
     try:
         if razorpay_client:
             data = {
@@ -133,340 +215,475 @@ def get_robust_razorpay_link(service_name, price, user_name="User"):
                 "accept_partial": False,
                 "description": f"Payment for {service_name}",
                 "customer": {"name": user_name if user_name else "User"},
+                "notify": {"sms": False, "email": False},
+                "reminder_enable": False,
                 "callback_url": "https://accastroforge.in/",
                 "callback_method": "get"
             }
-            res = razorpay_client.payment_link.create(data)
-            if res and "short_url" in res:
-                return res["short_url"]
-    except Exception:
-        pass
+            response = razorpay_client.payment_link.create(data)
+            if response and "short_url" in response:
+                return response["short_url"]
+    except Exception as e:
+        print(f"Razorpay Error: {e}")
     return RAZORPAY_ME_URL
 
-def create_kundali_pdf_file(name, dob, tob, pob):
-    filename = f"Kundali_{name.replace(' ', '_')}.pdf"
-    doc = SimpleDocTemplate(filename, pagesize=letter)
-    styles = getSampleStyleSheet()
-    story = []
-    title_style = ParagraphStyle('TStyle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=18, textColor=colors.HexColor("#5b21b6"), alignment=1, spaceAfter=15)
-    story.append(Paragraph("<b>AccAstroForge - Vedic Janam Kundali Report</b>", title_style))
-    story.append(Spacer(1, 10))
-    data = [
-        ["Attribute", "Details"],
-        ["Full Name", name],
-        ["Date of Birth", dob],
-        ["Time / Place", f"{tob} / {pob}"],
-        ["Rashi / Nakshatra", "Mesha (Aries) / Rohini"],
-        ["Current Dasha", "Favorable Planetary Cycle Active"]
-    ]
-    t = Table(data, colWidths=[180, 300])
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#7c3aed")),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('GRID', (0,0), (-1,-1), 1, colors.HexColor("#db2777")),
-        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor("#f3e8ff"))
-    ]))
-    story.append(t)
-    doc.build(story)
-    return filename
-
-# ---------------------------------------------------------
-# MASTER GRADIO-LOOK HTML/CSS SINGLE PAGE
-# ---------------------------------------------------------
-@app.get("/", response_class=HTMLResponse)
-def index(msg: str = ""):
-    pay_250 = get_robust_razorpay_link("Wallet Topup ₹250", 250)
-    pay_500 = get_robust_razorpay_link("Wallet Topup ₹500", 500)
-    alert_box = f"<div style='background:rgba(34,197,94,0.25); border:1px solid #22c55e; color:#4ade80; padding:12px; border-radius:12px; margin-bottom:15px; font-weight:bold; text-align:center; font-size:0.85rem;'>{msg}</div>" if msg else ""
-
+def get_paywall_html(service_name, price, user_name="User"):
+    display_name = user_name.strip() if user_name and user_name.strip() else "User"
+    try:
+        amt_val = int(float(price))
+    except Exception:
+        amt_val = price
+    pay_url = get_robust_razorpay_link(service_name, amt_val, display_name)
     return f"""
-    <!DOCTYPE html>
-    <html lang="bn">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AccAstroForge - AI Astrology Guidance</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <style>
-            body {{
-                background-color: #030014 !important;
-                background-image: linear-gradient(rgba(5, 1, 20, 0.5), rgba(5, 1, 20, 0.75)), url('/static/bg.jpg') !important;
-                background-position: center center !important;
-                background-repeat: no-repeat !important;
-                background-size: cover !important;
-                background-attachment: fixed !important;
-                color: #ffffff !important;
-                font-family: 'Poppins', sans-serif !important;
-                min-height: 100vh;
-                margin: 0;
-                padding: 15px;
-            }}
-            .cinzel {{ font-family: 'Cinzel', serif; }}
-            .tab-btn {{
-                background: rgba(18, 8, 42, 0.9);
-                border: 1px solid rgba(244, 114, 182, 0.4);
-                color: #fef08a;
-                font-family: 'Cinzel', serif;
-                font-weight: 700;
-                font-size: 0.75rem;
-                border-radius: 8px;
-                padding: 8px 14px;
-                cursor: pointer;
-                transition: all 0.3s;
-                white-space: nowrap;
-            }}
-            .tab-btn.active {{
-                background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
-                color: #ffffff;
-                border-color: #fde047;
-                box-shadow: 0 0 15px rgba(124, 58, 237, 0.6);
-            }}
-            .card-box {{
-                background: rgba(14, 5, 35, 0.92);
-                border: 1px solid rgba(244, 114, 182, 0.5);
-                border-radius: 16px;
-                padding: 22px;
-                margin-top: 15px;
-                box-shadow: 0 0 25px rgba(124, 58, 237, 0.25);
-            }}
-            input, select, textarea {{
-                background: rgba(22, 10, 48, 0.95) !important;
-                border: 1.5px solid rgba(244, 114, 182, 0.6) !important;
-                color: #ffffff !important;
-                border-radius: 12px !important;
-                padding: 10px 14px !important;
-                width: 100%;
-                margin-top: 5px;
-                margin-bottom: 12px;
-                font-size: 0.85rem;
-            }}
-            label {{
-                color: #fde047 !important;
-                font-weight: 600;
-                font-size: 0.85rem;
-            }}
-            .btn-primary {{
-                background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
-                color: white;
-                border: 1px solid #fde047;
-                font-weight: bold;
-                border-radius: 12px;
-                padding: 12px 20px;
-                cursor: pointer;
-                width: 100%;
-                box-shadow: 0 4px 15px rgba(219, 39, 119, 0.4);
-                font-size: 0.85rem;
-            }}
-            .btn-primary:hover {{
-                opacity: 0.95;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="max-w-5xl mx-auto">
-            <!-- Header Bar -->
-            <div class="flex justify-between items-center bg-slate-900/80 p-4 rounded-2xl border border-purple-900/50 backdrop-blur-md mb-4 flex-wrap gap-4">
-                <div class="flex items-center space-x-3">
-                    <img src="/static/logo.png" alt="Logo" class="w-12 h-12 animate-spin" style="animation-duration: 12s;">
-                    <span class="cinzel text-2xl font-bold text-yellow-400">AccAstroForge</span>
-                </div>
-                <div class="flex items-center gap-2 bg-slate-950/80 px-4 py-2 rounded-xl border border-pink-500/40 text-xs">
-                    <span class="text-yellow-400 font-semibold">🔐 Quick Logins:</span>
-                    <a href="https://accounts.google.com" target="_blank" class="bg-red-600 text-white px-2.5 py-1 rounded-md font-bold hover:opacity-90">Google</a>
-                    <a href="https://www.facebook.com" target="_blank" class="bg-blue-600 text-white px-2.5 py-1 rounded-md font-bold hover:opacity-90">Facebook</a>
-                </div>
+    <div style="background: rgba(18, 8, 42, 0.95); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5);">
+        <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h3>
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
+        <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{amt_val}</p>
+        <a href="{pay_url}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
+            🚀 Proceed to Pay ₹{amt_val} (UPI, GPay, PhonePe & Cards)
+        </a>
+    </div>
+    """
+
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccAstroForge - AI Astrology Guidance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #030014;
+            background-image: linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)), url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg");
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .logo-area img { height: 65px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); }
+        .social-links a { color: #fff; background: #ea4335; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; margin-left: 5px; }
+        .social-links a.fb { background: #1877f2; }
+        .tab-list { display: flex; flex-wrap: wrap; gap: 4px; background: rgba(10, 3, 25, 0.9); padding: 6px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.4); margin-bottom: 20px; }
+        .tab-btn { background: rgba(18, 8, 42, 0.9); border: 1px solid rgba(244, 114, 182, 0.45); color: #fef08a; font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.75rem; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border-color: #fde047; }
+        .tab-content { display: none; background: rgba(14, 5, 35, 0.95); border: 1px solid rgba(244, 114, 182, 0.6); border-radius: 16px; padding: 25px; box-shadow: 0 0 30px rgba(124, 58, 237, 0.3); }
+        .tab-content.active { display: block; }
+        h3, h4 { color: #fde047; font-family: 'Cinzel', serif; }
+        input, select, textarea { background: rgba(22, 10, 48, 0.95); border: 1.5px solid rgba(244, 114, 182, 0.7); color: #ffffff; border-radius: 12px; padding: 12px 16px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        button.primary-btn { background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; font-weight: 700; border-radius: 12px; padding: 12px 24px; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media(max-width: 768px) { .row { grid-template-columns: 1fr; } }
+        .card { background: rgba(18, 8, 42, 0.9); border: 1px solid #7c3aed; padding: 18px; border-radius: 14px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-area">
+                {% if logo_src %}
+                <img src="{{ logo_src }}" alt="Logo">
+                {% else %}
+                <span style="font-size: 26px; font-weight: 800; color: #fbcfe8; font-family: 'Cinzel', serif;">AccAstroForge</span>
+                {% endif %}
             </div>
-
-            {alert_box}
-
-            <!-- Tabs Navigation (Exact Gradio Look) -->
-            <div class="flex overflow-x-auto gap-2 p-2 bg-slate-900/90 rounded-xl border border-pink-500/40 mb-4" id="tab-list">
-                <button class="tab-btn active" onclick="switchTab('dashboard')">👤 DASHBOARD</button>
-                <button class="tab-btn" onclick="switchTab('life')">🌟 LIFE PREDICTION</button>
-                <button class="tab-btn" onclick="switchTab('horoscope')">☀️ HOROSCOPE</button>
-                <button class="tab-btn" onclick="switchTab('matching')">❤️ MATCHING</button>
-                <button class="tab-btn" onclick="switchTab('gemstones')">💎 GEMSTONES</button>
-                <button class="tab-btn" onclick="switchTab('kundali')">📜 KUNDALI & BIRTH PDF</button>
-                <button class="tab-btn" onclick="switchTab('numerology')">🔢 NUMEROLOGY</button>
-                <button class="tab-btn" onclick="switchTab('panchang')">📅 PANCHANG</button>
-                <button class="tab-btn" onclick="switchTab('ai')">🤖 AI ASSISTANT</button>
-                <button class="tab-btn" onclick="switchTab('legal')">⚖️ LEGAL</button>
-            </div>
-
-            <!-- TAB 1: DASHBOARD -->
-            <div id="tab-dashboard" class="tab-content card-box">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">👤 User Profile, Wallet & Order History</h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <!-- Login Box -->
-                    <div class="bg-slate-950 p-5 rounded-xl border border-purple-800">
-                        <h4 class="text-yellow-400 font-bold text-sm mb-3">🔐 Active User Session</h4>
-                        <p class="text-xs text-slate-300 mb-3">Sign in or register for full features</p>
-                        <form action="/login" method="post" class="space-y-2">
-                            <input type="email" name="email" required placeholder="Registered Email">
-                            <input type="password" name="password" required placeholder="Password">
-                            <button type="submit" class="btn-primary text-xs py-2">Sign In to Account</button>
-                        </form>
-                    </div>
-
-                    <!-- Wallet Topup Box -->
-                    <div class="bg-slate-950 p-5 rounded-xl border border-purple-800 text-center flex flex-col justify-between">
-                        <div>
-                            <h4 class="text-yellow-400 font-bold text-sm mb-1">💳 Wallet Balance: <span class="text-green-400">₹ 0.00</span></h4>
-                            <p class="text-xs text-slate-300 mb-4">Instant topup credits via Razorpay UPI, Cards & Netbanking</p>
-                        </div>
-                        <div class="flex justify-center gap-3">
-                            <a href="{pay_250}" target="_blank" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2.5 rounded-xl shadow-lg">⚡ Add ₹250</a>
-                            <a href="{pay_500}" target="_blank" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2.5 rounded-xl shadow-lg">⚡ Add ₹500</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: LIFE PREDICTION -->
-            <div id="tab-life" class="tab-content card-box" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">🌌 Vedic Astrology & Deep Life Forecast</h3>
-                <form action="/check-life" method="post">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div><label>Full Name</label><input type="text" name="name" required placeholder="Full Name"></div>
-                        <div><label>Date of Birth</label><input type="date" name="dob" required></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div><label>Time of Birth</label><input type="text" name="tob" placeholder="e.g. 10:30 AM"></div>
-                        <div><label>Place of Birth</label><input type="text" name="pob" placeholder="City, State"></div>
-                    </div>
-                    <button type="submit" class="btn-primary mt-2">✨ Reveal Detailed Life Insights (₹499)</button>
-                </form>
-            </div>
-
-            <!-- TAB 3: HOROSCOPE -->
-            <div id="tab-horoscope" class="tab-content card-box text-center" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">🔮 Daily Zodiac Predictions</h3>
-                <select class="max-w-xs mx-auto mb-4">
-                    <option>Aries (Mesha)</option><option>Taurus (Vrishabha)</option><option>Gemini (Mithuna)</option>
-                    <option>Cancer (Karka)</option><option>Leo (Simha)</option><option>Virgo (Kanya)</option>
-                </select>
-                <div class="bg-slate-950 p-6 rounded-xl border border-purple-900 max-w-lg mx-auto">
-                    <p class="text-green-400 text-sm font-semibold">✨ Today brings high cosmic energy. Planetary transits indicate financial growth and emotional peace.</p>
-                </div>
-            </div>
-
-            <!-- TAB 4: MATCHING -->
-            <div id="tab-matching" class="tab-content card-box" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">💍 Vedic Compatibility & Guna Milan</h3>
-                <form action="/check-matching" method="post">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div><label>Boy's Name</label><input type="text" name="boy_name" required placeholder="Boy's Name"></div>
-                        <div><label>Boy's DOB</label><input type="date" name="boy_dob" required></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div><label>Girl's Name</label><input type="text" name="girl_name" required placeholder="Girl's Name"></div>
-                        <div><label>Girl's DOB</label><input type="date" name="girl_dob" required></div>
-                    </div>
-                    <button type="submit" class="btn-primary mt-2">❤️ Match Kundalis Now (₹399)</button>
-                </form>
-            </div>
-
-            <!-- TAB 5: GEMSTONES -->
-            <div id="tab-gemstones" class="tab-content card-box text-center" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">🧿 Lucky Gemstones & Remedies</h3>
-                <div class="bg-slate-950 p-6 rounded-xl border border-purple-900 max-w-md mx-auto">
-                    <p class="text-slate-300 text-xs mb-4">Discover Emerald (Panna) or Yellow Sapphire (Pukhraj) suitability for success.</p>
-                    <a href="{get_robust_razorpay_link('Gemstone Report', 299)}" target="_blank" class="btn-primary inline-block">🚀 Unlock Gemstone Report (₹299)</a>
-                </div>
-            </div>
-
-            <!-- TAB 6: KUNDALI & BIRTH PDF -->
-            <div id="tab-kundali" class="tab-content card-box" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">📜 Janam Kundali & Lagna Birth Chart Generator</h3>
-                <form action="/generate-pdf" method="post">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div><label>Full Name</label><input type="text" name="name" required placeholder="Full Name"></div>
-                        <div><label>Date of Birth</label><input type="date" name="dob" required></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div><label>Time of Birth</label><input type="text" name="tob" placeholder="e.g. 08:15 PM"></div>
-                        <div><label>Place of Birth</label><input type="text" name="pob" placeholder="City"></div>
-                    </div>
-                    <button type="submit" class="btn-primary mt-2">📜 Generate Birth Chart & PDF (₹299)</button>
-                </form>
-            </div>
-
-            <!-- TAB 7: NUMEROLOGY -->
-            <div id="tab-numerology" class="tab-content card-box text-center" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">🔢 Numerology Calculator</h3>
-                <div class="bg-slate-950 p-6 rounded-xl border border-purple-900 max-w-md mx-auto">
-                    <p class="text-yellow-400 text-lg font-bold mb-2">Psychic Life Number: 7</p>
-                    <p class="text-xs text-slate-300">Strong analytical abilities and deep spiritual focus predicted.</p>
-                </div>
-            </div>
-
-            <!-- TAB 8: PANCHANG -->
-            <div id="tab-panchang" class="tab-content card-box" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">📅 Daily Vedic Panchang</h3>
-                <div class="bg-slate-950 p-6 rounded-xl border border-purple-900 max-w-md mx-auto">
-                    <ul class="space-y-2 text-xs text-slate-300">
-                        <li><b class="text-yellow-400">Tithi:</b> Shukla Paksha Navami</li>
-                        <li><b class="text-yellow-400">Nakshatra:</b> Rohini</li>
-                        <li><b class="text-yellow-400">Rahu Kalam:</b> 10:30 AM - 12:00 PM</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- TAB 9: AI ASSISTANT -->
-            <div id="tab-ai" class="tab-content card-box" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">🤖 Ask Your Personal AI Astrologer</h3>
-                <textarea rows="3" placeholder="Ask any question regarding career, marriage, health..."></textarea>
-                <button class="btn-primary mt-2">Ask Assistant ✨</button>
-            </div>
-
-            <!-- TAB 10: LEGAL -->
-            <div id="tab-legal" class="tab-content card-box" style="display:none;">
-                <h3 class="cinzel text-xl font-bold text-yellow-400 mb-4">⚖️ Terms & Social Handles</h3>
-                <p class="text-xs text-slate-300 mb-4">All predictions are for guidance purposes based on traditional Vedic Astrology principles.</p>
-                <p class="text-xs text-yellow-400 font-bold">Official Handles:</p>
-                <ul class="text-xs text-slate-300 space-y-1 mt-2">
-                    <li>Twitter (X): <a href="https://x.com/AccAstroForge" target="_blank" class="text-blue-400 underline">https://x.com/AccAstroForge</a></li>
-                    <li>Instagram: <a href="https://www.instagram.com/accastroforge/" target="_blank" class="text-pink-400 underline">https://www.instagram.com/accastroforge/</a></li>
-                </ul>
+            <div class="social-links">
+                <span style="font-size: 0.85rem; color: #fde047;">Quick Logins:</span>
+                <a href="{{ google_url }}" target="_blank">Google</a>
+                <a href="{{ fb_url }}" target="_blank" class="fb">Facebook</a>
             </div>
         </div>
 
-        <script>
-            function switchTab(tabId) {{
-                document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                document.getElementById('tab-' + tabId).style.display = 'block';
-                if(event && event.currentTarget) {{
-                    event.currentTarget.classList.add('active');
-                }}
-            }}
-        </script>
-    </body>
-    </html>
-    """
+        <div class="tab-list">
+            <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIFE PREDICTION</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-horoscope')">☀️ HOROSCOPE</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-matching')">❤️ MATCHING</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-gemstones')">💎 GEMSTONES</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-kundali')">📜 KUNDALI PDF</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-numerology')">🔢 NUMEROLOGY</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-panchang')">📅 PANCHANG</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🤖 AI ASSISTANT</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-legal')">⚖️ LEGAL</button>
+        </div>
 
-@app.post("/login")
-def login(email: str = Form(...)):
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": email, "service": "Member Login", "payment_status": "Active Session"})
-    return RedirectResponse(url="/?msg=Login+successful+for+" + email, status_code=303)
+        <!-- TAB 1: DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content active">
+            <h3>👤 User Profile, Wallet & Order History</h3>
+            <div class="card" id="profile-box">
+                <h4>Active User Session</h4>
+                <p>Guest User (Please Sign Up / Login)</p>
+            </div>
+            <div class="card">
+                <h4>💳 Wallet Balance: ₹ 0.00</h4>
+                <p>Use credits for instant unlocking of reports.</p>
+                <div class="row" style="margin-top:10px;">
+                    <button class="primary-btn" onclick="topupWallet(250)">⚡ Add ₹250</button>
+                    <button class="primary-btn" onclick="topupWallet(500)">⚡ Add ₹500</button>
+                </div>
+                <div id="wallet-result" style="margin-top:10px;"></div>
+            </div>
+            <div class="card">
+                <h4>📝 Sign Up & Verify OTP</h4>
+                <div class="row">
+                    <input type="text" id="su-name" placeholder="Full Name">
+                    <input type="email" id="su-email" placeholder="Email Address">
+                </div>
+                <div class="row">
+                    <input type="text" id="su-phone" placeholder="Phone Number">
+                    <input type="password" id="su-pass" placeholder="Password">
+                </div>
+                <button class="primary-btn" onclick="registerUser()">✨ Register & Send OTP</button>
+                <div id="su-output" style="margin-top: 10px;"></div>
+                <div style="margin-top: 15px;" class="row">
+                    <input type="text" id="su-otp" placeholder="Enter 6-Digit OTP">
+                    <button class="primary-btn" onclick="verifyOtp()">🔑 Verify OTP</button>
+                </div>
+            </div>
+            <div class="card">
+                <h4>🔐 Member Sign In / Login</h4>
+                <input type="email" id="li-email" placeholder="Registered Email">
+                <input type="password" id="li-pass" placeholder="Password">
+                <button class="primary-btn" onclick="loginUser()">🚀 Sign In</button>
+                <div id="li-output" style="margin-top: 10px;"></div>
+            </div>
+        </div>
 
-@app.post("/check-matching")
-def matching(boy_name: str = Form(...), girl_name: str = Form(...)):
-    link = get_robust_razorpay_link(f"Kundali Matching: {boy_name} & {girl_name}", 399, boy_name)
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{boy_name} & {girl_name}", "service": "Kundali Matching", "payment_status": "Pending (₹399)"})
-    return RedirectResponse(url=link, status_code=303)
+        <!-- TAB 2: LIFE PREDICTION -->
+        <div id="tab-life" class="tab-content">
+            <h3>🌌 Vedic Astrology & Deep Life Forecast</h3>
+            <div class="row">
+                <input type="text" id="life-name" placeholder="Full Name">
+                <input type="date" id="life-dob">
+            </div>
+            <div class="row">
+                <input type="time" id="life-tob">
+                <input type="text" id="life-pob" placeholder="Place of Birth">
+            </div>
+            <button class="primary-btn" onclick="submitLifePrediction()">✨ Reveal Life Insights (₹499)</button>
+            <div id="life-result" style="margin-top: 15px;"></div>
+        </div>
 
-@app.post("/check-life")
-def life(name: str = Form(...)):
-    link = get_robust_razorpay_link(f"Life Prediction: {name}", 499, name)
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "payment_status": "Pending (₹499)"})
-    return RedirectResponse(url=link, status_code=303)
+        <!-- TAB 3: HOROSCOPE -->
+        <div id="tab-horoscope" class="tab-content">
+            <h3>🔮 Daily Zodiac Predictions</h3>
+            <select id="horo-sign">
+                {% for s in zodiacs %}
+                <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+            </select>
+            <button class="primary-btn" onclick="getHoroscope()">🔮 Get Horoscope</button>
+            <div id="horo-result" style="margin-top: 15px;"></div>
+        </div>
 
-@app.post("/generate-pdf")
-def pdf(name: str = Form(...), dob: str = Form(...), tob: str = Form(""), pob: str = Form("")):
-    filename = create_kundali_pdf_file(name, dob, tob, pob)
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": filename, "payment_status": "Generated"})
-    return FileResponse(filename, filename=filename, media_type='application/pdf')
+        <!-- TAB 4: MATCHING -->
+        <div id="tab-matching" class="tab-content">
+            <h3>💍 Vedic Compatibility & Guna Milan</h3>
+            <div class="row">
+                <input type="text" id="b-name" placeholder="Boy's Name">
+                <input type="date" id="b-dob">
+            </div>
+            <div class="row">
+                <input type="text" id="g-name" placeholder="Girl's Name">
+                <input type="date" id="g-dob">
+            </div>
+            <button class="primary-btn" onclick="submitMatching()">❤️ Match Kundalis Now (₹399)</button>
+            <div id="matching-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB 5: GEMSTONES -->
+        <div id="tab-gemstones" class="tab-content">
+            <h3>🧿 Lucky Gemstones & Cosmic Remedies</h3>
+            <div class="row">
+                <input type="date" id="gem-dob">
+                <input type="text" id="gem-zodiac" placeholder="Zodiac Sign">
+            </div>
+            <button class="primary-btn" onclick="submitGemstone()">💎 Find My Gemstone (₹299)</button>
+            <div id="gem-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB 6: KUNDALI PDF -->
+        <div id="tab-kundali" class="tab-content">
+            <h3>📜 Janam Kundali & Lagna Birth Chart Generator</h3>
+            <div class="row">
+                <input type="text" id="k-name" placeholder="Full Name">
+                <input type="date" id="k-dob">
+            </div>
+            <div class="row">
+                <input type="text" id="k-tob" placeholder="Time of Birth (HH:MM)">
+                <input type="text" id="k-pob" placeholder="Place of Birth">
+            </div>
+            <button class="primary-btn" onclick="submitKundaliPdf()">📜 Generate Kundali & PDF (₹299)</button>
+            <div id="kundali-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB 7: NUMEROLOGY -->
+        <div id="tab-numerology" class="tab-content">
+            <h3>🔢 Numerology Check</h3>
+            <div class="row">
+                <input type="text" id="num-name" placeholder="Full Name">
+                <input type="date" id="num-dob">
+            </div>
+            <button class="primary-btn" onclick="submitNumerology()">🔢 Analyze Numerology (₹249)</button>
+            <div id="num-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB 8: PANCHANG -->
+        <div id="tab-panchang" class="tab-content">
+            <h3>📅 Vedic Panchang & Shubh Muhurat</h3>
+            <div class="row">
+                <input type="date" id="p-date">
+                <input type="text" id="p-city" placeholder="City">
+            </div>
+            <button class="primary-btn" onclick="submitPanchang()">📅 Check Panchang</button>
+            <div id="panchang-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB 9: AI ASSISTANT -->
+        <div id="tab-ai" class="tab-content">
+            <h3>🤖 Ask Your Personal AI Astrologer</h3>
+            <textarea id="ai-query" placeholder="Ask your question regarding career, marriage, health..."></textarea>
+            <button class="primary-btn" onclick="askAi()">Ask Assistant ✨</button>
+            <div id="ai-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB 10: LEGAL -->
+        <div id="tab-legal" class="tab-content">
+            <h3>⚖️ Terms & Social Handles</h3>
+            <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
+            <p><b>Support Email:</b> support@accastroforge.in</p>
+            <ul>
+                <li>Twitter: <a href="https://x.com/AccAstroForge" target="_blank" style="color:#38bdf8;">https://x.com/AccAstroForge</a></li>
+                <li>Instagram: <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color:#f472b6;">https://www.instagram.com/accastroforge/</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let generatedOtpStorage = "";
+        let verifiedEmailStorage = "";
+
+        function switchTab(evt, tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        async function registerUser() {
+            let name = document.getElementById('su-name').value;
+            let email = document.getElementById('su-email').value;
+            let phone = document.getElementById('su-phone').value;
+            let res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, email, phone}) });
+            let data = await res.json();
+            generatedOtpStorage = data.otp;
+            verifiedEmailStorage = email;
+            document.getElementById('su-output').innerHTML = data.msg;
+        }
+
+        async function verifyOtp() {
+            let userOtp = document.getElementById('su-otp').value;
+            if(userOtp === generatedOtpStorage) {
+                document.getElementById('profile-box').innerHTML = `<h4>👤 Active Member</h4><p>Verified: ${verifiedEmailStorage}</p>`;
+                alert("Account verified successfully!");
+            } else { alert("Invalid OTP!"); }
+        }
+
+        async function loginUser() {
+            let email = document.getElementById('li-email').value;
+            let res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email}) });
+            let data = await res.json();
+            document.getElementById('li-output').innerHTML = data.msg;
+            if(data.success) {
+                document.getElementById('profile-box').innerHTML = `<h4>👤 Active Member</h4><p>Logged In: ${email}</p>`;
+            }
+        }
+
+        async function topupWallet(amt) {
+            let res = await fetch('/api/topup', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({amount: amt}) });
+            let data = await res.json();
+            document.getElementById('wallet-result').innerHTML = data.paywall;
+        }
+
+        async function submitLifePrediction() {
+            let name = document.getElementById('life-name').value;
+            let dob = document.getElementById('life-dob').value;
+            let res = await fetch('/api/life', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
+            let data = await res.json();
+            document.getElementById('life-result').innerHTML = data.teaser + data.paywall;
+        }
+
+        async function getHoroscope() {
+            let sign = document.getElementById('horo-sign').value;
+            let res = await fetch('/api/horoscope', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({sign}) });
+            let data = await res.json();
+            document.getElementById('horo-result').innerHTML = data.html;
+        }
+
+        async function submitMatching() {
+            let boy_name = document.getElementById('b-name').value;
+            let girl_name = document.getElementById('g-name').value;
+            let res = await fetch('/api/matching', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({boy_name, girl_name}) });
+            let data = await res.json();
+            document.getElementById('matching-result').innerHTML = data.teaser + data.paywall;
+        }
+
+        async function submitGemstone() {
+            let zodiac = document.getElementById('gem-zodiac').value;
+            let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({zodiac}) });
+            let data = await res.json();
+            document.getElementById('gem-result').innerHTML = data.teaser + data.paywall;
+        }
+
+        async function submitKundaliPdf() {
+            let name = document.getElementById('k-name').value;
+            let dob = document.getElementById('k-dob').value;
+            let tob = document.getElementById('k-tob').value;
+            let pob = document.getElementById('k-pob').value;
+            let res = await fetch('/api/kundali-pdf', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob}) });
+            let data = await res.json();
+            document.getElementById('kundali-result').innerHTML = data.teaser + data.chart + data.paywall;
+        }
+
+        async function submitNumerology() {
+            let name = document.getElementById('num-name').value;
+            let dob = document.getElementById('num-dob').value;
+            let res = await fetch('/api/numerology', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
+            let data = await res.json();
+            document.getElementById('num-result').innerHTML = data.teaser + data.paywall;
+        }
+
+        async function submitPanchang() {
+            let city = document.getElementById('p-city').value;
+            let date = document.getElementById('p-date').value;
+            let res = await fetch('/api/panchang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city, date}) });
+            let data = await res.json();
+            document.getElementById('panchang-result').innerHTML = data.html;
+        }
+
+        async function askAi() {
+            let query = document.getElementById('ai-query').value;
+            let res = await fetch('/api/ai', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query}) });
+            let data = await res.json();
+            document.getElementById('ai-result').innerHTML = data.html;
+        }
+    </script>
+</body>
+</html>
+"""
+
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    return HTMLResponse(content=HTML_TEMPLATE.replace("{% for s in zodiacs %}", "").replace("{% endfor %}", ""))
+
+@app.post("/api/register")
+async def api_register(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    email = data.get("email", "")
+    phone = data.get("phone", "")
+    otp_code = str(random.randint(100000, 999999))
+    send_brevo_email(email, name, "OTP Verification", f"<h2>Welcome {name}! Your OTP is {otp_code}</h2>")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Registration OTP", "details": f"Email: {email}", "payment_status": "OTP Dispatched"})
+    return JSONResponse({"otp": otp_code, "msg": "<p style='color:#4ade80;'>📧 OTP Sent to your email!</p>"})
+
+@app.post("/api/login")
+async def api_login(request: Request):
+    data = await request.json()
+    email = data.get("email", "").strip().lower()
+    users = load_users()
+    found = any(u.get("email") == email or u.get("Email") == email for u in users)
+    if found:
+        save_log({"timestamp": str(datetime.datetime.now()), "full_name": email, "service": "Login", "payment_status": "Active Session"})
+        return JSONResponse({"success": True, "msg": "<p style='color:#4ade80;'>🎉 Login Successful!</p>"})
+    return JSONResponse({"success": False, "msg": "<p style='color:#ef4444;'>❌ Account not found. Please register first.</p>"})
+
+@app.post("/api/topup")
+async def api_topup(request: Request):
+    data = await request.json()
+    amt = data.get("amount", 250)
+    paywall = get_paywall_html(f"Wallet Topup (₹{amt})", amt, "User")
+    return JSONResponse({"paywall": paywall})
+
+@app.post("/api/life")
+async def api_life(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    dob = data.get("dob", "2000-01-01")
+    profile = calculate_astrological_profile(name, dob)
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🌟 Astrological Teaser for {name.upper()}</h4><p><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p></div>"""
+    paywall = get_paywall_html("Complete Deep Life Forecast & PDF", 499, name)
+    return JSONResponse({"teaser": teaser, "paywall": paywall})
+
+@app.post("/api/horoscope")
+async def api_horoscope(request: Request):
+    data = await request.json()
+    sign = data.get("sign", "Aries")
+    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔮 Daily Horoscope for {sign}</h4><p>Today brings high cosmic energy. Jupiter's aspect promises financial opportunities and peace.</p></div>"""
+    return JSONResponse({"html": html})
+
+@app.post("/api/matching")
+async def api_matching(request: Request):
+    data = await request.json()
+    b = data.get("boy_name", "Boy")
+    g = data.get("girl_name", "Girl")
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>❤️ Compatibility Teaser for {b} & {g}</h4><p>High Guna Milan score detected! Excellent long-term emotional alignment.</p></div>"""
+    paywall = get_paywall_html("Complete Kundali Matching Report", 399, f"{b} & {g}")
+    return JSONResponse({"teaser": teaser, "paywall": paywall})
+
+@app.post("/api/gemstone")
+async def api_gemstone(request: Request):
+    data = await request.json()
+    z = data.get("zodiac", "Aries")
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>💎 Gemstone Guidance for {z}</h4><p>Emerald (Panna) or Yellow Sapphire recommended for career success.</p></div>"""
+    paywall = get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
+    return JSONResponse({"teaser": teaser, "paywall": paywall})
+
+@app.post("/api/kundali-pdf")
+async def api_kundali_pdf(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    dob = data.get("dob", "2000-01-01")
+    tob = data.get("tob", "10:00")
+    pob = data.get("pob", "Kolkata")
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready.</p></div>"""
+    chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
+    paywall = get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
+    return JSONResponse({"teaser": teaser, "chart": chart, "paywall": paywall})
+
+@app.post("/api/numerology")
+async def api_numerology(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    dob = data.get("dob", "2000-01-01")
+    profile = calculate_astrological_profile(name, dob)
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
+    paywall = get_paywall_html("Detailed Numerology & Name Correction Report", 249, name)
+    return JSONResponse({"teaser": teaser, "paywall": paywall})
+
+@app.post("/api/panchang")
+async def api_panchang(request: Request):
+    data = await request.json()
+    city = data.get("city", "Kolkata")
+    date = data.get("date", "Today")
+    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📅 Vedic Panchang for {city} ({date})</h4><p><b>Tithi:</b> Shukla Paksha Navami<br><b>Nakshatra:</b> Rohini<br><b>Rahu Kalam:</b> 10:30 AM - 12:00 PM</p></div>"""
+    return JSONResponse({"html": html})
+
+@app.post("/api/ai")
+async def api_ai(request: Request):
+    data = await request.json()
+    query = data.get("query", "")
+    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><p><b>Query:</b> {query}</p><p style='color:#4ade80;'><b>AI Astrologer:</b> Planetary alignments show favorable outcomes for your career and relationships. Keep up regular meditation.</p></div>"""
+    return JSONResponse({"html": html})
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=10000, reload=True)

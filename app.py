@@ -6,9 +6,8 @@ import json
 import requests
 import sqlite3
 import razorpay
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -139,9 +138,6 @@ def save_log(user_data):
         print(f"Save Log Error: {e}")
     append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
-logo_path = "logo.png" if os.path.exists("logo.png") else None
-
 def get_base64(file_path):
     if file_path and os.path.exists(file_path):
         try:
@@ -151,8 +147,11 @@ def get_base64(file_path):
             return ""
     return ""
 
-logo_b64 = get_base64(logo_path)
+logo_b64 = get_base64("logo.png")
 logo_src = "data:image/png;base64," + logo_b64 if logo_b64 else ""
+
+favicon_b64 = get_base64("favicon.png")
+favicon_src = "data:image/png;base64," + favicon_b64 if favicon_b64 else ""
 
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
@@ -252,11 +251,14 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AccAstroForge - AI Astrology Guidance</title>
+    <link rel="icon" type="image/png" href="{{ favicon_src }}">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #030014;
-            background-image: linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)), url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg");
+            background-image: 
+                linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)),
+                url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg");
             background-position: center center;
             background-repeat: no-repeat;
             background-size: cover;
@@ -269,14 +271,17 @@ HTML_TEMPLATE = """
         }
         .container { max-width: 1100px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .logo-area img { height: 65px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); }
+        .logo-area img { height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.7)); mix-blend-mode: screen; background: transparent !important; }
         .social-links a { color: #fff; background: #ea4335; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; margin-left: 5px; }
         .social-links a.fb { background: #1877f2; }
+        
         .tab-list { display: flex; flex-wrap: wrap; gap: 4px; background: rgba(10, 3, 25, 0.9); padding: 6px; border-radius: 12px; border: 1px solid rgba(244, 114, 182, 0.4); margin-bottom: 20px; }
         .tab-btn { background: rgba(18, 8, 42, 0.9); border: 1px solid rgba(244, 114, 182, 0.45); color: #fef08a; font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.75rem; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.3s; }
         .tab-btn.active { background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border-color: #fde047; }
+        
         .tab-content { display: none; background: rgba(14, 5, 35, 0.95); border: 1px solid rgba(244, 114, 182, 0.6); border-radius: 16px; padding: 25px; box-shadow: 0 0 30px rgba(124, 58, 237, 0.3); }
         .tab-content.active { display: block; }
+        
         h3, h4 { color: #fde047; font-family: 'Cinzel', serif; }
         input, select, textarea { background: rgba(22, 10, 48, 0.95); border: 1.5px solid rgba(244, 114, 182, 0.7); color: #ffffff; border-radius: 12px; padding: 12px 16px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
         button.primary-btn { background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; border: 1px solid #fde047; font-weight: 700; border-radius: 12px; padding: 12px 24px; cursor: pointer; width: 100%; font-size: 1rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); }
@@ -290,13 +295,13 @@ HTML_TEMPLATE = """
         <div class="header">
             <div class="logo-area">
                 {% if logo_src %}
-                <img src="{{ logo_src }}" alt="Logo">
+                <img src="{{ logo_src }}" alt="AccAstroForge Logo">
                 {% else %}
                 <span style="font-size: 26px; font-weight: 800; color: #fbcfe8; font-family: 'Cinzel', serif;">AccAstroForge</span>
                 {% endif %}
             </div>
-            <div class="social-links">
-                <span style="font-size: 0.85rem; color: #fde047;">Quick Logins:</span>
+            <div class="social-links" style="display: flex; align-items: center; background: rgba(18, 8, 42, 0.85); border: 1px solid rgba(244, 114, 182, 0.5); padding: 8px 14px; border-radius: 14px;">
+                <span style="font-size: 0.8rem; color: #fde047; font-weight: 600; margin-right: 6px;">🔐 Quick Logins:</span>
                 <a href="{{ google_url }}" target="_blank">Google</a>
                 <a href="{{ fb_url }}" target="_blank" class="fb">Facebook</a>
             </div>
@@ -318,6 +323,15 @@ HTML_TEMPLATE = """
         <!-- TAB 1: DASHBOARD -->
         <div id="tab-dashboard" class="tab-content active">
             <h3>👤 User Profile, Wallet & Order History</h3>
+            
+            <div style="background: linear-gradient(135deg, rgba(69, 10, 10, 0.95), rgba(127, 29, 29, 0.9)); border: 2.5px solid #f87171; padding: 18px 22px; border-radius: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+                <div style="background: #fde047; color: #7f1d1d; width: 45px; height: 45px; min-width: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900;">⚠️</div>
+                <div>
+                    <h4 style="color: #fef08a !important; margin: 0 0 4px 0; font-family: 'Cinzel', serif;">⚠️ CRITICAL WARNING: DO NOT REFRESH PAGE!</h4>
+                    <p style="color: #ffffff !important; font-size: 0.92rem; margin: 0;">When logged in or performing wallet topups, <span style="color: #fca5a5; text-decoration: underline;">NEVER REFRESH THE PAGE</span> to avoid clearing active sessions.</p>
+                </div>
+            </div>
+
             <div class="card" id="profile-box">
                 <h4>Active User Session</h4>
                 <p>Guest User (Please Sign Up / Login)</p>
@@ -582,7 +596,11 @@ HTML_TEMPLATE = """
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return HTMLResponse(content=HTML_TEMPLATE.replace("{% for s in zodiacs %}", "").replace("{% endfor %}", ""))
+    rendered_html = HTML_TEMPLATE.replace("{{ favicon_src }}", favicon_src).replace("{{ logo_src }}", logo_src).replace("{{ google_url }}", GOOGLE_OAUTH_URL).replace("{{ fb_url }}", FACEBOOK_OAUTH_URL)
+    for s in ZODIAC_SIGNS:
+        rendered_html = rendered_html.replace("{% for s in zodiacs %}", f"<option value='{s}'>{s}</option>\n{{% for s in zodiacs %}}", 1)
+    rendered_html = rendered_html.replace("{% for s in zodiacs %}", "").replace("{% endfor %}", "")
+    return HTMLResponse(content=rendered_html)
 
 @app.post("/api/register")
 async def api_register(request: Request):

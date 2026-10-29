@@ -34,6 +34,7 @@ FACEBOOK_OAUTH_URL = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FA
 
 APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCOjnJySc7mB7vu5BcWhmn7t5f-lPG7EkC03Hc2SCKyMhvOrFz2tZmM1I5obCAm2YM/exec"
 DB_FILE = "accastroforge.db"
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "MeherArnab1989")
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
@@ -137,6 +138,19 @@ def save_log(user_data):
     except Exception as e:
         print(f"Save Log Error: {e}")
     append_to_google_sheet_direct("AdminLogs", [ts, fn, srv, dtl, pst])
+
+def load_logs():
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admin_logs")
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        print(f"Load Logs Error: {e}")
+        return []
 
 def get_base64(file_path):
     if file_path and os.path.exists(file_path):
@@ -284,11 +298,31 @@ HTML_TEMPLATE = """
             gap: 15px;
         }
 
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .logo-area img {
             height: 75px;
-            filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.8));
+            filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9));
             mix-blend-mode: screen;
             background: transparent !important;
+        }
+
+        .admin-dot {
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            min-height: 16px;
+            background: radial-gradient(circle, #fde047 0%, #d97706 100%);
+            border: 1.5px solid #fef08a;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+            box-shadow: 0 0 12px #fde047;
+            margin-left: 10px;
         }
 
         .quick-logins {
@@ -302,7 +336,6 @@ HTML_TEMPLATE = """
             gap: 10px;
         }
 
-        /* Tab Navigation Bar matching Gradio style */
         .tab-list {
             display: flex !important;
             flex-wrap: wrap !important;
@@ -379,16 +412,25 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <!-- HEADER WITH LOGO & QUICK LOGINS -->
+        <!-- HEADER WITH LOGO, SECRET ADMIN DOT & QUICK LOGINS -->
         <div class="header-container">
             <div class="logo-area">
                 LOGO_SRC_PLACEHOLDER
+                <span class="admin-dot" title="Admin Trigger" onclick="toggleAdminPanel()"></span>
             </div>
             <div class="quick-logins">
                 <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
                 <a href="GOOGLE_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
                 <a href="FB_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
             </div>
+        </div>
+
+        <!-- HIDDEN ADMIN PANEL -->
+        <div id="admin-panel" class="card" style="display: none; border: 2px solid #fde047; margin-bottom: 20px;">
+            <h3>🛡️ Owner Portal (Admin Dashboard)</h3>
+            <input type="password" id="admin-pass" placeholder="Enter Admin Secret Password">
+            <button class="primary-btn" onclick="loadAdminDashboard()">Unlock Dashboard</button>
+            <div id="admin-output" style="margin-top: 15px;"></div>
         </div>
 
         <!-- TABS BAR -->
@@ -421,37 +463,42 @@ HTML_TEMPLATE = """
                 <h4>Active User Session</h4>
                 <p>Guest User (Please Sign Up / Login)</p>
             </div>
+            
             <div class="card">
                 <h4>💳 Wallet Balance: ₹ 0.00</h4>
                 <p>Use credits for instant unlocking of reports.</p>
-                <div class="row" style="margin-top:10px;">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px;">
+                    <button class="primary-btn" onclick="topupWallet(100)">⚡ Add ₹100</button>
                     <button class="primary-btn" onclick="topupWallet(250)">⚡ Add ₹250</button>
                     <button class="primary-btn" onclick="topupWallet(500)">⚡ Add ₹500</button>
+                    <button class="primary-btn" onclick="topupWallet(1000)">⚡ Add ₹1000</button>
                 </div>
                 <div id="wallet-result" style="margin-top:10px;"></div>
             </div>
+
             <div class="card">
                 <h4>📝 Sign Up & Verify OTP</h4>
                 <div class="row">
-                    <input type="text" id="su-name" placeholder="Full Name">
-                    <input type="email" id="su-email" placeholder="Email Address">
+                    <input type="text" id="su-name" placeholder="Full Name (e.g. Rajesh Sharma)">
+                    <input type="email" id="su-email" placeholder="Email Address (e.g. user@gmail.com)">
                 </div>
                 <div class="row">
-                    <input type="text" id="su-phone" placeholder="Phone Number">
-                    <input type="password" id="su-pass" placeholder="Password">
+                    <input type="text" id="su-phone" placeholder="Phone Number (e.g. 9876543210)">
+                    <input type="password" id="su-pass" placeholder="Create Secure Password">
                 </div>
-                <button class="primary-btn" onclick="registerUser()">✨ Register & Send OTP</button>
+                <button class="primary-btn" onclick="registerUser()">✨ 1. Register & Send Verification OTP</button>
                 <div id="su-output" style="margin-top: 10px;"></div>
                 <div style="margin-top: 15px;" class="row">
-                    <input type="text" id="su-otp" placeholder="Enter 6-Digit OTP">
-                    <button class="primary-btn" onclick="verifyOtp()">🔑 Verify OTP</button>
+                    <input type="text" id="su-otp" placeholder="Enter 6-Digit Email OTP">
+                    <button class="primary-btn" onclick="verifyOtp()">🔑 2. Verify OTP & Activate Account</button>
                 </div>
             </div>
+
             <div class="card">
                 <h4>🔐 Member Sign In / Login</h4>
-                <input type="email" id="li-email" placeholder="Registered Email">
+                <input type="email" id="li-email" placeholder="Registered Email Address">
                 <input type="password" id="li-pass" placeholder="Password">
-                <button class="primary-btn" onclick="loginUser()">🚀 Sign In</button>
+                <button class="primary-btn" onclick="loginUser()">🚀 Sign In to Account</button>
                 <div id="li-output" style="margin-top: 10px;"></div>
             </div>
         </div>
@@ -540,7 +587,11 @@ HTML_TEMPLATE = """
                 <input type="date" id="p-date">
                 <input type="text" id="p-city" placeholder="City">
             </div>
-            <button class="primary-btn" onclick="submitPanchang()">📅 Check Panchang</button>
+            <select id="p-mode" style="margin-top: 10px;">
+                <option value="free">Free Daily Panchang</option>
+                <option value="detailed">Detailed Shubh Muhurat Report (₹99)</option>
+            </select>
+            <button class="primary-btn" onclick="submitPanchang()" style="margin-top: 10px;">📅 Check Panchang</button>
             <div id="panchang-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -578,6 +629,18 @@ HTML_TEMPLATE = """
             evt.currentTarget.classList.add('active');
         }
 
+        function toggleAdminPanel() {
+            let panel = document.getElementById('admin-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function loadAdminDashboard() {
+            let pass = document.getElementById('admin-pass').value;
+            let res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pass}) });
+            let data = await res.json();
+            document.getElementById('admin-output').innerHTML = data.html;
+        }
+
         async function registerUser() {
             let name = document.getElementById('su-name').value;
             let email = document.getElementById('su-email').value;
@@ -591,10 +654,15 @@ HTML_TEMPLATE = """
 
         async function verifyOtp() {
             let userOtp = document.getElementById('su-otp').value;
-            if(userOtp === generatedOtpStorage) {
-                document.getElementById('profile-box').innerHTML = `<h4>👤 Active Member</h4><p>Verified: ${verifiedEmailStorage}</p>`;
-                alert("Account verified successfully!");
-            } else { alert("Invalid OTP!"); }
+            let name = document.getElementById('su-name').value;
+            let email = document.getElementById('su-email').value;
+            let phone = document.getElementById('su-phone').value;
+            let res = await fetch('/api/verify-otp', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({otp: userOtp, gen_otp: generatedOtpStorage, name, email, phone}) });
+            let data = await res.json();
+            document.getElementById('su-output').innerHTML = data.msg;
+            if(data.success) {
+                document.getElementById('profile-box').innerHTML = `<h4>👤 Active Member</h4><p>Verified: ${email}</p>`;
+            }
         }
 
         async function loginUser() {
@@ -664,9 +732,10 @@ HTML_TEMPLATE = """
         async function submitPanchang() {
             let city = document.getElementById('p-city').value;
             let date = document.getElementById('p-date').value;
-            let res = await fetch('/api/panchang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city, date}) });
+            let mode = document.getElementById('p-mode').value;
+            let res = await fetch('/api/panchang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city, date, mode}) });
             let data = await res.json();
-            document.getElementById('panchang-result').innerHTML = data.html;
+            document.getElementById('panchang-result').innerHTML = data.html + (data.paywall || '');
         }
 
         async function askAi() {
@@ -683,7 +752,6 @@ HTML_TEMPLATE = """
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     logo_html = f'<img src="{logo_src}" alt="AccAstroForge Logo">' if logo_src else '<span style="font-size: 26px; font-weight: 800; color: #fbcfe8; font-family: \'Cinzel\', serif;">AccAstroForge</span>'
-    
     zodiac_options_html = "".join([f'<option value="{s}">{s}</option>' for s in ZODIAC_SIGNS])
     
     rendered_html = (
@@ -696,6 +764,24 @@ def index(request: Request):
     )
     return HTMLResponse(content=rendered_html)
 
+@app.post("/api/admin")
+async def api_admin(request: Request):
+    data = await request.json()
+    if data.get("password") != ADMIN_PASSWORD:
+        return JSONResponse({"html": "<span style='color:#ef4444;'>❌ Incorrect Password! Access Denied.</span>"})
+    
+    users = load_users()
+    logs = load_logs()
+    
+    summary_html = f"""<div style='color:#fff;'>
+        <h4 style='color:#4ade80;'>📋 Registered Users ({len(users)})</h4>
+        <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; margin-bottom:15px;' border='1'>
+            <tr style='background:#5b21b6;'><th>Name</th><th>Email</th><th>Phone</th></tr>"""
+    for u in users:
+        summary_html += f"<tr><td>{u.get('name', '')}</td><td>{u.get('email', '')}</td><td>{u.get('phone', '')}</td></tr>"
+    summary_html += "</table></div>"
+    return JSONResponse({"html": summary_html})
+
 @app.post("/api/register")
 async def api_register(request: Request):
     data = await request.json()
@@ -707,6 +793,14 @@ async def api_register(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Registration OTP", "details": f"Email: {email}", "payment_status": "OTP Dispatched"})
     return JSONResponse({"otp": otp_code, "msg": "<p style='color:#4ade80;'>📧 OTP Sent to your email!</p>"})
 
+@app.post("/api/verify-otp")
+async def api_verify_otp(request: Request):
+    data = await request.json()
+    if str(data.get("otp")) != str(data.get("gen_otp")):
+        return JSONResponse({"success": False, "msg": "<p style='color:#ef4444;'>❌ Invalid OTP!</p>"})
+    save_user_db_single(data.get("name"), data.get("email"), data.get("phone"))
+    return JSONResponse({"success": True, "msg": "<p style='color:#4ade80;'>🎉 Account Verified & Active!</p>"})
+
 @app.post("/api/login")
 async def api_login(request: Request):
     data = await request.json()
@@ -714,7 +808,6 @@ async def api_login(request: Request):
     users = load_users()
     found = any(u.get("email") == email or u.get("Email") == email for u in users)
     if found:
-        save_log({"timestamp": str(datetime.datetime.now()), "full_name": email, "service": "Login", "payment_status": "Active Session"})
         return JSONResponse({"success": True, "msg": "<p style='color:#4ade80;'>🎉 Login Successful!</p>"})
     return JSONResponse({"success": False, "msg": "<p style='color:#ef4444;'>❌ Account not found. Please register first.</p>"})
 
@@ -786,8 +879,12 @@ async def api_panchang(request: Request):
     data = await request.json()
     city = data.get("city", "Kolkata")
     date = data.get("date", "Today")
-    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📅 Vedic Panchang for {city} ({date})</h4><p><b>Tithi:</b> Shukla Paksha Navami<br><b>Nakshatra:</b> Rohini<br><b>Rahu Kalam:</b> 10:30 AM - 12:00 PM</p></div>"""
-    return JSONResponse({"html": html})
+    mode = data.get("mode", "free")
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📅 Vedic Panchang for {city} ({date})</h4><p><b>Tithi:</b> Shukla Paksha Navami<br><b>Nakshatra:</b> Rohini<br><b>Rahu Kalam:</b> 10:30 AM - 12:00 PM</p></div>"""
+    paywall = ""
+    if mode == "detailed":
+        paywall = get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
+    return JSONResponse({"html": teaser, "paywall": paywall})
 
 @app.post("/api/ai")
 async def api_ai(request: Request):

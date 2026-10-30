@@ -276,14 +276,14 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH BRIGHT & COMPACT WATERMARK
+# PDF GENERATION WITH HIGH OPACITY & CLEAR BRIGHT LOGO
 # ---------------------------------------------------------
 def draw_watermark_and_logo(canvas_obj, doc_obj):
     canvas_obj.saveState()
     if os.path.exists("logo.png"):
         try:
-            # Optimized opacity and compact size for clear, bright visibility matching Kundali style
-            canvas_obj.setFillAlpha(0.18)
+            # High opacity (0.35) for bold, clear, and prominent visibility matching Kundali style
+            canvas_obj.setFillAlpha(0.35)
             canvas_obj.drawImage("logo.png", 175, 275, width=260, height=260, preserveAspectRatio=True, mask='auto')
         except Exception:
             pass

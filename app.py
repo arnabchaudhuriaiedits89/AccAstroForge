@@ -275,13 +275,72 @@ def get_paywall_html(service_name, price, user_name="User"):
     </div>
     """
 
+# ---------------------------------------------------------
+# PDF GENERATION WITH WATERMARK / LOGO STICK
+# ---------------------------------------------------------
+def draw_watermark_and_logo(canvas_obj, doc_obj):
+    canvas_obj.saveState()
+    # Watermark in center (semi-transparent)
+    if os.path.exists("logo.png"):
+        try:
+            canvas_obj.setFillAlpha(0.08)
+            canvas_obj.drawImage("logo.png", 150, 250, width=300, height=300, preserveAspectRatio=True, mask='auto')
+        except Exception:
+            pass
+    
+    # Header / Footer branding
+    canvas_obj.setFont("Helvetica-Bold", 9)
+    canvas_obj.setFillColor(colors.HexColor("#7c3aed"))
+    canvas_obj.drawString(54, 750, "AccAstroForge - Official Astrological & Vastu Report")
+    canvas_obj.setStrokeColor(colors.HexColor("#db2777"))
+    canvas_obj.setLineWidth(1)
+    canvas_obj.line(54, 742, 558, 742)
+    
+    canvas_obj.setFont("Helvetica", 8)
+    canvas_obj.setFillColor(colors.HexColor("#6b7280"))
+    canvas_obj.drawString(54, 30, "Generated securely via AccAstroForge.in | All Rights Reserved")
+    canvas_obj.drawRightString(558, 30, f"Page {doc_obj.page}")
+    canvas_obj.restoreState()
+
+def generate_pdf_report(filename, title, content_paragraphs):
+    doc = SimpleDocTemplate(filename, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=72, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'PdfTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=18,
+        textColor=colors.HexColor('#7c3aed'),
+        spaceAfter=15,
+        alignment=1
+    )
+    
+    body_style = ParagraphStyle(
+        'PdfBody',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=11,
+        textColor=colors.HexColor('#1f2937'),
+        spaceAfter=10,
+        leading=16
+    )
+    
+    story = [Paragraph(title, title_style), Spacer(1, 10)]
+    for para in content_paragraphs:
+        story.append(Paragraph(para, body_style))
+        story.append(Spacer(1, 6))
+        
+    doc.build(story, onFirstPage=draw_watermark_and_logo, onLaterPages=draw_watermark_and_logo)
+
+
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AccAstroForge - AI Astrology Guidance</title>
+    <title>AccAstroForge - AI Astrology & Vastu Guidance</title>
     <link rel="icon" type="image/png" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -467,36 +526,33 @@ HTML_TEMPLATE = """
             user-select: none;
         }
 
-        /* MOBILE & DESKTOP RESPONSIVE MAGICAL SPINNING LOADER OVERLAY */
         #loader-overlay {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: rgba(3, 0, 20, 0.90) !important;
-            backdrop-filter: blur(10px) !important;
-            -webkit-backdrop-filter: blur(10px) !important;
-            z-index: 999999 !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-            transition: opacity 0.3s ease !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(3, 0, 20, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
         }
         #loader-overlay.active {
-            opacity: 1 !important;
-            pointer-events: auto !important;
+            opacity: 1;
+            pointer-events: auto;
         }
         .loader-logo {
-            width: 200px !important;
-            height: 200px !important;
-            max-width: 60vw !important;
-            max-height: 60vh !important;
-            object-fit: contain !important;
-            animation: spinZoomLoader 1.0s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
-            filter: drop-shadow(0 0 35px rgba(244, 114, 182, 0.9)) !important;
+            width: 220px;
+            height: 220px;
+            object-fit: contain;
+            animation: spinZoomLoader 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            filter: drop-shadow(0 0 35px rgba(244, 114, 182, 0.9));
         }
         @keyframes spinZoomLoader {
             0% {
@@ -515,7 +571,6 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <!-- MAGICAL SPINNING LOADER OVERLAY FOR MOBILE & DESKTOP -->
     <div id="loader-overlay">
         <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" alt="Cosmic Loader" class="loader-logo">
     </div>
@@ -534,13 +589,14 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TABS BAR -->
+        <!-- TABS BAR (INCLUDING NEW VASTU TAB) -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIFE PREDICTION</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-horoscope')">☀️ HOROSCOPE</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-matching')">❤️ MATCHING</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-gemstones')">💎 GEMSTONES</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-vastu')">🏛️ VASTU SHASTRA</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-kundali')">📜 KUNDALI PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-numerology')">🔢 NUMEROLOGY</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-panchang')">📅 PANCHANG</button>
@@ -629,7 +685,7 @@ HTML_TEMPLATE = """
                 </div>
                 <div id="admin-panel" style="margin-top: 15px;">
                     <div class="password-container">
-                        <input type="password" id="admin-pass" name="admin_secret_pass_xyz" placeholder="Enter Admin Secret Password" autocomplete="off">
+                        <input type="password" id="admin-pass" name="admin_secret_pass_xyz" placeholder="Admin Password" autocomplete="off">
                         <span class="eye-icon" onclick="togglePassword('admin-pass', this)">👁️</span>
                     </div>
                     <button class="primary-btn" onclick="loadAdminDashboard()">Unlock Dashboard</button>
@@ -689,7 +745,37 @@ HTML_TEMPLATE = """
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 6: KUNDALI PDF -->
+        <!-- TAB 6: NEW VASTU SHASTRA TAB -->
+        <div id="tab-vastu" class="tab-content">
+            <h3>🏛️ Vastu Shastra & Commercial/Home Property Analysis</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Ensure positive energy flow (Vastu Purusha Mandala) for your home, office, or factory to maximize prosperity and success.</p>
+            <div class="row">
+                <input type="text" id="vastu-name" placeholder="Owner / Applicant Name" autocomplete="off">
+                <select id="vastu-property-type">
+                    <option value="Residential House / Flat">Residential House / Flat</option>
+                    <option value="Commercial Office / Shop">Commercial Office / Shop</option>
+                    <option value="Factory / Warehouse">Factory / Warehouse</option>
+                    <option value="Plot / Land">Plot / Land</option>
+                </select>
+            </div>
+            <div class="row">
+                <select id="vastu-facing">
+                    <option value="North Facing">North Facing (Kubera Direction)</option>
+                    <option value="East Facing">East Facing (Surya Direction)</option>
+                    <option value="South Facing">South Facing (Yama Direction)</option>
+                    <option value="West Facing">West Facing (Varuna Direction)</option>
+                    <option value="North-East (Ishan)">North-East (Ishan - Most Auspicious)</option>
+                    <option value="South-East (Agneya)">South-East (Agneya - Fire Zone)</option>
+                    <option value="South-West (Nairutya)">South-West (Nairutya - Earth Zone)</option>
+                    <option value="North-West (Vayavya)">North-West (Vayavya - Air Zone)</option>
+                </select>
+                <input type="text" id="vastu-city" placeholder="City / Location" autocomplete="off">
+            </div>
+            <button class="primary-btn" onclick="submitVastuAnalysis()">🏛️ Generate Vastu Dosha & Remedy Report (₹349)</button>
+            <div id="vastu-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB 7: KUNDALI PDF -->
         <div id="tab-kundali" class="tab-content">
             <h3>📜 Janam Kundali & Lagna Birth Chart Generator</h3>
             <div class="row">
@@ -704,7 +790,7 @@ HTML_TEMPLATE = """
             <div id="kundali-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 7: NUMEROLOGY -->
+        <!-- TAB 8: NUMEROLOGY -->
         <div id="tab-numerology" class="tab-content">
             <h3>🔢 Numerology Check</h3>
             <div class="row">
@@ -715,7 +801,7 @@ HTML_TEMPLATE = """
             <div id="num-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 8: PANCHANG -->
+        <!-- TAB 9: PANCHANG -->
         <div id="tab-panchang" class="tab-content">
             <h3>📅 Vedic Panchang & Shubh Muhurat</h3>
             <div class="row">
@@ -730,15 +816,15 @@ HTML_TEMPLATE = """
             <div id="panchang-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 9: AI ASSISTANT -->
+        <!-- TAB 10: AI ASSISTANT -->
         <div id="tab-ai" class="tab-content">
             <h3>🤖 Ask Your Personal AI Astrologer</h3>
-            <textarea id="ai-query" placeholder="Ask your question regarding career, marriage, health..."></textarea>
+            <textarea id="ai-query" placeholder="Ask your question regarding career, marriage, health, vastu..."></textarea>
             <button class="primary-btn" onclick="askAi()">Ask Assistant ✨</button>
             <div id="ai-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 10: LEGAL -->
+        <!-- TAB 11: LEGAL -->
         <div id="tab-legal" class="tab-content">
             <h3>⚖️ Terms & Social Handles</h3>
             <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
@@ -1006,6 +1092,18 @@ HTML_TEMPLATE = """
             });
         }
 
+        async function submitVastuAnalysis() {
+            let name = document.getElementById('vastu-name').value;
+            let p_type = document.getElementById('vastu-property-type').value;
+            let facing = document.getElementById('vastu-facing').value;
+            let city = document.getElementById('vastu-city').value;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/vastu', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, property_type: p_type, facing, city}) });
+                let data = await res.json();
+                document.getElementById('vastu-result').innerHTML = data.teaser + data.paywall;
+            });
+        }
+
         async function submitKundaliPdf() {
             let name = document.getElementById('k-name').value;
             let dob = document.getElementById('k-dob').value;
@@ -1189,6 +1287,34 @@ async def api_gemstone(request: Request):
     paywall = get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
+@app.post("/api/vastu")
+async def api_vastu(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    p_type = data.get("property_type", "Residential")
+    facing = data.get("facing", "North Facing")
+    city = data.get("city", "Kolkata")
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Pending (₹349)"})
+    
+    # Generate actual PDF report with logo watermark
+    pdf_filename = f"Vastu_Report_{name.replace(' ', '_')}.pdf"
+    generate_pdf_report(
+        pdf_filename,
+        f"Vastu Shastra Assessment for {name}",
+        [
+            f"Property Type: {p_type}",
+            f"Direction Facing: {facing}",
+            f"Location: {city}",
+            "Vastu Purusha Mandala Analysis: The main entrance and energy grids show favorable alignment with minor adjustments required in South-West zones.",
+            "Recommended Remedies: Place Vastu Pyramids in affected corners and ensure water elements are placed in the North-East Ishan corner for maximum financial prosperity and stability."
+        ]
+    )
+    
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF generated with official watermarked logo & layout.</p></div>"""
+    paywall = get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 349, name)
+    return JSONResponse({"teaser": teaser, "paywall": paywall})
+
 @app.post("/api/kundali-pdf")
 async def api_kundali_pdf(request: Request):
     data = await request.json()
@@ -1196,8 +1322,23 @@ async def api_kundali_pdf(request: Request):
     dob = data.get("dob", "2000-01-01")
     tob = data.get("tob", "10:00")
     pob = data.get("pob", "Kolkata")
+    
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Generated (₹299)"})
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready.</p></div>"""
+    
+    # Generate PDF with watermark
+    pdf_filename = f"Kundali_{name.replace(' ', '_')}.pdf"
+    generate_pdf_report(
+        pdf_filename,
+        f"Janam Kundali & Lagna Chart - {name}",
+        [
+            f"Date of Birth: {dob} | Time: {tob}",
+            f"Place of Birth: {pob}",
+            "Planetary Positions (Graha Sthiti): Sun in Aries, Moon in Taurus, Jupiter in Cancer.",
+            "Lagna Horoscope: Strong ascendant house indicating resilience, leadership, and long-term financial growth."
+        ]
+    )
+    
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready with logo watermark.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     paywall = get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
     return JSONResponse({"teaser": teaser, "chart": chart, "paywall": paywall})
@@ -1232,7 +1373,9 @@ async def api_ai(request: Request):
     query = data.get("query", "").strip().lower()
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Assistant", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    if any(k in query for k in ["kundali", "birth chart", "lagna", "janam"]):
+    if any(k in query for k in ["vastu", "office", "house", "facing", "direction", "factory"]):
+        ai_reply = "🏛️ Vastu Guidance: Ensuring your main entrance is in the North or East direction brings abundance. Keep the North-East (Ishan) zone clean and clutter-free."
+    elif any(k in query for k in ["kundali", "birth chart", "lagna", "janam"]):
         ai_reply = "📜 Janam Kundali Insight: Your planetary positions indicate a strong Lagna house. Focus on consistent efforts in your professional sphere for optimal growth."
     elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna"]):
         ai_reply = "💎 Gemstone Recommendation: Based on cosmic alignments, wearing a certified Emerald (Panna) or Yellow Sapphire on an auspicious day will enhance focus and prosperity."
@@ -1240,8 +1383,6 @@ async def api_ai(request: Request):
         ai_reply = "💼 Career & Wealth Forecast: Jupiter's transit brings favorable opportunities for career advancement and financial stability. Avoid impulsive investments."
     elif any(k in query for k in ["marriage", "love", "relationship", "match", "partner"]):
         ai_reply = "❤️ Relationship & Marriage Guidance: Venus harmony indicates positive emotional bonding. Transparent communication will resolve ongoing misunderstandings."
-    elif any(k in query for k in ["health", "disease", "fitness", "peace"]):
-        ai_reply = "🌿 Health & Wellness: Maintain a balanced routine with morning meditation and regular hydration to keep vital energies aligned."
     else:
         ai_reply = f"✨ AI Astrologer Response for '{query}': Planetary transits show highly favorable outcomes for your endeavors. Keep up regular meditation and positive intent."
 

@@ -276,11 +276,10 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH WATERMARK / LOGO STICK
+# PDF GENERATION WITH WATERMARK / LOGO STICK & DOWNLOAD API
 # ---------------------------------------------------------
 def draw_watermark_and_logo(canvas_obj, doc_obj):
     canvas_obj.saveState()
-    # Watermark in center (semi-transparent)
     if os.path.exists("logo.png"):
         try:
             canvas_obj.setFillAlpha(0.08)
@@ -288,7 +287,6 @@ def draw_watermark_and_logo(canvas_obj, doc_obj):
         except Exception:
             pass
     
-    # Header / Footer branding
     canvas_obj.setFont("Helvetica-Bold", 9)
     canvas_obj.setFillColor(colors.HexColor("#7c3aed"))
     canvas_obj.drawString(54, 750, "AccAstroForge - Official Astrological & Vastu Report")
@@ -303,7 +301,8 @@ def draw_watermark_and_logo(canvas_obj, doc_obj):
     canvas_obj.restoreState()
 
 def generate_pdf_report(filename, title, content_paragraphs):
-    doc = SimpleDocTemplate(filename, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=72, bottomMargin=54)
+    filepath = os.path.join(os.getcwd(), filename)
+    doc = SimpleDocTemplate(filepath, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=72, bottomMargin=54)
     styles = getSampleStyleSheet()
     
     title_style = ParagraphStyle(
@@ -332,6 +331,14 @@ def generate_pdf_report(filename, title, content_paragraphs):
         story.append(Spacer(1, 6))
         
     doc.build(story, onFirstPage=draw_watermark_and_logo, onLaterPages=draw_watermark_and_logo)
+    return filepath
+
+@app.get("/download-pdf/{filename}")
+async def download_pdf(filename: str):
+    filepath = os.path.join(os.getcwd(), filename)
+    if os.path.exists(filepath):
+        return FileResponse(filepath, media_type="application/pdf", filename=filename)
+    return JSONResponse({"error": "File not found"}, status_code=404)
 
 
 HTML_TEMPLATE = """
@@ -589,7 +596,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TABS BAR (INCLUDING NEW VASTU TAB) -->
+        <!-- TABS BAR -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIFE PREDICTION</button>
@@ -745,7 +752,7 @@ HTML_TEMPLATE = """
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 6: NEW VASTU SHASTRA TAB -->
+        <!-- TAB 6: VASTU SHASTRA -->
         <div id="tab-vastu" class="tab-content">
             <h3>🏛️ Vastu Shastra & Commercial/Home Property Analysis</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Ensure positive energy flow (Vastu Purusha Mandala) for your home, office, or factory to maximize prosperity and success.</p>
@@ -842,6 +849,7 @@ HTML_TEMPLATE = """
     <script>
         let generatedOtpStorage = "";
         let verifiedEmailStorage = "";
+        let isAdminUnlocked = false; // ADMIN PAYWALL BYPASS FLAG
 
         window.onload = async function() {
             let hash = window.location.hash;
@@ -1010,6 +1018,10 @@ HTML_TEMPLATE = """
             let res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pass}) });
             let data = await res.json();
             document.getElementById('admin-output').innerHTML = data.html;
+            if(data.success) {
+                isAdminUnlocked = true;
+                alert("🛡️ Admin Mode Activated! All Paywalls are now Bypassed for testing.");
+            }
         }
 
         async function registerUser() {
@@ -1058,9 +1070,9 @@ HTML_TEMPLATE = """
             let name = document.getElementById('life-name').value;
             let dob = document.getElementById('life-dob').value;
             showMagicLoader(async () => {
-                let res = await fetch('/api/life', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
+                let res = await fetch('/api/life', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('life-result').innerHTML = data.teaser + data.paywall;
+                document.getElementById('life-result').innerHTML = data.teaser + (data.paywall || '');
             });
         }
 
@@ -1077,18 +1089,18 @@ HTML_TEMPLATE = """
             let boy_name = document.getElementById('b-name').value;
             let girl_name = document.getElementById('g-name').value;
             showMagicLoader(async () => {
-                let res = await fetch('/api/matching', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({boy_name, girl_name}) });
+                let res = await fetch('/api/matching', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({boy_name, girl_name, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('matching-result').innerHTML = data.teaser + data.paywall;
+                document.getElementById('matching-result').innerHTML = data.teaser + (data.paywall || '');
             });
         }
 
         async function submitGemstone() {
             let zodiac = document.getElementById('gem-zodiac').value;
             showMagicLoader(async () => {
-                let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({zodiac}) });
+                let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({zodiac, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('gem-result').innerHTML = data.teaser + data.paywall;
+                document.getElementById('gem-result').innerHTML = data.teaser + (data.paywall || '');
             });
         }
 
@@ -1098,9 +1110,9 @@ HTML_TEMPLATE = """
             let facing = document.getElementById('vastu-facing').value;
             let city = document.getElementById('vastu-city').value;
             showMagicLoader(async () => {
-                let res = await fetch('/api/vastu', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, property_type: p_type, facing, city}) });
+                let res = await fetch('/api/vastu', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, property_type: p_type, facing, city, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('vastu-result').innerHTML = data.teaser + data.paywall;
+                document.getElementById('vastu-result').innerHTML = data.teaser + (data.pdf_download_btn || '') + (data.paywall || '');
             });
         }
 
@@ -1110,9 +1122,9 @@ HTML_TEMPLATE = """
             let tob = document.getElementById('k-tob').value;
             let pob = document.getElementById('k-pob').value;
             showMagicLoader(async () => {
-                let res = await fetch('/api/kundali-pdf', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob}) });
+                let res = await fetch('/api/kundali-pdf', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('kundali-result').innerHTML = data.teaser + data.chart + data.paywall;
+                document.getElementById('kundali-result').innerHTML = data.teaser + data.chart + (data.pdf_download_btn || '') + (data.paywall || '');
             });
         }
 
@@ -1120,9 +1132,9 @@ HTML_TEMPLATE = """
             let name = document.getElementById('num-name').value;
             let dob = document.getElementById('num-dob').value;
             showMagicLoader(async () => {
-                let res = await fetch('/api/numerology', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
+                let res = await fetch('/api/numerology', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('num-result').innerHTML = data.teaser + data.paywall;
+                document.getElementById('num-result').innerHTML = data.teaser + (data.paywall || '');
             });
         }
 
@@ -1131,7 +1143,7 @@ HTML_TEMPLATE = """
             let date = document.getElementById('p-date').value;
             let mode = document.getElementById('p-mode').value;
             showMagicLoader(async () => {
-                let res = await fetch('/api/panchang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city, date, mode}) });
+                let res = await fetch('/api/panchang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city, date, mode, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
                 document.getElementById('panchang-result').innerHTML = data.html + (data.paywall || '');
             });
@@ -1168,12 +1180,13 @@ def index(request: Request):
 async def api_admin(request: Request):
     data = await request.json()
     if data.get("password") != ADMIN_PASSWORD:
-        return JSONResponse({"html": "<span style='color:#ef4444;'>❌ Incorrect Password! Access Denied.</span>"})
+        return JSONResponse({"success": False, "html": "<span style='color:#ef4444;'>❌ Incorrect Password! Access Denied.</span>"})
     
     users = load_users()
     logs = load_logs()
     
     summary_html = f"""<div style='color:#fff;'>
+        <p style='color:#4ade80; font-weight:bold; font-size:1.05rem;'>✅ ADMIN DASHBOARD UNLOCKED (PAYWALL BYPASSED FOR TESTING)</p>
         <h4 style='color:#4ade80; margin-bottom: 8px;'>📋 Registered Users ({len(users)})</h4>
         <table style='width:100%; border-collapse:collapse; border:1px solid #7c3aed; margin-bottom:20px; font-size: 0.85rem;' border='1'>
             <tr style='background:#5b21b6;'><th>Name</th><th>Email</th><th>Phone</th></tr>"""
@@ -1191,7 +1204,7 @@ async def api_admin(request: Request):
         summary_html += f"<tr><td>{l.get('timestamp', '')}</td><td>{l.get('full_name', '')}</td><td>{l.get('service', '')}</td><td>{l.get('details', '')}</td><td>{l.get('payment_status', '')}</td></tr>"
     summary_html += "</table></div></div>"
 
-    return JSONResponse({"html": summary_html})
+    return JSONResponse({"success": True, "html": summary_html})
 
 @app.post("/api/social-login")
 async def api_social_login(request: Request):
@@ -1254,10 +1267,12 @@ async def api_life(request: Request):
     data = await request.json()
     name = data.get("name", "User")
     dob = data.get("dob", "2000-01-01")
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Pending (₹499)"})
+    is_admin = data.get("is_admin", False)
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹499)"})
     profile = calculate_astrological_profile(name, dob)
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🌟 Astrological Teaser for {name.upper()}</h4><p><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p></div>"""
-    paywall = get_paywall_html("Complete Deep Life Forecast & PDF", 499, name)
+    paywall = "" if is_admin else get_paywall_html("Complete Deep Life Forecast & PDF", 499, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/horoscope")
@@ -1273,18 +1288,22 @@ async def api_matching(request: Request):
     data = await request.json()
     b = data.get("boy_name", "Boy")
     g = data.get("girl_name", "Girl")
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Kundali Matching", "details": "Guna Milan Check", "payment_status": "Pending (₹399)"})
+    is_admin = data.get("is_admin", False)
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Kundali Matching", "details": "Guna Milan Check", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹399)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>❤️ Compatibility Teaser for {b} & {g}</h4><p>High Guna Milan score detected! Excellent long-term emotional alignment.</p></div>"""
-    paywall = get_paywall_html("Complete Kundali Matching Report", 399, f"{b} & {g}")
+    paywall = "" if is_admin else get_paywall_html("Complete Kundali Matching Report", 399, f"{b} & {g}")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/gemstone")
 async def api_gemstone(request: Request):
     data = await request.json()
     z = data.get("zodiac", "Aries")
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Gemstone Remedy", "details": f"Zodiac: {z}", "payment_status": "Pending (₹299)"})
+    is_admin = data.get("is_admin", False)
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Gemstone Remedy", "details": f"Zodiac: {z}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹299)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>💎 Gemstone Guidance for {z}</h4><p>Emerald (Panna) or Yellow Sapphire recommended for career success.</p></div>"""
-    paywall = get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
+    paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/vastu")
@@ -1294,13 +1313,13 @@ async def api_vastu(request: Request):
     p_type = data.get("property_type", "Residential")
     facing = data.get("facing", "North Facing")
     city = data.get("city", "Kolkata")
+    is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Pending (₹349)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹349)"})
     
-    # Generate actual PDF report with logo watermark
-    pdf_filename = f"Vastu_Report_{name.replace(' ', '_')}.pdf"
+    filename = f"Vastu_Report_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
-        pdf_filename,
+        filename,
         f"Vastu Shastra Assessment for {name}",
         [
             f"Property Type: {p_type}",
@@ -1311,9 +1330,14 @@ async def api_vastu(request: Request):
         ]
     )
     
+    pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report (Watermarked)</a></div>"""
+    
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF generated with official watermarked logo & layout.</p></div>"""
-    paywall = get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 349, name)
-    return JSONResponse({"teaser": teaser, "paywall": paywall})
+    
+    paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 349, name)
+    download_btn = pdf_btn_html if is_admin else ""
+    
+    return JSONResponse({"teaser": teaser, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/kundali-pdf")
 async def api_kundali_pdf(request: Request):
@@ -1322,13 +1346,13 @@ async def api_kundali_pdf(request: Request):
     dob = data.get("dob", "2000-01-01")
     tob = data.get("tob", "10:00")
     pob = data.get("pob", "Kolkata")
+    is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Generated (₹299)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹299)"})
     
-    # Generate PDF with watermark
-    pdf_filename = f"Kundali_{name.replace(' ', '_')}.pdf"
+    filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
-        pdf_filename,
+        filename,
         f"Janam Kundali & Lagna Chart - {name}",
         [
             f"Date of Birth: {dob} | Time: {tob}",
@@ -1338,20 +1362,27 @@ async def api_kundali_pdf(request: Request):
         ]
     )
     
+    pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF (Watermarked)</a></div>"""
+    
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready with logo watermark.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
-    paywall = get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
-    return JSONResponse({"teaser": teaser, "chart": chart, "paywall": paywall})
+    
+    paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
+    download_btn = pdf_btn_html if is_admin else ""
+    
+    return JSONResponse({"teaser": teaser, "chart": chart, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/numerology")
 async def api_numerology(request: Request):
     data = await request.json()
     name = data.get("name", "User")
     dob = data.get("dob", "2000-01-01")
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Pending (₹249)"})
+    is_admin = data.get("is_admin", False)
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹249)"})
     profile = calculate_astrological_profile(name, dob)
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
-    paywall = get_paywall_html("Detailed Numerology & Name Correction Report", 249, name)
+    paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 249, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/panchang")
@@ -1360,10 +1391,12 @@ async def api_panchang(request: Request):
     city = data.get("city", "Kolkata")
     date = data.get("date", "Today")
     mode = data.get("mode", "free")
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Panchang", "details": f"City: {city}, Mode: {mode}", "payment_status": "Free/Pending"})
+    is_admin = data.get("is_admin", False)
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Panchang", "details": f"City: {city}, Mode: {mode}", "payment_status": "Free/Admin Bypassed" if is_admin else "Free/Pending"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📅 Vedic Panchang for {city} ({date})</h4><p><b>Tithi:</b> Shukla Paksha Navami<br><b>Nakshatra:</b> Rohini<br><b>Rahu Kalam:</b> 10:30 AM - 12:00 PM</p></div>"""
     paywall = ""
-    if mode == "detailed":
+    if mode == "detailed" and not is_admin:
         paywall = get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
     return JSONResponse({"html": teaser, "paywall": paywall})
 

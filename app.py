@@ -276,14 +276,15 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH CLEAN LAYOUT & BALANCED WATERMARK
+# PDF GENERATION WITH BRIGHT & COMPACT WATERMARK
 # ---------------------------------------------------------
 def draw_watermark_and_logo(canvas_obj, doc_obj):
     canvas_obj.saveState()
     if os.path.exists("logo.png"):
         try:
-            canvas_obj.setFillAlpha(0.12)  # Balanced visibility without disturbing text
-            canvas_obj.drawImage("logo.png", 150, 250, width=300, height=300, preserveAspectRatio=True, mask='auto')
+            # Optimized opacity and compact size for clear, bright visibility matching Kundali style
+            canvas_obj.setFillAlpha(0.18)
+            canvas_obj.drawImage("logo.png", 175, 275, width=260, height=260, preserveAspectRatio=True, mask='auto')
         except Exception:
             pass
     
@@ -408,12 +409,41 @@ HTML_TEMPLATE = """
             margin-left: 8px;
         }
 
+        .header-right-area {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        /* LIVE DIGITAL CLOCK STYLING */
+        .live-digital-clock {
+            background: rgba(18, 8, 42, 0.85);
+            border: 1px solid #fde047;
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fde047;
+            box-shadow: 0 0 12px rgba(253, 224, 71, 0.4);
+            letter-spacing: 1px;
+        }
+        .clock-colon {
+            animation: colonBlink 1s infinite;
+        }
+        @keyframes colonBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
         .quick-logins {
             display: flex;
             align-items: center;
             background: rgba(18, 8, 42, 0.70);
             backdrop-filter: blur(8px);
-            padding: 8px 16px;
+            padding: 6px 14px;
             border-radius: 14px;
             border: 1px solid rgba(244, 114, 182, 0.4);
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
@@ -583,16 +613,19 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="container">
-        <!-- HEADER WITH LOGO, SECRET ADMIN DOT & QUICK LOGINS -->
+        <!-- HEADER WITH LOGO, SECRET ADMIN DOT, LIVE DIGITAL CLOCK & QUICK LOGINS -->
         <div class="header-container">
             <div class="logo-area">
                 LOGO_SRC_PLACEHOLDER
                 <span class="admin-dot" title="Click to open Admin Portal" onclick="toggleAdminPanel()"></span>
             </div>
-            <div class="quick-logins">
-                <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
-                <a href="GOOGLE_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
-                <a href="FB_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
+            <div class="header-right-area">
+                <div id="live-digital-clock" class="live-digital-clock">00<span class="clock-colon">:</span>00<span class="clock-colon">:</span>00 IST</div>
+                <div class="quick-logins">
+                    <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
+                    <a href="GOOGLE_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
+                    <a href="FB_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
+                </div>
             </div>
         </div>
 
@@ -670,7 +703,7 @@ HTML_TEMPLATE = """
             <div class="card">
                 <h4>💳 Wallet Balance: ₹ 0.00</h4>
                 <p>Use credits for instant unlocking of reports.</p>
-                <!-- 5 WALLET BUTTONS OPTIMIZED TO FIT IN ONE ROW -->
+                <!-- 5 WALLET BUTTONS IN ONE ROW WITH ₹750 INCLUDED -->
                 <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(100)">⚡ ₹100</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(250)">⚡ ₹250</button>
@@ -703,7 +736,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TAB 2: LIFE PREDICTION (UPDATED TIME FORMAT HH:MM) -->
+        <!-- TAB 2: LIFE PREDICTION -->
         <div id="tab-life" class="tab-content">
             <h3>🌌 Vedic Astrology & Deep Life Forecast</h3>
             <div class="row">
@@ -853,7 +886,21 @@ HTML_TEMPLATE = """
         let verifiedEmailStorage = "";
         let isAdminUnlocked = false;
 
+        // LIVE 24-HOUR DIGITAL CLOCK SCRIPT WITH BLINKING COLON
+        function updateLiveClock() {
+            let now = new Date();
+            let hours = String(now.getHours()).padStart(2, '0');
+            let minutes = String(now.getMinutes()).padStart(2, '0');
+            let seconds = String(now.getSeconds()).padStart(2, '0');
+            let clockEl = document.getElementById('live-digital-clock');
+            if(clockEl) {
+                clockEl.innerHTML = `${hours}<span class="clock-colon">:</span>${minutes}<span class="clock-colon">:</span>${seconds} IST`;
+            }
+        }
+        setInterval(updateLiveClock, 1000);
+
         window.onload = async function() {
+            updateLiveClock();
             let hash = window.location.hash;
             if (hash && hash.includes("access_token")) {
                 let params = new URLSearchParams(hash.substring(1));

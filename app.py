@@ -276,13 +276,13 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH WATERMARK / LOGO STICK & DOWNLOAD API
+# PDF GENERATION WITH CLEAN LAYOUT & BALANCED WATERMARK
 # ---------------------------------------------------------
 def draw_watermark_and_logo(canvas_obj, doc_obj):
     canvas_obj.saveState()
     if os.path.exists("logo.png"):
         try:
-            canvas_obj.setFillAlpha(0.08)
+            canvas_obj.setFillAlpha(0.12)  # Balanced visibility without disturbing text
             canvas_obj.drawImage("logo.png", 150, 250, width=300, height=300, preserveAspectRatio=True, mask='auto')
         except Exception:
             pass
@@ -670,11 +670,13 @@ HTML_TEMPLATE = """
             <div class="card">
                 <h4>💳 Wallet Balance: ₹ 0.00</h4>
                 <p>Use credits for instant unlocking of reports.</p>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px;">
-                    <button class="primary-btn" onclick="topupWallet(100)">⚡ Add ₹100</button>
-                    <button class="primary-btn" onclick="topupWallet(250)">⚡ Add ₹250</button>
-                    <button class="primary-btn" onclick="topupWallet(500)">⚡ Add ₹500</button>
-                    <button class="primary-btn" onclick="topupWallet(1000)">⚡ Add ₹1000</button>
+                <!-- 5 WALLET BUTTONS OPTIMIZED TO FIT IN ONE ROW -->
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(100)">⚡ ₹100</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(250)">⚡ ₹250</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(500)">⚡ ₹500</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(750)">⚡ ₹750</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(1000)">⚡ ₹1000</button>
                 </div>
                 <div id="wallet-result" style="margin-top:10px;"></div>
             </div>
@@ -701,7 +703,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TAB 2: LIFE PREDICTION -->
+        <!-- TAB 2: LIFE PREDICTION (UPDATED TIME FORMAT HH:MM) -->
         <div id="tab-life" class="tab-content">
             <h3>🌌 Vedic Astrology & Deep Life Forecast</h3>
             <div class="row">
@@ -709,7 +711,7 @@ HTML_TEMPLATE = """
                 <input type="date" id="life-dob">
             </div>
             <div class="row">
-                <input type="time" id="life-tob">
+                <input type="text" id="life-tob" placeholder="Time of Birth (HH:MM)" onfocus="this.type='time'" onblur="if(!this.value)this.type='text'">
                 <input type="text" id="life-pob" placeholder="Place of Birth">
             </div>
             <button class="primary-btn" onclick="submitLifePrediction()">✨ Reveal Life Insights (₹499)</button>
@@ -849,7 +851,7 @@ HTML_TEMPLATE = """
     <script>
         let generatedOtpStorage = "";
         let verifiedEmailStorage = "";
-        let isAdminUnlocked = false; // ADMIN PAYWALL BYPASS FLAG
+        let isAdminUnlocked = false;
 
         window.onload = async function() {
             let hash = window.location.hash;
@@ -1330,9 +1332,9 @@ async def api_vastu(request: Request):
         ]
     )
     
-    pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report (Watermarked)</a></div>"""
+    pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report</a></div>"""
     
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF generated with official watermarked logo & layout.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF generated with proper information.</p></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 349, name)
     download_btn = pdf_btn_html if is_admin else ""
@@ -1362,9 +1364,9 @@ async def api_kundali_pdf(request: Request):
         ]
     )
     
-    pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF (Watermarked)</a></div>"""
+    pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
     
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready with logo watermark.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready with proper information.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)

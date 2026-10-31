@@ -275,9 +275,6 @@ def get_paywall_html(service_name, price, user_name="User"):
     </div>
     """
 
-# ---------------------------------------------------------
-# PDF GENERATION WITH FRESH & CLEAN SQUARE LOGO STAMP
-# ---------------------------------------------------------
 def draw_clean_header_footer(canvas_obj, doc_obj):
     canvas_obj.saveState()
     canvas_obj.setFont("Helvetica-Bold", 9)
@@ -319,8 +316,6 @@ def generate_pdf_report(filename, title, content_paragraphs):
     )
     
     story = []
-    
-    # FRESH LOGO INSERTION WITH BALANCED SQUARE PROPORTION
     if os.path.exists("logo.png"):
         try:
             logo_img = RLImage("logo.png", width=85, height=85)
@@ -402,17 +397,18 @@ HTML_TEMPLATE = """
         }
 
         .admin-dot {
-            width: 14px;
-            height: 14px;
-            min-width: 14px;
-            min-height: 14px;
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            min-height: 16px;
             background: radial-gradient(circle, #fde047 0%, #d97706 100%);
-            border: 1.5px solid #fef08a;
+            border: 2px solid #fef08a;
             border-radius: 50%;
             display: inline-block;
             cursor: pointer;
-            box-shadow: 0 0 12px #fde047;
-            margin-left: 8px;
+            box-shadow: 0 0 15px #fde047;
+            margin-left: 10px;
+            z-index: 999;
         }
 
         .header-right-area {
@@ -423,7 +419,6 @@ HTML_TEMPLATE = """
             margin-top: 5px;
         }
 
-        /* LIVE DIGITAL CLOCK STYLING */
         .live-digital-clock {
             background: rgba(18, 8, 42, 0.85);
             border: 1px solid #fde047;
@@ -619,7 +614,7 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="container">
-        <!-- HEADER WITH LOGO, SECRET ADMIN DOT, LIVE DIGITAL CLOCK & QUICK LOGINS -->
+        <!-- HEADER WITH LOGO, ADMIN DOT, LIVE DIGITAL CLOCK & QUICK LOGINS -->
         <div class="header-container">
             <div class="logo-area">
                 LOGO_SRC_PLACEHOLDER
@@ -709,7 +704,6 @@ HTML_TEMPLATE = """
             <div class="card">
                 <h4>💳 Wallet Balance: ₹ 0.00</h4>
                 <p>Use credits for instant unlocking of reports.</p>
-                <!-- 5 WALLET BUTTONS IN ONE ROW WITH ₹750 INCLUDED -->
                 <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(100)">⚡ ₹100</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(250)">⚡ ₹250</button>
@@ -725,7 +719,7 @@ HTML_TEMPLATE = """
                 <p>No previous orders found for current guest session. Please register or login.</p>
             </div>
 
-            <!-- HIDDEN ADMIN PORTAL AT THE BOTTOM (TRIGGERED BY LOGO DOT) -->
+            <!-- ADMIN PORTAL AT DASHBOARD -->
             <div id="admin-wrapper" class="card" style="display: none; border: 1.5px dashed #fde047; margin-top: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h4 style="margin: 0; color: #fde047;">🛡️ Owner Portal (Admin Dashboard)</h4>
@@ -892,7 +886,7 @@ HTML_TEMPLATE = """
         let verifiedEmailStorage = "";
         let isAdminUnlocked = false;
 
-        # LIVE 24-HOUR DIGITAL CLOCK SCRIPT WITH BLINKING COLON
+        // FIXED LIVE DIGITAL CLOCK SCRIPT
         function updateLiveClock() {
             let now = new Date();
             let hours = String(now.getHours()).padStart(2, '0');
@@ -1005,9 +999,12 @@ HTML_TEMPLATE = """
 
         function toggleAdminPanel() {
             let wrapper = document.getElementById('admin-wrapper');
-            wrapper.style.display = wrapper.style.display === 'none' || wrapper.style.display === '' ? 'block' : 'none';
-            if(wrapper.style.display === 'block') {
-                wrapper.scrollIntoView({ behavior: 'smooth' });
+            if(wrapper) {
+                let isHidden = wrapper.style.display === 'none' || wrapper.style.display === '';
+                wrapper.style.display = isHidden ? 'block' : 'none';
+                if(isHidden) {
+                    wrapper.scrollIntoView({ behavior: 'smooth' });
+                }
             }
         }
 
@@ -1386,7 +1383,6 @@ async def api_vastu(request: Request):
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report</a></div>"""
-    
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF generated with fresh stamp logo.</p></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 349, name)
@@ -1418,7 +1414,6 @@ async def api_kundali_pdf(request: Request):
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
-    
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready with fresh stamp logo.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     

@@ -276,9 +276,9 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH TOP HEADER STAMP LOGO (NO WATERMARK OVERLAP)
+# PDF GENERATION WITH CLEAN TOP HEADER STAMP LOGO (NO WATERMARK)
 # ---------------------------------------------------------
-def draw_header_footer_canvas(canvas_obj, doc_obj):
+def draw_clean_header_footer(canvas_obj, doc_obj):
     canvas_obj.saveState()
     canvas_obj.setFont("Helvetica-Bold", 9)
     canvas_obj.setFillColor(colors.HexColor("#7c3aed"))
@@ -320,7 +320,7 @@ def generate_pdf_report(filename, title, content_paragraphs):
     
     story = []
     
-    # ADD SOLID TOP HEADER STAMP LOGO (KAPALER TIP / STAMP STYLE)
+    # ADD SOLID TOP HEADER STAMP LOGO (KAPALER TIP / STAMP STYLE AT THE TOP CENTER)
     if os.path.exists("logo.png"):
         try:
             logo_img = RLImage("logo.png", width=55, height=55)
@@ -337,7 +337,7 @@ def generate_pdf_report(filename, title, content_paragraphs):
         story.append(Paragraph(para, body_style))
         story.append(Spacer(1, 6))
         
-    doc.build(story, onFirstPage=draw_header_footer_canvas, onLaterPages=draw_header_footer_canvas)
+    doc.build(story, onFirstPage=draw_clean_header_footer, onLaterPages=draw_clean_header_footer)
     return filepath
 
 @app.get("/download-pdf/{filename}")

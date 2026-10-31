@@ -320,10 +320,9 @@ def generate_pdf_report(filename, title, content_paragraphs):
     
     story = []
     
-    # TOTALLY FRESH LOGO INSERTION WITH BALANCED SQUARE/ROUND PROPORTION (NO SQUASHING)
+    # FRESH LOGO INSERTION WITH BALANCED SQUARE PROPORTION
     if os.path.exists("logo.png"):
         try:
-            # COMPLETELY REMOVED OLD REFERENCES AND SETTING FRESH BALANCED DIMENSIONS
             logo_img = RLImage("logo.png", width=85, height=85)
             logo_img.hAlign = 'CENTER'
             story.append(logo_img)
@@ -893,7 +892,7 @@ HTML_TEMPLATE = """
         let verifiedEmailStorage = "";
         let isAdminUnlocked = false;
 
-        // LIVE 24-HOUR DIGITAL CLOCK SCRIPT WITH BLINKING COLON
+        # LIVE 24-HOUR DIGITAL CLOCK SCRIPT WITH BLINKING COLON
         function updateLiveClock() {
             let now = new Date();
             let hours = String(now.getHours()).padStart(2, '0');
@@ -1466,7 +1465,7 @@ async def api_ai(request: Request):
         ai_reply = "🏛️ Vastu Guidance: Ensuring your main entrance is in the North or East direction brings abundance. Keep the North-East (Ishan) zone clean and clutter-free."
     elif any(k in query for k in ["kundali", "birth chart", "lagna", "janam"]):
         ai_reply = "📜 Janam Kundali Insight: Your planetary positions indicate a strong Lagna house. Focus on consistent efforts in your professional sphere for optimal growth."
-    elif any(k in query for k:: ["gemstone", "panna", "stone", "ring", "ratna"]):
+    elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna"]):
         ai_reply = "💎 Gemstone Recommendation: Based on cosmic alignments, wearing a certified Emerald (Panna) or Yellow Sapphire on an auspicious day will enhance focus and prosperity."
     elif any(k in query for k in ["career", "job", "business", "money", "finance", "success"]):
         ai_reply = "💼 Career & Wealth Forecast: Jupiter's transit brings favorable opportunities for career advancement and financial stability. Avoid impulsive investments."

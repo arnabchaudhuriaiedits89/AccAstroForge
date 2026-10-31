@@ -276,9 +276,9 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# BRAND NEW SCRATCH-BUILT PDF CANVAS SETUP
+# CLEAN PDF CANVAS SETUP (NO STAMP / WATERMARK MENTION)
 # ---------------------------------------------------------
-def draw_fresh_pdf_decorations(canvas_obj, doc_obj):
+def draw_clean_pdf_decorations(canvas_obj, doc_obj):
     canvas_obj.saveState()
     canvas_obj.setFont("Helvetica-Bold", 9)
     canvas_obj.setFillColor(colors.HexColor("#7c3aed"))
@@ -320,11 +320,9 @@ def generate_pdf_report(filename, title, content_paragraphs):
     
     story = []
     
-    # COMPLETELY FRESH LOGO PLACEMENT WITH PROPORTIONATE NON-SQUASHED DIMENSIONS
     if os.path.exists("logo.png"):
         try:
-            # Using strict balanced width and proportional height to avoid any squashing
-            logo_img = RLImage("logo.png", width=90, height=90)
+            logo_img = RLImage("logo.png", width=85, height=85)
             logo_img.hAlign = 'CENTER'
             story.append(logo_img)
             story.append(Spacer(1, 10))
@@ -338,7 +336,7 @@ def generate_pdf_report(filename, title, content_paragraphs):
         story.append(Paragraph(para, body_style))
         story.append(Spacer(1, 6))
         
-    doc.build(story, onFirstPage=draw_fresh_pdf_decorations, onLaterPages=draw_fresh_pdf_decorations)
+    doc.build(story, onFirstPage=draw_clean_pdf_decorations, onLaterPages=draw_clean_pdf_decorations)
     return filepath
 
 @app.get("/download-pdf/{filename}")
@@ -1388,7 +1386,7 @@ async def api_vastu(request: Request):
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report</a></div>"""
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF generated with fresh stamp logo.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF report is ready for download.</p></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 349, name)
     download_btn = pdf_btn_html if is_admin else ""
@@ -1419,7 +1417,7 @@ async def api_kundali_pdf(request: Request):
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready with fresh stamp logo.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)

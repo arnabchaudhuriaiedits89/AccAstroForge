@@ -275,7 +275,10 @@ def get_paywall_html(service_name, price, user_name="User"):
     </div>
     """
 
-def draw_clean_header_footer(canvas_obj, doc_obj):
+# ---------------------------------------------------------
+# BRAND NEW SCRATCH-BUILT PDF CANVAS SETUP
+# ---------------------------------------------------------
+def draw_fresh_pdf_decorations(canvas_obj, doc_obj):
     canvas_obj.saveState()
     canvas_obj.setFont("Helvetica-Bold", 9)
     canvas_obj.setFillColor(colors.HexColor("#7c3aed"))
@@ -316,12 +319,15 @@ def generate_pdf_report(filename, title, content_paragraphs):
     )
     
     story = []
+    
+    # COMPLETELY FRESH LOGO PLACEMENT WITH PROPORTIONATE NON-SQUASHED DIMENSIONS
     if os.path.exists("logo.png"):
         try:
-            logo_img = RLImage("logo.png", width=85, height=85)
+            # Using strict balanced width and proportional height to avoid any squashing
+            logo_img = RLImage("logo.png", width=90, height=90)
             logo_img.hAlign = 'CENTER'
             story.append(logo_img)
-            story.append(Spacer(1, 8))
+            story.append(Spacer(1, 10))
         except Exception:
             pass
 
@@ -332,7 +338,7 @@ def generate_pdf_report(filename, title, content_paragraphs):
         story.append(Paragraph(para, body_style))
         story.append(Spacer(1, 6))
         
-    doc.build(story, onFirstPage=draw_clean_header_footer, onLaterPages=draw_clean_header_footer)
+    doc.build(story, onFirstPage=draw_fresh_pdf_decorations, onLaterPages=draw_fresh_pdf_decorations)
     return filepath
 
 @app.get("/download-pdf/{filename}")
@@ -886,7 +892,6 @@ HTML_TEMPLATE = """
         let verifiedEmailStorage = "";
         let isAdminUnlocked = false;
 
-        // FIXED LIVE DIGITAL CLOCK SCRIPT
         function updateLiveClock() {
             let now = new Date();
             let hours = String(now.getHours()).padStart(2, '0');

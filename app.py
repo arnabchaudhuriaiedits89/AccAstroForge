@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 app = FastAPI()
@@ -276,18 +276,10 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH HIGH OPACITY & CLEAR BRIGHT LOGO
+# PDF GENERATION WITH TOP HEADER STAMP LOGO (NO WATERMARK OVERLAP)
 # ---------------------------------------------------------
-def draw_watermark_and_logo(canvas_obj, doc_obj):
+def draw_header_footer_canvas(canvas_obj, doc_obj):
     canvas_obj.saveState()
-    if os.path.exists("logo.png"):
-        try:
-            # High opacity (0.35) for bold, clear, and prominent visibility matching Kundali style
-            canvas_obj.setFillAlpha(0.35)
-            canvas_obj.drawImage("logo.png", 175, 275, width=260, height=260, preserveAspectRatio=True, mask='auto')
-        except Exception:
-            pass
-    
     canvas_obj.setFont("Helvetica-Bold", 9)
     canvas_obj.setFillColor(colors.HexColor("#7c3aed"))
     canvas_obj.drawString(54, 750, "AccAstroForge - Official Astrological & Vastu Report")
@@ -303,16 +295,16 @@ def draw_watermark_and_logo(canvas_obj, doc_obj):
 
 def generate_pdf_report(filename, title, content_paragraphs):
     filepath = os.path.join(os.getcwd(), filename)
-    doc = SimpleDocTemplate(filepath, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=72, bottomMargin=54)
+    doc = SimpleDocTemplate(filepath, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=50, bottomMargin=54)
     styles = getSampleStyleSheet()
     
     title_style = ParagraphStyle(
         'PdfTitle',
         parent=styles['Heading1'],
         fontName='Helvetica-Bold',
-        fontSize=18,
+        fontSize=16,
         textColor=colors.HexColor('#7c3aed'),
-        spaceAfter=15,
+        spaceAfter=12,
         alignment=1
     )
     
@@ -326,12 +318,26 @@ def generate_pdf_report(filename, title, content_paragraphs):
         leading=16
     )
     
-    story = [Paragraph(title, title_style), Spacer(1, 10)]
+    story = []
+    
+    # ADD SOLID TOP HEADER STAMP LOGO (KAPALER TIP / STAMP STYLE)
+    if os.path.exists("logo.png"):
+        try:
+            logo_img = RLImage("logo.png", width=55, height=55)
+            logo_img.hAlign = 'CENTER'
+            story.append(logo_img)
+            story.append(Spacer(1, 8))
+        except Exception:
+            pass
+
+    story.append(Paragraph(title, title_style))
+    story.append(Spacer(1, 8))
+    
     for para in content_paragraphs:
         story.append(Paragraph(para, body_style))
         story.append(Spacer(1, 6))
         
-    doc.build(story, onFirstPage=draw_watermark_and_logo, onLaterPages=draw_watermark_and_logo)
+    doc.build(story, onFirstPage=draw_header_footer_canvas, onLaterPages=draw_header_footer_canvas)
     return filepath
 
 @app.get("/download-pdf/{filename}")

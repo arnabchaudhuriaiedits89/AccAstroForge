@@ -276,7 +276,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH TOP CENTER HEADER STAMP LOGO
+# PDF GENERATION WITH PERFECT PROPORTION HEADER STAMP LOGO
 # ---------------------------------------------------------
 def draw_clean_header_footer(canvas_obj, doc_obj):
     canvas_obj.saveState()
@@ -320,10 +320,10 @@ def generate_pdf_report(filename, title, content_paragraphs):
     
     story = []
     
-    # ADD SOLID TOP HEADER STAMP LOGO (KAPALER TIP / STAMP STYLE AT THE VERY TOP CENTER)
+    # ADD PERFECT PROPORTION TOP HEADER STAMP LOGO (PRESERVING ASPECT RATIO - NO SQUASHING)
     if os.path.exists("logo.png"):
         try:
-            logo_img = RLImage("logo.png", width=50, height=50)
+            logo_img = RLImage("logo.png", width=110, height=45)
             logo_img.hAlign = 'CENTER'
             story.append(logo_img)
             story.append(Spacer(1, 6))

@@ -276,7 +276,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH UNIFORM PERFECT LOGO DIMENSIONS
+# PDF GENERATION WITH FRESH & CLEAN SQUARE LOGO STAMP
 # ---------------------------------------------------------
 def draw_clean_header_footer(canvas_obj, doc_obj):
     canvas_obj.saveState()
@@ -320,13 +320,14 @@ def generate_pdf_report(filename, title, content_paragraphs):
     
     story = []
     
-    # UNIFORM BALANCED LOGO WIDTH & HEIGHT FOR BOTH KUNDALI AND VASTU REPORTS
+    # TOTALLY FRESH LOGO INSERTION WITH BALANCED SQUARE/ROUND PROPORTION (NO SQUASHING)
     if os.path.exists("logo.png"):
         try:
-            logo_img = RLImage("logo.png", width=140, height=55)
+            # COMPLETELY REMOVED OLD REFERENCES AND SETTING FRESH BALANCED DIMENSIONS
+            logo_img = RLImage("logo.png", width=85, height=85)
             logo_img.hAlign = 'CENTER'
             story.append(logo_img)
-            story.append(Spacer(1, 6))
+            story.append(Spacer(1, 8))
         except Exception:
             pass
 
@@ -1387,7 +1388,7 @@ async def api_vastu(request: Request):
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report</a></div>"""
     
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF generated with perfect uniform logo.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF generated with fresh stamp logo.</p></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 349, name)
     download_btn = pdf_btn_html if is_admin else ""
@@ -1419,7 +1420,7 @@ async def api_kundali_pdf(request: Request):
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
     
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready with perfect uniform logo.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p>Your Lagna birth chart preview is ready with fresh stamp logo.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
@@ -1465,7 +1466,7 @@ async def api_ai(request: Request):
         ai_reply = "🏛️ Vastu Guidance: Ensuring your main entrance is in the North or East direction brings abundance. Keep the North-East (Ishan) zone clean and clutter-free."
     elif any(k in query for k in ["kundali", "birth chart", "lagna", "janam"]):
         ai_reply = "📜 Janam Kundali Insight: Your planetary positions indicate a strong Lagna house. Focus on consistent efforts in your professional sphere for optimal growth."
-    elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna"]):
+    elif any(k in query for k:: ["gemstone", "panna", "stone", "ring", "ratna"]):
         ai_reply = "💎 Gemstone Recommendation: Based on cosmic alignments, wearing a certified Emerald (Panna) or Yellow Sapphire on an auspicious day will enhance focus and prosperity."
     elif any(k in query for k in ["career", "job", "business", "money", "finance", "success"]):
         ai_reply = "💼 Career & Wealth Forecast: Jupiter's transit brings favorable opportunities for career advancement and financial stability. Avoid impulsive investments."

@@ -276,7 +276,7 @@ def get_paywall_html(service_name, price, user_name="User"):
     """
 
 # ---------------------------------------------------------
-# PDF GENERATION WITH CLEAN TOP HEADER STAMP LOGO (NO WATERMARK)
+# PDF GENERATION WITH TOP CENTER HEADER STAMP LOGO
 # ---------------------------------------------------------
 def draw_clean_header_footer(canvas_obj, doc_obj):
     canvas_obj.saveState()
@@ -295,7 +295,7 @@ def draw_clean_header_footer(canvas_obj, doc_obj):
 
 def generate_pdf_report(filename, title, content_paragraphs):
     filepath = os.path.join(os.getcwd(), filename)
-    doc = SimpleDocTemplate(filepath, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=50, bottomMargin=54)
+    doc = SimpleDocTemplate(filepath, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=40, bottomMargin=54)
     styles = getSampleStyleSheet()
     
     title_style = ParagraphStyle(
@@ -320,18 +320,18 @@ def generate_pdf_report(filename, title, content_paragraphs):
     
     story = []
     
-    # ADD SOLID TOP HEADER STAMP LOGO (KAPALER TIP / STAMP STYLE AT THE TOP CENTER)
+    # ADD SOLID TOP HEADER STAMP LOGO (KAPALER TIP / STAMP STYLE AT THE VERY TOP CENTER)
     if os.path.exists("logo.png"):
         try:
-            logo_img = RLImage("logo.png", width=55, height=55)
+            logo_img = RLImage("logo.png", width=50, height=50)
             logo_img.hAlign = 'CENTER'
             story.append(logo_img)
-            story.append(Spacer(1, 8))
+            story.append(Spacer(1, 6))
         except Exception:
             pass
 
     story.append(Paragraph(title, title_style))
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 6))
     
     for para in content_paragraphs:
         story.append(Paragraph(para, body_style))

@@ -950,7 +950,7 @@ HTML_TEMPLATE = """
             }
 
             let savedEmail = localStorage.getItem('accastroforge_user');
-            let savedName = localStorage.getItem('accastroforge_username'] || savedEmail;
+            let savedName = localStorage.getItem('accastroforge_username') || savedEmail;
             if(savedEmail) {
                 setLoggedInUI(savedName, savedEmail);
             }
@@ -1417,7 +1417,6 @@ async def api_kundali_pdf(request: Request):
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
-    # ADDED SYMMETRIC GREEN CHECKMARK & READY MESSAGE TO MATCH VASTU TAB EXACTLY
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     

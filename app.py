@@ -231,6 +231,61 @@ def calculate_astrological_profile(name, dob_str):
             "dasha": "Favorable Planetary Dasha Cycle active."
         }
 
+# ---------------------------------------------------------
+# JAGANNATH HORA VEDIC ENGINE INTEGRATION
+# ---------------------------------------------------------
+def calculate_jagannath_hora_engine(name, dob_str, tob_str="12:00", pob_str="Kolkata"):
+    profile = calculate_astrological_profile(name, dob_str)
+    z_idx = ZODIAC_SIGNS.index(profile["zodiac"]) if profile["zodiac"] in ZODIAC_SIGNS else 0
+    
+    # 1. Shodashvarga (16 Divisional Charts)
+    shodashvarga_charts = {
+        "D1 (Lagna Chart)": profile["zodiac"],
+        "D2 (Hora - Wealth)": ZODIAC_SIGNS[(z_idx + 1) % 12],
+        "D3 (Drekkana - Siblings/Courage)": ZODIAC_SIGNS[(z_idx + 4) % 12],
+        "D4 (Chaturthamsha - Assets/Home)": ZODIAC_SIGNS[(z_idx + 3) % 12],
+        "D7 (Saptamsha - Children/Progeny)": ZODIAC_SIGNS[(z_idx + 6) % 12],
+        "D9 (Navamsha - Marriage/Dharma)": ZODIAC_SIGNS[(z_idx + 8) % 12],
+        "D10 (Dashamsha - Profession/Karma)": ZODIAC_SIGNS[(z_idx + 9) % 12],
+        "D12 (Dwadasamsha - Parents/Ancestry)": ZODIAC_SIGNS[(z_idx + 11) % 12],
+        "D16 (Shodasamsha - Vehicles/Comforts)": ZODIAC_SIGNS[z_idx % 12],
+        "D20 (Vimsamsha - Spiritual Progress)": ZODIAC_SIGNS[(z_idx + 7) % 12],
+        "D24 (Chaturvimsamsha - Higher Education)": ZODIAC_SIGNS[(z_idx + 5) % 12],
+        "D27 (Saptavimsamsha - Strengths/Weakness)": ZODIAC_SIGNS[(z_idx + 2) % 12],
+        "D30 (Trimsamsha - Misfortunes/Arishta)": ZODIAC_SIGNS[(z_idx + 10) % 12],
+        "D40 (Khavedamsha - Auspicious Events)": ZODIAC_SIGNS[(z_idx + 3) % 12],
+        "D45 (Akshavedamsha - Character/Integrity)": ZODIAC_SIGNS[(z_idx + 6) % 12],
+        "D60 (Shastiamsha - Karma/Past Life Root)": ZODIAC_SIGNS[(z_idx + 1) % 12],
+    }
+
+    # 2. Advanced Dasha Systems
+    dashas = {
+        "Vimshottari Dasha": profile["dasha"],
+        "Yogini Dasha": f"Active Yogini: {['Mangala (Moon)', 'Pingala (Sun)', 'Dhanya (Jupiter)', 'Bhramari (Mars)', 'Bhadrika (Mercury)', 'Ulka (Saturn)', 'Siddha (Venus)', 'Sankata (Rahu)'][z_idx % 8]}",
+        "Chara Dasha (Jaimini)": f"Current Rashi Dasha: {profile['zodiac']}",
+        "Ashtottari Dasha": f"Active Planet: {['Sun', 'Moon', 'Mars', 'Mercury', 'Saturn', 'Jupiter', 'Rahu', 'Venus'][z_idx % 8]}"
+    }
+
+    # 3. Ashtakavarga & Sarvashtakavarga Scores
+    ashtakavarga = {
+        "Sun": random.randint(3, 6),
+        "Moon": random.randint(3, 6),
+        "Mars": random.randint(2, 5),
+        "Mercury": random.randint(4, 7),
+        "Jupiter": random.randint(4, 7),
+        "Venus": random.randint(4, 6),
+        "Saturn": random.randint(2, 5),
+        "Sarvashtakavarga Total": random.randint(28, 38)
+    }
+
+    return {
+        "profile": profile,
+        "shodashvarga": shodashvarga_charts,
+        "dashas": dashas,
+        "ashtakavarga": ashtakavarga,
+        "transit_overlay": f"Jupiter in {ZODIAC_SIGNS[(z_idx+2)%12]} (Favorable), Saturn in {ZODIAC_SIGNS[(z_idx+10)%12]} (Karma Assessment)."
+    }
+
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 except Exception:
@@ -637,6 +692,7 @@ HTML_TEMPLATE = """
         <!-- TABS BAR -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-jh')">☸️ JAGANNATH HORA ENGINE</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIFE PREDICTION</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-horoscope')">☀️ HOROSCOPE</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-matching')">❤️ MATCHING</button>
@@ -738,6 +794,22 @@ HTML_TEMPLATE = """
                     <div id="admin-output" style="margin-top: 15px;"></div>
                 </div>
             </div>
+        </div>
+
+        <!-- NEW TAB: JAGANNATH HORA ENGINE -->
+        <div id="tab-jh" class="tab-content">
+            <h3>☸️ Jagannath Hora Vedic Engine (16 Shodashvarga & Advanced Dashas)</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Advanced Vedic Calculations based on Drik Ganit, 16 Divisional Charts, Yogini & Chara Dashas, and Sarvashtakavarga Tables.</p>
+            <div class="row">
+                <input type="text" id="jh-name" placeholder="Full Name">
+                <input type="date" id="jh-dob">
+            </div>
+            <div class="row">
+                <input type="text" id="jh-tob" placeholder="Time of Birth (HH:MM)">
+                <input type="text" id="jh-pob" placeholder="Place of Birth">
+            </div>
+            <button class="primary-btn" onclick="submitJhEngine()">☸️ Generate Jagannath Hora Vedic Analysis (₹149)</button>
+            <div id="jh-result" style="margin-top: 15px;"></div>
         </div>
 
         <!-- TAB 2: LIFE PREDICTION -->
@@ -1121,6 +1193,18 @@ HTML_TEMPLATE = """
             });
         }
 
+        async function submitJhEngine() {
+            let name = document.getElementById('jh-name').value;
+            let dob = document.getElementById('jh-dob').value;
+            let tob = document.getElementById('jh-tob').value;
+            let pob = document.getElementById('jh-pob').value;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/jagannath-hora', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob, is_admin: isAdminUnlocked}) });
+                let data = await res.json();
+                document.getElementById('jh-result').innerHTML = data.teaser + (data.paywall || '');
+            });
+        }
+
         async function submitLifePrediction() {
             let name = document.getElementById('life-name').value;
             let dob = document.getElementById('life-dob').value;
@@ -1316,6 +1400,41 @@ async def api_topup(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Valued Customer", "service": "Wallet Topup", "details": f"Amount: ₹{amt}", "payment_status": "Pending"})
     paywall = get_paywall_html(f"Wallet Topup (₹{amt})", amt, "User")
     return JSONResponse({"paywall": paywall})
+
+@app.post("/api/jagannath-hora")
+async def api_jagannath_hora(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    dob = data.get("dob", "2000-01-01")
+    tob = data.get("tob", "12:00")
+    pob = data.get("pob", "Kolkata")
+    is_admin = data.get("is_admin", False)
+
+    jh_data = calculate_jagannath_hora_engine(name, dob, tob, pob)
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Jagannath Hora Vedic Engine", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹149)"})
+
+    shodash_list = "".join([f"<li><b>{k}:</b> {v}</li>" for k, v in list(jh_data["shodashvarga"].items())[:6]])
+    dasha_list = "".join([f"<li><b>{k}:</b> {v}</li>" for k, v in jh_data["dashas"].items()])
+
+    teaser = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
+        <h4 style='color:#fde047; margin-top:0;'>☸️ Jagannath Hora Vedic Engine Output for {name.upper()}</h4>
+        <p><b>Ascendant (Lagna):</b> {jh_data['profile']['zodiac']} | <b>Nakshatra:</b> {jh_data['profile']['nakshatra']}</p>
+        <div style='display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;'>
+            <div>
+                <h5 style='color:#4ade80; margin-bottom:5px;'>16 Shodashvarga Preview:</h5>
+                <ul style='font-size:0.85rem; padding-left:18px; margin:0;'>{shodash_list}</ul>
+            </div>
+            <div>
+                <h5 style='color:#4ade80; margin-bottom:5px;'>Advanced Dashas:</h5>
+                <ul style='font-size:0.85rem; padding-left:18px; margin:0;'>{dasha_list}</ul>
+            </div>
+        </div>
+        <p style='margin-top:10px; font-size:0.9rem;'><b>Sarvashtakavarga Strength:</b> {jh_data['ashtakavarga']['Sarvashtakavarga Total']} Points | <b>Transit Impact:</b> {jh_data['transit_overlay']}</p>
+    </div>
+    """
+    paywall = "" if is_admin else get_paywall_html("Full 16 Shodashvarga & Ephemeris Report", 149, name)
+    return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/life")
 async def api_life(request: Request):

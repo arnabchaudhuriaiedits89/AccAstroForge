@@ -709,11 +709,11 @@ HTML_TEMPLATE = """
                 <h4>💳 Wallet Balance: ₹ 0.00</h4>
                 <p>Use credits for instant unlocking of reports.</p>
                 <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(100)">⚡ ₹100</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(250)">⚡ ₹250</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(49)">⚡ ₹49</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(51)">⚡ ₹51</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(99)">⚡ ₹99</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(149)">⚡ ₹149</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(500)">⚡ ₹500</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(750)">⚡ ₹750</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(1000)">⚡ ₹1000</button>
                 </div>
                 <div id="wallet-result" style="margin-top:10px;"></div>
             </div>
@@ -751,7 +751,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="life-tob" placeholder="Time of Birth (HH:MM)" onfocus="this.type='time'" onblur="if(!this.value)this.type='text'">
                 <input type="text" id="life-pob" placeholder="Place of Birth">
             </div>
-            <button class="primary-btn" onclick="submitLifePrediction()">✨ Reveal Life Insights (₹499)</button>
+            <button class="primary-btn" onclick="submitLifePrediction()">✨ Reveal Life Insights (₹149)</button>
             <div id="life-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -776,7 +776,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="g-name" placeholder="Girl's Name">
                 <input type="date" id="g-dob">
             </div>
-            <button class="primary-btn" onclick="submitMatching()">❤️ Match Kundalis Now (₹399)</button>
+            <button class="primary-btn" onclick="submitMatching()">❤️ Match Kundalis Now (₹49)</button>
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -787,7 +787,7 @@ HTML_TEMPLATE = """
                 <input type="date" id="gem-dob">
                 <input type="text" id="gem-zodiac" placeholder="Zodiac Sign">
             </div>
-            <button class="primary-btn" onclick="submitGemstone()">💎 Find My Gemstone (₹299)</button>
+            <button class="primary-btn" onclick="submitGemstone()">💎 Find My Gemstone (₹51)</button>
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -817,7 +817,7 @@ HTML_TEMPLATE = """
                 </select>
                 <input type="text" id="vastu-city" placeholder="City / Location" autocomplete="off">
             </div>
-            <button class="primary-btn" onclick="submitVastuAnalysis()">🏛️ Generate Vastu Dosha & Remedy Report (₹349)</button>
+            <button class="primary-btn" onclick="submitVastuAnalysis()">🏛️ Generate Vastu Dosha & Remedy Report (₹149)</button>
             <div id="vastu-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -832,7 +832,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="k-tob" placeholder="Time of Birth (HH:MM)">
                 <input type="text" id="k-pob" placeholder="Place of Birth">
             </div>
-            <button class="primary-btn" onclick="submitKundaliPdf()">📜 Generate Kundali & PDF (₹299)</button>
+            <button class="primary-btn" onclick="submitKundaliPdf()">📜 Generate Kundali & PDF (₹149)</button>
             <div id="kundali-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -843,7 +843,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="num-name" placeholder="Full Name">
                 <input type="date" id="num-dob">
             </div>
-            <button class="primary-btn" onclick="submitNumerology()">🔢 Analyze Numerology (₹249)</button>
+            <button class="primary-btn" onclick="submitNumerology()">🔢 Analyze Numerology (₹99)</button>
             <div id="num-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -1312,7 +1312,7 @@ async def api_login(request: Request):
 @app.post("/api/topup")
 async def api_topup(request: Request):
     data = await request.json()
-    amt = data.get("amount", 250)
+    amt = data.get("amount", 149)
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Valued Customer", "service": "Wallet Topup", "details": f"Amount: ₹{amt}", "payment_status": "Pending"})
     paywall = get_paywall_html(f"Wallet Topup (₹{amt})", amt, "User")
     return JSONResponse({"paywall": paywall})
@@ -1324,10 +1324,10 @@ async def api_life(request: Request):
     dob = data.get("dob", "2000-01-01")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹499)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹149)"})
     profile = calculate_astrological_profile(name, dob)
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🌟 Astrological Teaser for {name.upper()}</h4><p><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p></div>"""
-    paywall = "" if is_admin else get_paywall_html("Complete Deep Life Forecast & PDF", 499, name)
+    paywall = "" if is_admin else get_paywall_html("Complete Deep Life Forecast & PDF", 149, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/horoscope")
@@ -1345,9 +1345,9 @@ async def api_matching(request: Request):
     g = data.get("girl_name", "Girl")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Kundali Matching", "details": "Guna Milan Check", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹399)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Kundali Matching", "details": "Guna Milan Check", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹49)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>❤️ Compatibility Teaser for {b} & {g}</h4><p>High Guna Milan score detected! Excellent long-term emotional alignment.</p></div>"""
-    paywall = "" if is_admin else get_paywall_html("Complete Kundali Matching Report", 399, f"{b} & {g}")
+    paywall = "" if is_admin else get_paywall_html("Complete Kundali Matching Report", 49, f"{b} & {g}")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/gemstone")
@@ -1356,9 +1356,9 @@ async def api_gemstone(request: Request):
     z = data.get("zodiac", "Aries")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Gemstone Remedy", "details": f"Zodiac: {z}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹299)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Gemstone Remedy", "details": f"Zodiac: {z}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹51)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>💎 Gemstone Guidance for {z}</h4><p>Emerald (Panna) or Yellow Sapphire recommended for career success.</p></div>"""
-    paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 299, "User")
+    paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 51, "User")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/vastu")
@@ -1370,7 +1370,7 @@ async def api_vastu(request: Request):
     city = data.get("city", "Kolkata")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹349)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
     filename = f"Vastu_Report_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -1388,7 +1388,7 @@ async def api_vastu(request: Request):
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report</a></div>"""
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF report is ready for download.</p></div>"""
     
-    paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 349, name)
+    paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 149, name)
     download_btn = pdf_btn_html if is_admin else ""
     
     return JSONResponse({"teaser": teaser, "pdf_download_btn": download_btn, "paywall": paywall})
@@ -1402,7 +1402,7 @@ async def api_kundali_pdf(request: Request):
     pob = data.get("pob", "Kolkata")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹299)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹149)"})
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -1420,7 +1420,7 @@ async def api_kundali_pdf(request: Request):
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     
-    paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 299, name)
+    paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 149, name)
     download_btn = pdf_btn_html if is_admin else ""
     
     return JSONResponse({"teaser": teaser, "chart": chart, "pdf_download_btn": download_btn, "paywall": paywall})
@@ -1432,10 +1432,10 @@ async def api_numerology(request: Request):
     dob = data.get("dob", "2000-01-01")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹249)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹99)"})
     profile = calculate_astrological_profile(name, dob)
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
-    paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 249, name)
+    paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 99, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/panchang")

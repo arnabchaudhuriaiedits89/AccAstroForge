@@ -232,13 +232,12 @@ def calculate_astrological_profile(name, dob_str):
         }
 
 # ---------------------------------------------------------
-# JAGANNATH HORA VEDIC ENGINE INTEGRATION
+# JAGANNATH HORA VEDIC CALCULATIONS INTEGRATION
 # ---------------------------------------------------------
 def calculate_jagannath_hora_engine(name, dob_str, tob_str="12:00", pob_str="Kolkata"):
     profile = calculate_astrological_profile(name, dob_str)
     z_idx = ZODIAC_SIGNS.index(profile["zodiac"]) if profile["zodiac"] in ZODIAC_SIGNS else 0
     
-    # 1. Shodashvarga (16 Divisional Charts)
     shodashvarga_charts = {
         "D1 (Lagna Chart)": profile["zodiac"],
         "D2 (Hora - Wealth)": ZODIAC_SIGNS[(z_idx + 1) % 12],
@@ -258,7 +257,6 @@ def calculate_jagannath_hora_engine(name, dob_str, tob_str="12:00", pob_str="Kol
         "D60 (Shastiamsha - Karma/Past Life Root)": ZODIAC_SIGNS[(z_idx + 1) % 12],
     }
 
-    # 2. Advanced Dasha Systems
     dashas = {
         "Vimshottari Dasha": profile["dasha"],
         "Yogini Dasha": f"Active Yogini: {['Mangala (Moon)', 'Pingala (Sun)', 'Dhanya (Jupiter)', 'Bhramari (Mars)', 'Bhadrika (Mercury)', 'Ulka (Saturn)', 'Siddha (Venus)', 'Sankata (Rahu)'][z_idx % 8]}",
@@ -266,7 +264,6 @@ def calculate_jagannath_hora_engine(name, dob_str, tob_str="12:00", pob_str="Kol
         "Ashtottari Dasha": f"Active Planet: {['Sun', 'Moon', 'Mars', 'Mercury', 'Saturn', 'Jupiter', 'Rahu', 'Venus'][z_idx % 8]}"
     }
 
-    # 3. Ashtakavarga & Sarvashtakavarga Scores
     ashtakavarga = {
         "Sun": random.randint(3, 6),
         "Moon": random.randint(3, 6),
@@ -692,7 +689,7 @@ HTML_TEMPLATE = """
         <!-- TABS BAR -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-jh')">☸️ JAGANNATH HORA ENGINE</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-jh')">☸️ JAGANNATH HORA</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIFE PREDICTION</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-horoscope')">☀️ HOROSCOPE</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-matching')">❤️ MATCHING</button>
@@ -767,8 +764,8 @@ HTML_TEMPLATE = """
                 <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(49)">⚡ ₹49</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(51)">⚡ ₹51</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(99)">⚡ ₹99</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(149)">⚡ ₹149</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(59)">⚡ ₹59</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(69)">⚡ ₹69</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(500)">⚡ ₹500</button>
                 </div>
                 <div id="wallet-result" style="margin-top:10px;"></div>
@@ -796,9 +793,9 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- NEW TAB: JAGANNATH HORA ENGINE -->
+        <!-- NEW TAB: JAGANNATH HORA -->
         <div id="tab-jh" class="tab-content">
-            <h3>☸️ Jagannath Hora Vedic Engine (16 Shodashvarga & Advanced Dashas)</h3>
+            <h3>☸️ Jagannath Hora Vedic Calculations (16 Shodashvarga & Advanced Dashas)</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Advanced Vedic Calculations based on Drik Ganit, 16 Divisional Charts, Yogini & Chara Dashas, and Sarvashtakavarga Tables.</p>
             <div class="row">
                 <input type="text" id="jh-name" placeholder="Full Name">
@@ -808,7 +805,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="jh-tob" placeholder="Time of Birth (HH:MM)">
                 <input type="text" id="jh-pob" placeholder="Place of Birth">
             </div>
-            <button class="primary-btn" onclick="submitJhEngine()">☸️ Generate Jagannath Hora Vedic Analysis (₹149)</button>
+            <button class="primary-btn" onclick="submitJhEngine()">☸️ Generate Jagannath Hora Vedic Analysis (₹59)</button>
             <div id="jh-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -904,7 +901,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="k-tob" placeholder="Time of Birth (HH:MM)">
                 <input type="text" id="k-pob" placeholder="Place of Birth">
             </div>
-            <button class="primary-btn" onclick="submitKundaliPdf()">📜 Generate Kundali & PDF (₹149)</button>
+            <button class="primary-btn" onclick="submitKundaliPdf()">📜 Generate Kundali & PDF (₹59)</button>
             <div id="kundali-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -915,7 +912,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="num-name" placeholder="Full Name">
                 <input type="date" id="num-dob">
             </div>
-            <button class="primary-btn" onclick="submitNumerology()">🔢 Analyze Numerology (₹99)</button>
+            <button class="primary-btn" onclick="submitNumerology()">🔢 Analyze Numerology (₹69)</button>
             <div id="num-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -1396,7 +1393,7 @@ async def api_login(request: Request):
 @app.post("/api/topup")
 async def api_topup(request: Request):
     data = await request.json()
-    amt = data.get("amount", 149)
+    amt = data.get("amount", 59)
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Valued Customer", "service": "Wallet Topup", "details": f"Amount: ₹{amt}", "payment_status": "Pending"})
     paywall = get_paywall_html(f"Wallet Topup (₹{amt})", amt, "User")
     return JSONResponse({"paywall": paywall})
@@ -1411,14 +1408,14 @@ async def api_jagannath_hora(request: Request):
     is_admin = data.get("is_admin", False)
 
     jh_data = calculate_jagannath_hora_engine(name, dob, tob, pob)
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Jagannath Hora Vedic Engine", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹149)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Jagannath Hora Vedic Calculations", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹59)"})
 
     shodash_list = "".join([f"<li><b>{k}:</b> {v}</li>" for k, v in list(jh_data["shodashvarga"].items())[:6]])
     dasha_list = "".join([f"<li><b>{k}:</b> {v}</li>" for k, v in jh_data["dashas"].items()])
 
     teaser = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
-        <h4 style='color:#fde047; margin-top:0;'>☸️ Jagannath Hora Vedic Engine Output for {name.upper()}</h4>
+        <h4 style='color:#fde047; margin-top:0;'>☸️ Jagannath Hora Vedic Calculations Output for {name.upper()}</h4>
         <p><b>Ascendant (Lagna):</b> {jh_data['profile']['zodiac']} | <b>Nakshatra:</b> {jh_data['profile']['nakshatra']}</p>
         <div style='display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;'>
             <div>
@@ -1433,7 +1430,7 @@ async def api_jagannath_hora(request: Request):
         <p style='margin-top:10px; font-size:0.9rem;'><b>Sarvashtakavarga Strength:</b> {jh_data['ashtakavarga']['Sarvashtakavarga Total']} Points | <b>Transit Impact:</b> {jh_data['transit_overlay']}</p>
     </div>
     """
-    paywall = "" if is_admin else get_paywall_html("Full 16 Shodashvarga & Ephemeris Report", 149, name)
+    paywall = "" if is_admin else get_paywall_html("Full 16 Shodashvarga & Ephemeris Report", 59, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/life")
@@ -1521,7 +1518,7 @@ async def api_kundali_pdf(request: Request):
     pob = data.get("pob", "Kolkata")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹149)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -1539,7 +1536,7 @@ async def api_kundali_pdf(request: Request):
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
     
-    paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 149, name)
+    paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 59, name)
     download_btn = pdf_btn_html if is_admin else ""
     
     return JSONResponse({"teaser": teaser, "chart": chart, "pdf_download_btn": download_btn, "paywall": paywall})
@@ -1551,10 +1548,10 @@ async def api_numerology(request: Request):
     dob = data.get("dob", "2000-01-01")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹99)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹69)"})
     profile = calculate_astrological_profile(name, dob)
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
-    paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 99, name)
+    paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 69, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
 @app.post("/api/panchang")

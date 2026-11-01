@@ -758,11 +758,11 @@ HTML_TEMPLATE = """
                 <h4>💳 Wallet Balance: ₹ 0.00</h4>
                 <p>Use credits for instant unlocking of reports.</p>
                 <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(49)">⚡ ₹49</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(51)">⚡ ₹51</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(59)">⚡ ₹59</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(69)">⚡ ₹69</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(500)">⚡ ₹500</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(99)">⚡ ₹99</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(199)">⚡ ₹199</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(299)">⚡ ₹299</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(399)">⚡ ₹399</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(499)">⚡ ₹499</button>
                 </div>
                 <div id="wallet-result" style="margin-top:10px;"></div>
             </div>
@@ -849,7 +849,7 @@ HTML_TEMPLATE = """
             <div id="dasha-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TRANSIT TRACKER (UPDATED: "ALL MAJOR PLANETS" REMOVED) -->
+        <!-- TRANSIT TRACKER -->
         <div id="tab-transit" class="tab-content">
             <h3>🪐 Live Planetary Transit Tracker</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem;">Track real-time celestial movements of Saturn, Jupiter, Rahu, Ketu and choose specific planets for detailed impact analysis.</p>
@@ -1523,7 +1523,7 @@ async def api_login(request: Request):
 @app.post("/api/topup")
 async def api_topup(request: Request):
     data = await request.json()
-    amt = data.get("amount", 59)
+    amt = data.get("amount", 99)
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Valued Customer", "service": "Wallet Topup", "details": f"Amount: ₹{amt}", "payment_status": "Pending"})
     paywall = get_paywall_html(f"Wallet Topup (₹{amt})", amt, "User")
     return JSONResponse({"paywall": paywall})

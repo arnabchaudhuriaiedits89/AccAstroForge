@@ -849,13 +849,12 @@ HTML_TEMPLATE = """
             <div id="dasha-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TRANSIT TRACKER (UPDATED WITH SELECTOR & INPUT) -->
+        <!-- TRANSIT TRACKER (UPDATED: "ALL MAJOR PLANETS" REMOVED) -->
         <div id="tab-transit" class="tab-content">
             <h3>🪐 Live Planetary Transit Tracker</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem;">Track real-time celestial movements of Saturn, Jupiter, Rahu, Ketu and choose specific planets for detailed impact analysis.</p>
             <div class="row" style="margin-top: 15px;">
                 <select id="transit-planet">
-                    <option value="All">All Major Planets (Jupiter, Saturn, Rahu, Ketu)</option>
                     <option value="Jupiter">Jupiter (Guru - Wealth & Expansion)</option>
                     <option value="Saturn">Saturn (Shani - Karma & Discipline)</option>
                     <option value="Rahu">Rahu (Ambition & Technology)</option>
@@ -989,7 +988,7 @@ HTML_TEMPLATE = """
             <div id="panchang-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- AI PALMISTRY (UPDATED WITH FILE UPLOAD BOX) -->
+        <!-- AI PALMISTRY -->
         <div id="tab-palm" class="tab-content">
             <h3>🖐️ AI Palmistry & Hand Analysis (Experimental)</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Upload a clear photo of your palm and specify focus areas (Heart Line, Head Line, Life Line) to get instant AI analysis.</p>
@@ -1007,7 +1006,7 @@ HTML_TEMPLATE = """
             <div id="palm-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- AI ASSISTANT (AT THE VERY END BEFORE LEGAL) -->
+        <!-- AI ASSISTANT -->
         <div id="tab-ai" class="tab-content">
             <h3>🤖 AI Kundli Interpreter & Personal Astrologer</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem;">Ask your question regarding career, marriage, health, vastu... AI answers based on your saved chart data.</p>
@@ -1016,7 +1015,7 @@ HTML_TEMPLATE = """
             <div id="ai-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- LEGAL (ABSOLUTELY AT THE VERY END) -->
+        <!-- LEGAL -->
         <div id="tab-legal" class="tab-content">
             <h3>⚖️ Terms & Social Handles</h3>
             <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
@@ -1602,18 +1601,16 @@ async def api_dasha(request: Request):
 @app.post("/api/transit")
 async def api_transit(request: Request):
     data = await request.json()
-    planet = data.get("planet", "All")
+    planet = data.get("planet", "Jupiter")
     zodiac_sign = data.get("zodiacSign", "Aries")
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Live Planetary Transit Tracker", "details": f"Planet: {planet}, Sign: {zodiac_sign}", "payment_status": "Free Live Tracker"})
     
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
-        <h4 style='color:#fde047;'>🪐 Live Planetary Transits for {zodiac_sign} (Selected: {planet})</h4>
+        <h4 style='color:#fde047;'>🪐 Live Planetary Transit for {zodiac_sign} (Selected Planet: {planet})</h4>
         <div style='display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;'>
-            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Jupiter (Guru):</b> Gemini (Direct) - Favorable wealth expansion for {zodiac_sign}</div>
-            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Saturn (Shani):</b> Aquarius (Retrograde) - Karmic review & focus</div>
-            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Rahu:</b> Aquarius (Direct) - Technical & digital pursuits</div>
-            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Ketu:</b> Leo (Direct) - Spiritual introspection</div>
+            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>{planet} Movement:</b> Direct motion influencing {zodiac_sign} house of fortune & career.</div>
+            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Karmic Impact:</b> Favorable planetary aspect supporting long-term stability and positive outcomes.</div>
         </div>
     </div>
     """

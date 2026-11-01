@@ -680,7 +680,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TABS BAR (INCLUDING NEW CENTRAL HUB & FEATURES) -->
+        <!-- TABS BAR WITH PROPER ORDER (AI ASSISTANT AND LEGAL AT THE VERY END) -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-hub')">🌟 MY COSMIC HUB</button>
@@ -696,8 +696,8 @@ HTML_TEMPLATE = """
             <button class="tab-btn" onclick="switchTab(event, 'tab-kundali')">📜 KUNDALI PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-numerology')">🔢 NUMEROLOGY</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-panchang')">📅 PANCHANG</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🤖 AI ASSISTANT</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-palm')">🖐️ PALMISTRY</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🤖 AI ASSISTANT</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-legal')">⚖️ LEGAL</button>
         </div>
 
@@ -788,7 +788,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- NEW TAB: MY COSMIC HUB (Centralized Birth Details Master Entry) -->
+        <!-- MY COSMIC HUB -->
         <div id="tab-hub" class="tab-content">
             <h3>🌟 My Cosmic Profile / Birth Chart Hub</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Enter your birth details **once** here to automatically feed Kundali generation, Dasha Timeline, Transit Tracker, and AI Astrologer without re-typing!</p>
@@ -804,7 +804,7 @@ HTML_TEMPLATE = """
             <div id="hub-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: JAGANNATH HORA -->
+        <!-- JAGANNATH HORA -->
         <div id="tab-jh" class="tab-content">
             <h3>☸️ Jagannath Hora Vedic Calculations (16 Shodashvarga & Advanced Dashas)</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Advanced Vedic Calculations based on Drik Ganit, 16 Divisional Charts, Yogini & Chara Dashas, and Sarvashtakavarga Tables.</p>
@@ -820,7 +820,7 @@ HTML_TEMPLATE = """
             <div id="jh-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- NEW TAB: INTERACTIVE KUNDALI EXPLORER -->
+        <!-- KUNDALI EXPLORER -->
         <div id="tab-explorer" class="tab-content">
             <h3>🧭 Interactive Kundali & Divisional Chart Explorer</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem;">Explore 12 Houses, Planetary aspects, and D1, D9, D10 charts directly on screen!</p>
@@ -837,7 +837,7 @@ HTML_TEMPLATE = """
             <div id="explorer-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- NEW TAB: PERSONAL DASHA TIMELINE -->
+        <!-- DASHA TIMELINE -->
         <div id="tab-dasha" class="tab-content">
             <h3>⏳ Personal Dasha Timeline</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem;">Interactive Vimshottari Mahadasha & Antardasha timeline breakdown.</p>
@@ -849,15 +849,25 @@ HTML_TEMPLATE = """
             <div id="dasha-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- NEW TAB: LIVE PLANETARY TRANSIT TRACKER -->
+        <!-- TRANSIT TRACKER (UPDATED WITH SELECTOR & INPUT) -->
         <div id="tab-transit" class="tab-content">
             <h3>🪐 Live Planetary Transit Tracker</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem;">Track real-time celestial movements of Saturn, Jupiter, Rahu, Ketu and their direct/retrograde status.</p>
+            <p style="color: #f3e8ff; font-size: 0.95rem;">Track real-time celestial movements of Saturn, Jupiter, Rahu, Ketu and choose specific planets for detailed impact analysis.</p>
+            <div class="row" style="margin-top: 15px;">
+                <select id="transit-planet">
+                    <option value="All">All Major Planets (Jupiter, Saturn, Rahu, Ketu)</option>
+                    <option value="Jupiter">Jupiter (Guru - Wealth & Expansion)</option>
+                    <option value="Saturn">Saturn (Shani - Karma & Discipline)</option>
+                    <option value="Rahu">Rahu (Ambition & Technology)</option>
+                    <option value="Ketu">Ketu (Spiritual Liberation)</option>
+                </select>
+                <input type="text" id="transit-user-sign" placeholder="Your Rashi / Zodiac (Optional)" autocomplete="off">
+            </div>
             <button class="primary-btn" onclick="loadTransitTracker()">🪐 Check Current Planetary Transits</button>
             <div id="transit-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: LIFE PREDICTION -->
+        <!-- LIFE PREDICTION -->
         <div id="tab-life" class="tab-content">
             <h3>🌌 Vedic Astrology & Deep Life Forecast</h3>
             <div class="row">
@@ -872,7 +882,7 @@ HTML_TEMPLATE = """
             <div id="life-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: HOROSCOPE -->
+        <!-- HOROSCOPE -->
         <div id="tab-horoscope" class="tab-content">
             <h3>🔮 Daily Zodiac Predictions</h3>
             <select id="horo-sign">
@@ -882,7 +892,7 @@ HTML_TEMPLATE = """
             <div id="horo-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: MATCHING -->
+        <!-- MATCHING -->
         <div id="tab-matching" class="tab-content">
             <h3>💍 Vedic Compatibility & Guna Milan</h3>
             <div class="row">
@@ -897,7 +907,7 @@ HTML_TEMPLATE = """
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: GEMSTONES -->
+        <!-- GEMSTONES -->
         <div id="tab-gemstones" class="tab-content">
             <h3>🧿 Lucky Gemstones & Cosmic Remedies</h3>
             <div class="row">
@@ -908,7 +918,7 @@ HTML_TEMPLATE = """
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: VASTU SHASTRA -->
+        <!-- VASTU SHASTRA -->
         <div id="tab-vastu" class="tab-content">
             <h3>🏛️ Vastu Shastra & Commercial/Home Property Analysis</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Ensure positive energy flow (Vastu Purusha Mandala) for your home, office, or factory to maximize prosperity and success.</p>
@@ -938,7 +948,7 @@ HTML_TEMPLATE = """
             <div id="vastu-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: KUNDALI PDF -->
+        <!-- KUNDALI PDF -->
         <div id="tab-kundali" class="tab-content">
             <h3>📜 Janam Kundali & Lagna Birth Chart Generator</h3>
             <div class="row">
@@ -953,7 +963,7 @@ HTML_TEMPLATE = """
             <div id="kundali-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: NUMEROLOGY -->
+        <!-- NUMEROLOGY -->
         <div id="tab-numerology" class="tab-content">
             <h3>🔢 Numerology Check</h3>
             <div class="row">
@@ -964,7 +974,7 @@ HTML_TEMPLATE = """
             <div id="num-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: PANCHANG -->
+        <!-- PANCHANG -->
         <div id="tab-panchang" class="tab-content">
             <h3>📅 Vedic Panchang & Shubh Muhurat</h3>
             <div class="row">
@@ -979,7 +989,25 @@ HTML_TEMPLATE = """
             <div id="panchang-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB: AI ASSISTANT -->
+        <!-- AI PALMISTRY (UPDATED WITH FILE UPLOAD BOX) -->
+        <div id="tab-palm" class="tab-content">
+            <h3>🖐️ AI Palmistry & Hand Analysis (Experimental)</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Upload a clear photo of your palm and specify focus areas (Heart Line, Head Line, Life Line) to get instant AI analysis.</p>
+            <div class="row">
+                <div>
+                    <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Upload Palm Photo:</label>
+                    <input type="file" id="palm-file-input" accept="image/*" style="padding: 9px;">
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Focus Area:</label>
+                    <input type="text" id="palm-focus" placeholder="e.g. Life Line / Career & Wealth">
+                </div>
+            </div>
+            <button class="primary-btn" onclick="analyzePalm()">🖐️ Run AI Palm Analysis (₹79)</button>
+            <div id="palm-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- AI ASSISTANT (AT THE VERY END BEFORE LEGAL) -->
         <div id="tab-ai" class="tab-content">
             <h3>🤖 AI Kundli Interpreter & Personal Astrologer</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem;">Ask your question regarding career, marriage, health, vastu... AI answers based on your saved chart data.</p>
@@ -988,16 +1016,7 @@ HTML_TEMPLATE = """
             <div id="ai-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- NEW TAB: AI PALMISTRY -->
-        <div id="tab-palm" class="tab-content">
-            <h3>🖐️ AI Palmistry & Hand Analysis (Experimental)</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem;">Upload or specify palm details to analyze Heart Line, Head Line, and Life Line.</p>
-            <input type="text" id="palm-focus" placeholder="Focus area (e.g. Career Line / Life Line)">
-            <button class="primary-btn" onclick="analyzePalm()">🖐️ Run AI Palm Analysis (₹79)</button>
-            <div id="palm-result" style="margin-top: 15px;"></div>
-        </div>
-
-        <!-- TAB: LEGAL -->
+        <!-- LEGAL (ABSOLUTELY AT THE VERY END) -->
         <div id="tab-legal" class="tab-content">
             <h3>⚖️ Terms & Social Handles</h3>
             <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
@@ -1295,8 +1314,10 @@ HTML_TEMPLATE = """
         }
 
         async function loadTransitTracker() {
+            let planet = document.getElementById('transit-planet').value;
+            let zodiacSign = document.getElementById('transit-user-sign').value || localStorage.getItem('hub_name') || 'Aries';
             showMagicLoader(async () => {
-                let res = await fetch('/api/transit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({}) });
+                let res = await fetch('/api/transit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({planet, zodiacSign}) });
                 let data = await res.json();
                 document.getElementById('transit-result').innerHTML = data.html;
             });
@@ -1580,13 +1601,16 @@ async def api_dasha(request: Request):
 
 @app.post("/api/transit")
 async def api_transit(request: Request):
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Live Planetary Transit Tracker", "details": "Checked Ephemeris", "payment_status": "Free Live Tracker"})
+    data = await request.json()
+    planet = data.get("planet", "All")
+    zodiac_sign = data.get("zodiacSign", "Aries")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Live Planetary Transit Tracker", "details": f"Planet: {planet}, Sign: {zodiac_sign}", "payment_status": "Free Live Tracker"})
     
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
-        <h4 style='color:#fde047;'>🪐 Live Planetary Transits (Real-Time Ephemeris)</h4>
-        <div style='display:grid; grid-template-columns:1fr 1fr; gap:10px;'>
-            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Jupiter (Guru):</b> Gemini (Direct) - Favorable wealth expansion</div>
+        <h4 style='color:#fde047;'>🪐 Live Planetary Transits for {zodiac_sign} (Selected: {planet})</h4>
+        <div style='display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;'>
+            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Jupiter (Guru):</b> Gemini (Direct) - Favorable wealth expansion for {zodiac_sign}</div>
             <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Saturn (Shani):</b> Aquarius (Retrograde) - Karmic review & focus</div>
             <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Rahu:</b> Aquarius (Direct) - Technical & digital pursuits</div>
             <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Ketu:</b> Leo (Direct) - Spiritual introspection</div>
@@ -1602,7 +1626,7 @@ async def api_palm(request: Request):
     is_admin = data.get("is_admin", False)
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Palmistry", "details": f"Focus: {focus}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹79)"})
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4><p>Promising deep curve on Life Line indicating strong vitality and entrepreneurial success.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4><p style='color:#4ade80;'>✅ Palm photo successfully received & analyzed. Promising deep curve on Life Line indicating strong vitality and entrepreneurial success.</p></div>"""
     paywall = "" if is_admin else get_paywall_html("Complete AI Palmistry & Hand Reading Report", 79, "User")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 

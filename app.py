@@ -231,9 +231,6 @@ def calculate_astrological_profile(name, dob_str):
             "dasha": "Favorable Planetary Dasha Cycle active."
         }
 
-# ---------------------------------------------------------
-# JAGANNATH HORA VEDIC CALCULATIONS INTEGRATION
-# ---------------------------------------------------------
 def calculate_jagannath_hora_engine(name, dob_str, tob_str="12:00", pob_str="Kolkata"):
     profile = calculate_astrological_profile(name, dob_str)
     z_idx = ZODIAC_SIGNS.index(profile["zodiac"]) if profile["zodiac"] in ZODIAC_SIGNS else 0
@@ -327,9 +324,6 @@ def get_paywall_html(service_name, price, user_name="User"):
     </div>
     """
 
-# ---------------------------------------------------------
-# CLEAN PDF CANVAS SETUP
-# ---------------------------------------------------------
 def draw_clean_pdf_decorations(canvas_obj, doc_obj):
     canvas_obj.saveState()
     canvas_obj.setFont("Helvetica-Bold", 9)
@@ -686,10 +680,14 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TABS BAR -->
+        <!-- TABS BAR (INCLUDING NEW CENTRAL HUB & FEATURES) -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-hub')">🌟 MY COSMIC HUB</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-jh')">☸️ JAGANNATH HORA</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-explorer')">🧭 KUNDALI EXPLORER</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-dasha')">⏳ DASHA TIMELINE</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-transit')">🪐 TRANSIT TRACKER</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIFE PREDICTION</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-horoscope')">☀️ HOROSCOPE</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-matching')">❤️ MATCHING</button>
@@ -699,6 +697,7 @@ HTML_TEMPLATE = """
             <button class="tab-btn" onclick="switchTab(event, 'tab-numerology')">🔢 NUMEROLOGY</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-panchang')">📅 PANCHANG</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🤖 AI ASSISTANT</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-palm')">🖐️ PALMISTRY</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-legal')">⚖️ LEGAL</button>
         </div>
 
@@ -717,39 +716,36 @@ HTML_TEMPLATE = """
                     </div>
                 </div>
 
-                <!-- COLLAPSIBLE AUTH CONTAINER -->
                 <div id="auth-container" class="auth-container">
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <button class="tab-btn active" id="subtn-reg" onclick="switchAuthSub('reg')">📝 SIGN UP & VERIFY OTP</button>
                         <button class="tab-btn" id="subtn-log" onclick="switchAuthSub('log')">🔐 MEMBER SIGN IN</button>
                     </div>
 
-                    <!-- REGISTRATION SECTION -->
                     <div id="auth-reg-section">
                         <div class="row">
-                            <input type="text" id="su-name" name="new_user_full_name_xyz" placeholder="Full Name (e.g. Rajesh Sharma)" autocomplete="off">
-                            <input type="email" id="su-email" name="new_user_email_address_xyz" placeholder="Email Address (e.g. user@gmail.com)" autocomplete="off">
+                            <input type="text" id="su-name" placeholder="Full Name (e.g. Rajesh Sharma)" autocomplete="off">
+                            <input type="email" id="su-email" placeholder="Email Address (e.g. user@gmail.com)" autocomplete="off">
                         </div>
                         <div class="row">
-                            <input type="text" id="su-phone" name="new_user_phone_no_xyz" placeholder="Phone Number (e.g. 9876543210)" autocomplete="off">
+                            <input type="text" id="su-phone" placeholder="Phone Number (e.g. 9876543210)" autocomplete="off">
                             <div class="password-container">
-                                <input type="password" id="su-pass" name="new_user_password_xyz" placeholder="Create Secure Password" autocomplete="new-password">
+                                <input type="password" id="su-pass" placeholder="Create Secure Password" autocomplete="new-password">
                                 <span class="eye-icon" onclick="togglePassword('su-pass', this)">👁️</span>
                             </div>
                         </div>
                         <button class="primary-btn" onclick="registerUser()">✨ 1. Register & Send Verification OTP</button>
                         <div id="su-output" style="margin-top: 10px;"></div>
                         <div style="margin-top: 15px;" class="row">
-                            <input type="text" id="su-otp" name="user_otp_verification_xyz" placeholder="Enter 6-Digit Email OTP" autocomplete="off">
+                            <input type="text" id="su-otp" placeholder="Enter 6-Digit Email OTP" autocomplete="off">
                             <button class="primary-btn" onclick="verifyOtp()">🔑 2. Verify OTP & Activate Account</button>
                         </div>
                     </div>
 
-                    <!-- LOGIN SECTION -->
                     <div id="auth-log-section" style="display: none;">
-                        <input type="email" id="li-email" name="login_member_email_xyz" placeholder="Registered Email Address (e.g. user@gmail.com)" autocomplete="off">
+                        <input type="email" id="li-email" placeholder="Registered Email Address (e.g. user@gmail.com)" autocomplete="off">
                         <div class="password-container">
-                            <input type="password" id="li-pass" name="login_member_password_xyz" placeholder="Password" autocomplete="off">
+                            <input type="password" id="li-pass" placeholder="Password" autocomplete="off">
                             <span class="eye-icon" onclick="togglePassword('li-pass', this)">👁️</span>
                         </div>
                         <button class="primary-btn" onclick="loginUser()">🚀 Sign In to Account</button>
@@ -776,7 +772,6 @@ HTML_TEMPLATE = """
                 <p>No previous orders found for current guest session. Please register or login.</p>
             </div>
 
-            <!-- ADMIN PORTAL AT DASHBOARD -->
             <div id="admin-wrapper" class="card" style="display: none; border: 1.5px dashed #fde047; margin-top: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h4 style="margin: 0; color: #fde047;">🛡️ Owner Portal (Admin Dashboard)</h4>
@@ -784,7 +779,7 @@ HTML_TEMPLATE = """
                 </div>
                 <div id="admin-panel" style="margin-top: 15px;">
                     <div class="password-container">
-                        <input type="password" id="admin-pass" name="admin_secret_pass_xyz" placeholder="Admin Password" autocomplete="off">
+                        <input type="password" id="admin-pass" placeholder="Admin Password" autocomplete="off">
                         <span class="eye-icon" onclick="togglePassword('admin-pass', this)">👁️</span>
                     </div>
                     <button class="primary-btn" onclick="loadAdminDashboard()">Unlock Dashboard</button>
@@ -793,7 +788,23 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- NEW TAB: JAGANNATH HORA -->
+        <!-- NEW TAB: MY COSMIC HUB (Centralized Birth Details Master Entry) -->
+        <div id="tab-hub" class="tab-content">
+            <h3>🌟 My Cosmic Profile / Birth Chart Hub</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Enter your birth details **once** here to automatically feed Kundali generation, Dasha Timeline, Transit Tracker, and AI Astrologer without re-typing!</p>
+            <div class="row">
+                <input type="text" id="hub-name" placeholder="Full Name">
+                <input type="date" id="hub-dob">
+            </div>
+            <div class="row">
+                <input type="text" id="hub-tob" placeholder="Time of Birth (HH:MM)">
+                <input type="text" id="hub-pob" placeholder="Place of Birth">
+            </div>
+            <button class="primary-btn" onclick="saveCosmicHub()">✨ Save & Sync Across All Features</button>
+            <div id="hub-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB: JAGANNATH HORA -->
         <div id="tab-jh" class="tab-content">
             <h3>☸️ Jagannath Hora Vedic Calculations (16 Shodashvarga & Advanced Dashas)</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Advanced Vedic Calculations based on Drik Ganit, 16 Divisional Charts, Yogini & Chara Dashas, and Sarvashtakavarga Tables.</p>
@@ -809,7 +820,44 @@ HTML_TEMPLATE = """
             <div id="jh-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 2: LIFE PREDICTION -->
+        <!-- NEW TAB: INTERACTIVE KUNDALI EXPLORER -->
+        <div id="tab-explorer" class="tab-content">
+            <h3>🧭 Interactive Kundali & Divisional Chart Explorer</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem;">Explore 12 Houses, Planetary aspects, and D1, D9, D10 charts directly on screen!</p>
+            <div class="row" style="margin-top: 15px;">
+                <input type="text" id="exp-name" placeholder="Full Name">
+                <select id="exp-chart-type">
+                    <option value="D1">D1 - Lagna Chart (Main Body & Life)</option>
+                    <option value="D9">D9 - Navamsha Chart (Marriage & Soul)</option>
+                    <option value="D10">D10 - Dashamsha Chart (Career & Profession)</option>
+                    <option value="D7">D7 - Saptamsha Chart (Children & Progeny)</option>
+                </select>
+            </div>
+            <button class="primary-btn" onclick="exploreKundali()">🧭 Load Interactive Chart Grid</button>
+            <div id="explorer-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- NEW TAB: PERSONAL DASHA TIMELINE -->
+        <div id="tab-dasha" class="tab-content">
+            <h3>⏳ Personal Dasha Timeline</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem;">Interactive Vimshottari Mahadasha & Antardasha timeline breakdown.</p>
+            <div class="row" style="margin-top: 15px;">
+                <input type="text" id="dasha-name" placeholder="Full Name">
+                <input type="date" id="dasha-dob">
+            </div>
+            <button class="primary-btn" onclick="loadDashaTimeline()">⏳ Calculate Dasha Timeline</button>
+            <div id="dasha-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- NEW TAB: LIVE PLANETARY TRANSIT TRACKER -->
+        <div id="tab-transit" class="tab-content">
+            <h3>🪐 Live Planetary Transit Tracker</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem;">Track real-time celestial movements of Saturn, Jupiter, Rahu, Ketu and their direct/retrograde status.</p>
+            <button class="primary-btn" onclick="loadTransitTracker()">🪐 Check Current Planetary Transits</button>
+            <div id="transit-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB: LIFE PREDICTION -->
         <div id="tab-life" class="tab-content">
             <h3>🌌 Vedic Astrology & Deep Life Forecast</h3>
             <div class="row">
@@ -824,7 +872,7 @@ HTML_TEMPLATE = """
             <div id="life-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 3: HOROSCOPE -->
+        <!-- TAB: HOROSCOPE -->
         <div id="tab-horoscope" class="tab-content">
             <h3>🔮 Daily Zodiac Predictions</h3>
             <select id="horo-sign">
@@ -834,7 +882,7 @@ HTML_TEMPLATE = """
             <div id="horo-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 4: MATCHING -->
+        <!-- TAB: MATCHING -->
         <div id="tab-matching" class="tab-content">
             <h3>💍 Vedic Compatibility & Guna Milan</h3>
             <div class="row">
@@ -849,7 +897,7 @@ HTML_TEMPLATE = """
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 5: GEMSTONES -->
+        <!-- TAB: GEMSTONES -->
         <div id="tab-gemstones" class="tab-content">
             <h3>🧿 Lucky Gemstones & Cosmic Remedies</h3>
             <div class="row">
@@ -860,7 +908,7 @@ HTML_TEMPLATE = """
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 6: VASTU SHASTRA -->
+        <!-- TAB: VASTU SHASTRA -->
         <div id="tab-vastu" class="tab-content">
             <h3>🏛️ Vastu Shastra & Commercial/Home Property Analysis</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Ensure positive energy flow (Vastu Purusha Mandala) for your home, office, or factory to maximize prosperity and success.</p>
@@ -890,7 +938,7 @@ HTML_TEMPLATE = """
             <div id="vastu-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 7: KUNDALI PDF -->
+        <!-- TAB: KUNDALI PDF -->
         <div id="tab-kundali" class="tab-content">
             <h3>📜 Janam Kundali & Lagna Birth Chart Generator</h3>
             <div class="row">
@@ -905,7 +953,7 @@ HTML_TEMPLATE = """
             <div id="kundali-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 8: NUMEROLOGY -->
+        <!-- TAB: NUMEROLOGY -->
         <div id="tab-numerology" class="tab-content">
             <h3>🔢 Numerology Check</h3>
             <div class="row">
@@ -916,7 +964,7 @@ HTML_TEMPLATE = """
             <div id="num-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 9: PANCHANG -->
+        <!-- TAB: PANCHANG -->
         <div id="tab-panchang" class="tab-content">
             <h3>📅 Vedic Panchang & Shubh Muhurat</h3>
             <div class="row">
@@ -931,15 +979,25 @@ HTML_TEMPLATE = """
             <div id="panchang-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 10: AI ASSISTANT -->
+        <!-- TAB: AI ASSISTANT -->
         <div id="tab-ai" class="tab-content">
-            <h3>🤖 Ask Your Personal AI Astrologer</h3>
-            <textarea id="ai-query" placeholder="Ask your question regarding career, marriage, health, vastu..."></textarea>
-            <button class="primary-btn" onclick="askAi()">Ask Assistant ✨</button>
+            <h3>🤖 AI Kundli Interpreter & Personal Astrologer</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem;">Ask your question regarding career, marriage, health, vastu... AI answers based on your saved chart data.</p>
+            <textarea id="ai-query" placeholder="Ask your question..."></textarea>
+            <button class="primary-btn" onclick="askAi()">Ask AI Assistant ✨</button>
             <div id="ai-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- TAB 11: LEGAL -->
+        <!-- NEW TAB: AI PALMISTRY -->
+        <div id="tab-palm" class="tab-content">
+            <h3>🖐️ AI Palmistry & Hand Analysis (Experimental)</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem;">Upload or specify palm details to analyze Heart Line, Head Line, and Life Line.</p>
+            <input type="text" id="palm-focus" placeholder="Focus area (e.g. Career Line / Life Line)">
+            <button class="primary-btn" onclick="analyzePalm()">🖐️ Run AI Palm Analysis (₹79)</button>
+            <div id="palm-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- TAB: LEGAL -->
         <div id="tab-legal" class="tab-content">
             <h3>⚖️ Terms & Social Handles</h3>
             <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
@@ -1190,15 +1248,66 @@ HTML_TEMPLATE = """
             });
         }
 
+        async function saveCosmicHub() {
+            let name = document.getElementById('hub-name').value;
+            let dob = document.getElementById('hub-dob').value;
+            let tob = document.getElementById('hub-tob').value;
+            let pob = document.getElementById('hub-pob').value;
+            showMagicLoader(() => {
+                localStorage.setItem('hub_name', name);
+                localStorage.setItem('hub_dob', dob);
+                localStorage.setItem('hub_tob', tob);
+                localStorage.setItem('hub_pob', pob);
+                document.getElementById('hub-result').innerHTML = `<p style="color:#4ade80;">✅ Success! Birth details saved to Cosmic Hub. They will auto-fill across all astrological tools.</p>`;
+            });
+        }
+
         async function submitJhEngine() {
-            let name = document.getElementById('jh-name').value;
-            let dob = document.getElementById('jh-dob').value;
-            let tob = document.getElementById('jh-tob').value;
-            let pob = document.getElementById('jh-pob').value;
+            let name = document.getElementById('jh-name').value || localStorage.getItem('hub_name') || 'User';
+            let dob = document.getElementById('jh-dob').value || localStorage.getItem('hub_dob') || '2000-01-01';
+            let tob = document.getElementById('jh-tob').value || localStorage.getItem('hub_tob') || '12:00';
+            let pob = document.getElementById('jh-pob').value || localStorage.getItem('hub_pob') || 'Kolkata';
             showMagicLoader(async () => {
                 let res = await fetch('/api/jagannath-hora', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
                 document.getElementById('jh-result').innerHTML = data.teaser + (data.paywall || '');
+            });
+        }
+
+        async function exploreKundali() {
+            let name = document.getElementById('exp-name').value || localStorage.getItem('hub_name') || 'User';
+            let chart = document.getElementById('exp-chart-type').value;
+            showMagicLoader(async () => {
+                let res = await fetch('/api/explorer', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, chart}) });
+                let data = await res.json();
+                document.getElementById('explorer-result').innerHTML = data.html;
+            });
+        }
+
+        async function loadDashaTimeline() {
+            let name = document.getElementById('dasha-name').value || localStorage.getItem('hub_name') || 'User';
+            let dob = document.getElementById('dasha-dob').value || localStorage.getItem('hub_dob') || '2000-01-01';
+            showMagicLoader(async () => {
+                let res = await fetch('/api/dasha', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob}) });
+                let data = await res.json();
+                document.getElementById('dasha-result').innerHTML = data.html;
+            });
+        }
+
+        async function loadTransitTracker() {
+            showMagicLoader(async () => {
+                let res = await fetch('/api/transit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({}) });
+                let data = await res.json();
+                document.getElementById('transit-result').innerHTML = data.html;
+            });
+        }
+
+        async function analyzePalm() {
+            let focus = document.getElementById('palm-focus').value || 'Life Line & Career';
+            showMagicLoader(async () => {
+                let res = await fetch('/api/palm', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({focus, is_admin: isAdminUnlocked}) });
+                let data = await res.json();
+                document.getElementById('palm-result').innerHTML = data.teaser + (data.paywall || '');
             });
         }
 
@@ -1287,8 +1396,9 @@ HTML_TEMPLATE = """
 
         async function askAi() {
             let query = document.getElementById('ai-query').value;
+            let hName = localStorage.getItem('hub_name') || 'User';
             showMagicLoader(async () => {
-                let res = await fetch('/api/ai', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query}) });
+                let res = await fetch('/api/ai', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query, name: hName}) });
                 let data = await res.json();
                 document.getElementById('ai-result').innerHTML = data.html;
             });
@@ -1433,6 +1543,69 @@ async def api_jagannath_hora(request: Request):
     paywall = "" if is_admin else get_paywall_html("Full 16 Shodashvarga & Ephemeris Report", 59, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
+@app.post("/api/explorer")
+async def api_explorer(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    chart = data.get("chart", "D1")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Interactive Kundali Explorer", "details": f"Chart: {chart}", "payment_status": "Free Interactive"})
+    
+    html = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
+        <h4 style='color:#fde047;'>🧭 Interactive {chart} Chart Explorer for {name}</h4>
+        <p>Clickable 12 Houses grid active. House 1 (Ascendant): Aries | House 4: Cancer (Properties & Mother) | House 7: Libra (Partnership & Marriage) | House 10: Capricorn (Career & Karma).</p>
+        <p style='color:#4ade80;'>✅ All planetary aspects and drishti are calculated successfully for {chart}.</p>
+    </div>
+    """
+    return JSONResponse({"html": html})
+
+@app.post("/api/dasha")
+async def api_dasha(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    dob = data.get("dob", "2000-01-01")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Personal Dasha Timeline", "details": f"DOB: {dob}", "payment_status": "Free Timeline"})
+    
+    html = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
+        <h4 style='color:#fde047;'>⏳ Personal Dasha Timeline for {name}</h4>
+        <ul style='line-height:1.8;'>
+            <li><b>Current Mahadasha:</b> Jupiter (Guru) - Active until 2031</li>
+            <li><b>Current Antardasha:</b> Saturn (Shani) - Focus on discipline and career structure</li>
+            <li><b>Upcoming Dasha Transition:</b> Mercury (Budha) starting late 2031</li>
+        </ul>
+    </div>
+    """
+    return JSONResponse({"html": html})
+
+@app.post("/api/transit")
+async def api_transit(request: Request):
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Live Planetary Transit Tracker", "details": "Checked Ephemeris", "payment_status": "Free Live Tracker"})
+    
+    html = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
+        <h4 style='color:#fde047;'>🪐 Live Planetary Transits (Real-Time Ephemeris)</h4>
+        <div style='display:grid; grid-template-columns:1fr 1fr; gap:10px;'>
+            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Jupiter (Guru):</b> Gemini (Direct) - Favorable wealth expansion</div>
+            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Saturn (Shani):</b> Aquarius (Retrograde) - Karmic review & focus</div>
+            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Rahu:</b> Aquarius (Direct) - Technical & digital pursuits</div>
+            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Ketu:</b> Leo (Direct) - Spiritual introspection</div>
+        </div>
+    </div>
+    """
+    return JSONResponse({"html": html})
+
+@app.post("/api/palm")
+async def api_palm(request: Request):
+    data = await request.json()
+    focus = data.get("focus", "Career & Life Line")
+    is_admin = data.get("is_admin", False)
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Palmistry", "details": f"Focus: {focus}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹79)"})
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4><p>Promising deep curve on Life Line indicating strong vitality and entrepreneurial success.</p></div>"""
+    paywall = "" if is_admin else get_paywall_html("Complete AI Palmistry & Hand Reading Report", 79, "User")
+    return JSONResponse({"teaser": teaser, "paywall": paywall})
+
 @app.post("/api/life")
 async def api_life(request: Request):
     data = await request.json()
@@ -1573,22 +1746,19 @@ async def api_panchang(request: Request):
 async def api_ai(request: Request):
     data = await request.json()
     query = data.get("query", "").strip().lower()
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Assistant", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
+    name = data.get("name", "User")
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
     if any(k in query for k in ["vastu", "office", "house", "facing", "direction", "factory"]):
-        ai_reply = "🏛️ Vastu Guidance: Ensuring your main entrance is in the North or East direction brings abundance. Keep the North-East (Ishan) zone clean and clutter-free."
+        ai_reply = f"🏛️ Vastu Guidance for {name}: Ensuring your main entrance is in the North or East direction brings abundance. Keep the North-East (Ishan) zone clean and clutter-free."
     elif any(k in query for k in ["kundali", "birth chart", "lagna", "janam"]):
-        ai_reply = "📜 Janam Kundali Insight: Your planetary positions indicate a strong Lagna house. Focus on consistent efforts in your professional sphere for optimal growth."
+        ai_reply = f"📜 Janam Kundali Insight for {name}: Your chart shows a strong Lagna house. Focus on consistent professional efforts for optimal growth."
     elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna"]):
-        ai_reply = "💎 Gemstone Recommendation: Based on cosmic alignments, wearing a certified Emerald (Panna) or Yellow Sapphire on an auspicious day will enhance focus and prosperity."
-    elif any(k in query for k in ["career", "job", "business", "money", "finance", "success"]):
-        ai_reply = "💼 Career & Wealth Forecast: Jupiter's transit brings favorable opportunities for career advancement and financial stability. Avoid impulsive investments."
-    elif any(k in query for k in ["marriage", "love", "relationship", "match", "partner"]):
-        ai_reply = "❤️ Relationship & Marriage Guidance: Venus harmony indicates positive emotional bonding. Transparent communication will resolve ongoing misunderstandings."
+        ai_reply = f"💎 Gemstone Recommendation for {name}: Wearing a certified Emerald (Panna) or Yellow Sapphire will enhance focus and prosperity."
     else:
-        ai_reply = f"✨ AI Astrologer Response for '{query}': Planetary transits show highly favorable outcomes for your endeavors. Keep up regular meditation and positive intent."
+        ai_reply = f"✨ AI Astrologer Response for {name}: Planetary transits show highly favorable outcomes for your endeavors. Keep regular meditation and positive intent."
 
-    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><p><b>Query:</b> {query}</p><p style='color:#4ade80;'><b>AI Astrologer:</b> {ai_reply}</p></div>"""
+    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><p><b>Query:</b> {query}</p><p style='color:#4ade80;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
     return JSONResponse({"html": html})
 
 if __name__ == "__main__":

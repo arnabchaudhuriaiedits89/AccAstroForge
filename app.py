@@ -1780,7 +1780,7 @@ async def api_numerology(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹69)"})
     profile = calculate_astrological_profile(name, dob)
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;>'{profile['psychic_num']}</b></p></div>"""
     paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 69, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
@@ -1807,15 +1807,17 @@ async def api_ai(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    # Strictly segregated keyword checks to prevent overlapping
-    if any(k in query for k in ["girl", "partner", "relationship", "marriage", "love", "wife", "husband", "girlfriend", "boyfriend", "romance", "approach", "emotional"]):
+    # Ultra-robust safety & domain-segregated keyword logic handling security, threats, political/life risks and standard astrological queries
+    if any(k in query for k in ["threat", "political", "police", "danger", "fear", "life threat", "attack", "enemy", "party"]):
+        ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones</b> tabs."
+    elif any(k in query for k in ["girl", "partner", "relationship", "marriage", "love", "wife", "husband", "girlfriend", "boyfriend", "romance", "approach", "emotional"]):
         ai_reply = f"Hello {name}, matters of the heart and emotional boundaries are closely linked to Venus and the 7th house in your chart. When dealing with unexpected emotional pressures, it is wise to maintain clear personal boundaries. For complete Guna Milan and detailed compatibility matching, please explore our <b>Matching</b> tab."
     elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
         ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
     elif any(k in query for k in ["career", "job", "business", "money", "income", "work", "office", "promotion"]):
-        ai_reply = f"Hello {name}, your professional inquiry reflects active planetary energies in your 10th house of Karma. To explore deep career forecasts, divisional D10 charts, and professional remedies, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
-    elif any(k in query for k in ["vastu", "house", "home", "flat", "office", "facing", "property", "plot"]):
-        ai_reply = f"Hello {name}, proper property orientation and Vastu alignment are essential for peace and financial growth. To generate a complete room-by-room Vastu Dosha & Remedy PDF report, please use our <b>Vastu Shastra</b> tab."
+        ai_reply = f"Hello {name}, your professional inquiry reflects active planetary energies in your 10th house of Karma. To explore deep career forecasts, divisional D10 charts, and professional remedies, please check our <b>Jagannath Hora</b> and `<b>Kundali Explorer</b> tabs."
+    elif any(k in query for k in ["vastu", "house", "home", "flat", "office", "facing", "property", "plot", "haunted", "graveyard"]):
+        ai_reply = f"Hello {name}, property orientation, surrounding environmental energies, and Vastu alignment are essential for peace and safety. To generate a complete room-by-room Vastu Dosha & Remedy PDF report, please use our <b>Vastu Shastra</b> tab."
     else:
         ai_reply = f"Hello {name}, I have carefully analyzed your cosmic query regarding '{query}'. Vedic principles indicate a transformative phase ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
 

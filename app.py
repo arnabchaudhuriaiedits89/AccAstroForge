@@ -1327,7 +1327,7 @@ HTML_TEMPLATE = """
             showMagicLoader(async () => {
                 let res = await fetch('/api/jagannath-hora', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('jh-result').innerHTML = data.teaser + (data.paywall || '');
+                document.getElementById('jh-result').innerHTML = data.teaser + (data.full_report || '') + (data.paywall || '');
             });
         }
 
@@ -1416,7 +1416,7 @@ HTML_TEMPLATE = """
             showMagicLoader(async () => {
                 let res = await fetch('/api/vastu', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, property_type: p_type, facing, city, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('vastu-result').innerHTML = data.teaser + (data.pdf_download_btn || '') + (data.paywall || '');
+                document.getElementById('vastu-result').innerHTML = data.teaser + (data.full_report || '') + (data.pdf_download_btn || '') + (data.paywall || '');
             });
         }
 
@@ -1579,28 +1579,37 @@ async def api_jagannath_hora(request: Request):
     jh_data = calculate_jagannath_hora_engine(name, dob, tob, pob)
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Jagannath Hora Vedic Calculations", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹59)"})
 
-    shodash_list = "".join([f"<li><b>{k}:</b> {v}</li>" for k, v in list(jh_data["shodashvarga"].items())[:6]])
+    shodash_list = "".join([f"<li><b>{k}:</b> {v}</li>" for k, v in jh_data["shodashvarga"].items()])
     dasha_list = "".join([f"<li><b>{k}:</b> {v}</li>" for k, v in jh_data["dashas"].items()])
 
     teaser = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
         <h4 style='color:#fde047; margin-top:0;'>☸️ Jagannath Hora Vedic Calculations Output for {name.upper()}</h4>
         <p><b>Ascendant (Lagna):</b> {jh_data['profile']['zodiac']} | <b>Nakshatra:</b> {jh_data['profile']['nakshatra']}</p>
-        <div style='display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;'>
-            <div>
-                <h5 style='color:#4ade80; margin-bottom:5px;'>16 Shodashvarga Preview:</h5>
-                <ul style='font-size:0.85rem; padding-left:18px; margin:0;'>{shodash_list}</ul>
-            </div>
-            <div>
-                <h5 style='color:#4ade80; margin-bottom:5px;'>Advanced Dashas:</h5>
-                <ul style='font-size:0.85rem; padding-left:18px; margin:0;'>{dasha_list}</ul>
-            </div>
-        </div>
-        <p style='margin-top:10px; font-size:0.9rem;'><b>Sarvashtakavarga Strength:</b> {jh_data['ashtakavarga']['Sarvashtakavarga Total']} Points | <b>Transit Impact:</b> {jh_data['transit_overlay']}</p>
     </div>
     """
+
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>☸️ COMPLETE 16 SHODASHVARGA & ADVANCED DASHAS REPORT FOR {name.upper()}</h4>
+        <div style='display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:12px;'>
+            <div>
+                <h5 style='color:#fde047; margin-bottom:6px;'>All 16 Shodashvarga Divisional Charts:</h5>
+                <ul style='font-size:0.85rem; padding-left:18px; margin:0; line-height:1.6;'>{shodash_list}</ul>
+            </div>
+            <div>
+                <h5 style='color:#fde047; margin-bottom:6px;'>Advanced Dasha Cycles & Ashtakavarga:</h5>
+                <ul style='font-size:0.85rem; padding-left:18px; margin:0; line-height:1.6;'>{dasha_list}</ul>
+                <p style='margin-top:10px; font-size:0.9rem;'><b>Sarvashtakavarga Strength:</b> {jh_data['ashtakavarga']['Sarvashtakavarga Total']} Points</p>
+                <p style='font-size:0.9rem;'><b>Transit Impact:</b> {jh_data['transit_overlay']}</p>
+            </div>
+        </div>
+        <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Jagannath Hora Report Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+
     paywall = "" if is_admin else get_paywall_html("Full 16 Shodashvarga & Ephemeris Report", 59, name)
-    return JSONResponse({"teaser": teaser, "paywall": paywall})
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "paywall": paywall})
 
 @app.post("/api/explorer")
 async def api_explorer(request: Request):
@@ -1837,12 +1846,21 @@ async def api_vastu(request: Request):
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report</a></div>"""
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p><p style='color:#4ade80;'>✅ Vastu PDF report is ready for download.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p></div>"""
     
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🏛️ COMPREHENSIVE VASTU SHASTRA & PROPERTY ASSESSMENT REPORT FOR {name.upper()}</h4>
+        <p style='color: #f3e8ff; line-height: 1.8;'><b>Property:</b> {p_type} | <b>Facing Direction:</b> {facing} | <b>Location:</b> {city}</p>
+        <p style='color: #f3e8ff; line-height: 1.8;'>Detailed Vastu Purusha Mandala mapping indicates favorable energy flow in the North and East zones. Placing water elements in the Ishan corner and securing the South-West zone will maximize financial prosperity and family peace.</p>
+        <p style='color: #4ade80; font-weight: bold; margin-top: 10px;'>✅ Full Vastu Report Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+
     paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 149, name)
     download_btn = pdf_btn_html if is_admin else ""
     
-    return JSONResponse({"teaser": teaser, "pdf_download_btn": download_btn, "paywall": paywall})
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/kundali-pdf")
 async def api_kundali_pdf(request: Request):

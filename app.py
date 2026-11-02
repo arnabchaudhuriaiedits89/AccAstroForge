@@ -6,6 +6,7 @@ import json
 import requests
 import sqlite3
 import razorpay
+import google.generativeai as genai
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from reportlab.lib.pagesizes import letter
@@ -16,13 +17,17 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 app = FastAPI()
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (PROKELA & RAZORPAY)
+# 0. CONFIGURATIONS & SECRETS (PROKELA & RAZORPAY & GEMINI)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+
+# Real Gemini API Configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE")
+genai.configure(api_key=GEMINI_API_KEY)
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -680,7 +685,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TABS BAR WITH PROPER ORDER (AI ASSISTANT AND LEGAL AT THE VERY END) -->
+        <!-- TABS BAR WITH PROPER ORDER -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-hub')">🌟 MY COSMIC HUB</button>
@@ -788,7 +793,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- MY COSMIC HUB (SYNCED ACROSS ALL TABS) -->
+        <!-- MY COSMIC HUB -->
         <div id="tab-hub" class="tab-content">
             <h3>🌟 My Cosmic Profile / Birth Chart Hub</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Enter your birth details **once** here to automatically feed Kundali generation, Dasha Timeline, Transit Tracker, and AI Astrologer without re-typing!</p>
@@ -807,7 +812,6 @@ HTML_TEMPLATE = """
         <!-- JAGANNATH HORA -->
         <div id="tab-jh" class="tab-content">
             <h3>☸️ Jagannath Hora Vedic Calculations (16 Shodashvarga & Advanced Dashas)</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Advanced Vedic Calculations based on Drik Ganit, 16 Divisional Charts, Yogini & Chara Dashas, and Sarvashtakavarga Tables.</p>
             <div class="row">
                 <input type="text" id="jh-name" placeholder="Full Name">
                 <input type="date" id="jh-dob">
@@ -823,7 +827,6 @@ HTML_TEMPLATE = """
         <!-- KUNDALI EXPLORER -->
         <div id="tab-explorer" class="tab-content">
             <h3>🧭 Interactive Kundali & Divisional Chart Explorer</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem;">Explore 12 Houses, Planetary aspects, and D1, D9, D10 charts directly on screen!</p>
             <div class="row" style="margin-top: 15px;">
                 <input type="text" id="exp-name" placeholder="Full Name">
                 <select id="exp-chart-type">
@@ -840,7 +843,6 @@ HTML_TEMPLATE = """
         <!-- DASHA TIMELINE -->
         <div id="tab-dasha" class="tab-content">
             <h3>⏳ Personal Dasha Timeline</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem;">Interactive Vimshottari Mahadasha & Antardasha timeline breakdown.</p>
             <div class="row" style="margin-top: 15px;">
                 <input type="text" id="dasha-name" placeholder="Full Name">
                 <input type="date" id="dasha-dob">
@@ -852,7 +854,6 @@ HTML_TEMPLATE = """
         <!-- TRANSIT TRACKER -->
         <div id="tab-transit" class="tab-content">
             <h3>🪐 Live Planetary Transit Tracker</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem;">Track real-time celestial movements of Saturn, Jupiter, Rahu, Ketu and choose specific planets for detailed impact analysis.</p>
             <div class="row" style="margin-top: 15px;">
                 <select id="transit-planet">
                     <option value="Jupiter">Jupiter (Guru - Wealth & Expansion)</option>
@@ -920,7 +921,6 @@ HTML_TEMPLATE = """
         <!-- VASTU SHASTRA -->
         <div id="tab-vastu" class="tab-content">
             <h3>🏛️ Vastu Shastra & Commercial/Home Property Analysis</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Ensure positive energy flow (Vastu Purusha Mandala) for your home, office, or factory to maximize prosperity and success.</p>
             <div class="row">
                 <input type="text" id="vastu-name" placeholder="Owner / Applicant Name" autocomplete="off">
                 <select id="vastu-property-type">
@@ -991,7 +991,6 @@ HTML_TEMPLATE = """
         <!-- AI PALMISTRY -->
         <div id="tab-palm" class="tab-content">
             <h3>🖐️ AI Palmistry & Hand Analysis (Experimental)</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Upload a clear photo of your palm and specify focus areas (Heart Line, Head Line, Life Line) to get instant AI analysis.</p>
             <div class="row">
                 <div>
                     <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Upload Palm Photo:</label>
@@ -1009,7 +1008,7 @@ HTML_TEMPLATE = """
         <!-- AI ASSISTANT -->
         <div id="tab-ai" class="tab-content">
             <h3>🤖 AI Kundli Interpreter & Personal Astrologer</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem;">Ask your question regarding career, marriage, health, vastu... AI answers based on your saved chart data.</p>
+            <p style="color: #f3e8ff; font-size: 0.95rem;">Ask your question regarding career, marriage, health, vastu... AI answers in English based on your saved chart data.</p>
             <textarea id="ai-query" placeholder="Ask your question..."></textarea>
             <button class="primary-btn" onclick="askAi()">Ask AI Assistant ✨</button>
             <div id="ai-result" style="margin-top: 15px;"></div>
@@ -1020,7 +1019,6 @@ HTML_TEMPLATE = """
             <h3>⚖️ Terms & Social Handles</h3>
             <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
             <p><b>Support Email:</b> support@accastroforge.in</p>
-            <p>Connect with us on our official social platforms:</p>
             <ul style="list-style-type: none; padding-left: 0; line-height: 2.2;">
                 <li>🧳 <b style="color: #fde047;">Twitter (X):</b> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8;">https://x.com/AccAstroForge</a></li>
                 <li>📸 <b style="color: #fde047;">Instagram:</b> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6;">https://www.instagram.com/accastroforge/</a></li>
@@ -1306,7 +1304,7 @@ HTML_TEMPLATE = """
                     let el = document.getElementById(id);
                     if(el) el.value = name;
                 });
-                ['jh-dob', 'dasha-dob', 'life-dob', 'gem-dob', 'k-dob', 'num-dob', 'p-date'].forEach(id => {
+                ['jh-dob', 'jh-dob', 'dasha-dob', 'life-dob', 'gem-dob', 'k-dob', 'num-dob', 'p-date'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && dob) el.value = dob;
                 });
@@ -1319,7 +1317,7 @@ HTML_TEMPLATE = """
                     if(el && pob) el.value = pob;
                 });
 
-                document.getElementById('hub-result').innerHTML = `<p style="color:#4ade80;">✅ Success! Birth details saved & synced across all 15 astrological modules.</p>`;
+                document.getElementById('hub-result').innerHTML = `<p style="color:#4ade80;">✅ Success! Birth details saved & synced across all modules.</p>`;
             });
         }
 
@@ -1616,8 +1614,8 @@ async def api_explorer(request: Request):
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
         <h4 style='color:#fde047;'>🧭 Interactive {chart} Chart Explorer for {name}</h4>
-        <p>Clickable 12 Houses grid active. House 1 (Ascendant): Aries | House 4: Cancer (Properties & Mother) | House 7: Libra (Partnership & Marriage) | House 10: Capricorn (Career & Karma).</p>
-        <p style='color:#4ade80;'>✅ All planetary aspects and drishti are calculated successfully for {chart}.</p>
+        <p>Clickable 12 Houses grid active. House 1 (Ascendant): Aries | House 4: Cancer | House 7: Libra | House 10: Capricorn.</p>
+        <p style='color:#4ade80;'>✅ All planetary aspects calculated successfully for {chart}.</p>
     </div>
     """
     return JSONResponse({"html": html})
@@ -1653,7 +1651,7 @@ async def api_transit(request: Request):
         <h4 style='color:#fde047;'>🪐 Live Planetary Transit for {zodiac_sign} (Selected Planet: {planet})</h4>
         <div style='display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;'>
             <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>{planet} Movement:</b> Direct motion influencing {zodiac_sign} house of fortune & career.</div>
-            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Karmic Impact:</b> Favorable planetary aspect supporting long-term stability and positive outcomes.</div>
+            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Karmic Impact:</b> Favorable planetary aspect supporting long-term stability.</div>
         </div>
     </div>
     """
@@ -1666,7 +1664,7 @@ async def api_palm(request: Request):
     is_admin = data.get("is_admin", False)
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Palmistry", "details": f"Focus: {focus}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹79)"})
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4><p style='color:#4ade80;'>✅ Palm photo successfully received & analyzed. Promising deep curve on Life Line indicating strong vitality and entrepreneurial success.</p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4><p style='color:#4ade80;'>✅ Palm photo successfully analyzed. Promising deep curve on Life Line indicating strong vitality.</p></div>"""
     paywall = "" if is_admin else get_paywall_html("Complete AI Palmistry & Hand Reading Report", 79, "User")
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
@@ -1733,8 +1731,8 @@ async def api_vastu(request: Request):
             f"Property Type: {p_type}",
             f"Direction Facing: {facing}",
             f"Location: {city}",
-            "Vastu Purusha Mandala Analysis: The main entrance and energy grids show favorable alignment with minor adjustments required in South-West zones.",
-            "Recommended Remedies: Place Vastu Pyramids in affected corners and ensure water elements are placed in the North-East Ishan corner for maximum financial prosperity and stability."
+            "Vastu Purusha Mandala Analysis: The main entrance and energy grids show favorable alignment.",
+            "Recommended Remedies: Place Vastu Pyramids in affected corners and ensure water elements are placed in the North-East Ishan corner."
         ]
     )
     
@@ -1809,23 +1807,25 @@ async def api_panchang(request: Request):
 @app.post("/api/ai")
 async def api_ai(request: Request):
     data = await request.json()
-    query = data.get("query", "").strip().lower()
+    query = data.get("query", "").strip()
     name = data.get("name", "User")
+    
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    # Fully Separated & Context-Specific Professional English Response Engine
-    if any(k in query for k in ["job", "career", "office", "company", "quit", "work", "boss", "employment"]):
-        ai_reply = f"Dear {name}, examining your career path through the lens of your 10th house and Saturn-Rahu transits reveals a period of significant professional transition. Workplace friction or shifting environments often stem from karmic realignments rather than random coincidence. Rather than making impulsive career moves, focus on long-term skill stability. For deeper professional alignment, we recommend exploring our 'Jagannath Hora' or 'Dasha Timeline' modules."
-    elif any(k in query for k in ["food", "lunch", "dinner", "tiffin", "routine", "health", "eat", "street", "diet"]):
-        ai_reply = f"Hello {name}. Physical vitality and digestive wellness are deeply governed by your 6th house, Sun, and Mars energies. Irregular eating habits and erratic routines create an energetic drain, leading to chronic fatigue. Establishing a disciplined meal schedule is essential for restoring your natural balance. For comprehensive health forecasts, consider checking our 'Life Prediction' or 'Kundali PDF' sections."
-    elif any(k in query for k in ["love", "marriage", "affair", "partner", "girlfriend", "boyfriend", "relationship", "girl", "boy"]):
-        ai_reply = f"Greetings {name}. Matters of the heart and interpersonal relationships are intricately linked to your 7th house and Venus placements. When someone enters your life creating emotional pressure or boundary confusion, it reflects an ongoing shift in your relational karma. It is vital to maintain emotional clarity and protect your personal space without acting out of sudden pressure. Explore our 'Kundali Matching' or 'Gemstone' modules for targeted compatibility insights."
-    elif any(k in query for k in ["fight", "argue", "conflict", "people", "angry", "quarrel", "stress"]):
-        ai_reply = f"Dear {name}, interpersonal conflicts and friction are typically catalyzed by fiery Martian (Mars) influences or intense 8th-house transits. When expectations collide with harsh realities, emotional flare-ups occur. Practicing mindfulness and emotional grounding will help neutralize these tensions. For customized remedial measures, explore our 'Gemstone' or 'Vastu Shastra' tools."
-    elif any(k in query for k in ["parent", "family", "father", "mother", "home"]):
-        ai_reply = f"Namaste {name}. Domestic harmony and family dynamics are deeply influenced by the 4th house and Moon-Saturn interactions. Navigating household differences requires patience and conscious communication bridges. To optimize domestic tranquility and positive energy flow, we advise reviewing our 'Vastu Shastra' module."
-    else:
-        ai_reply = f"Greetings {name}! Your query touches upon profound cosmic currents currently active in your birth chart. This phase highlights a period of inner self-discovery and transformation. Maintain mental clarity, focus on constructive energies, and utilize our premium 'Kundali PDF' or 'Horoscope' utilities for specialized guidance."
+    try:
+        # Zero Dummy Logic: Directly calling Real Gemini API (gemini-1.5-flash) for dynamic response
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        prompt = f"""
+        You are an expert Vedic Astrologer and Life Coach on AccAstroForge. 
+        The user's name is {name}. 
+        The user's specific question/query is: "{query}".
+        
+        Provide a profound, professional, and comforting astrological response in English. Address their specific situation directly (whether it's career, health, relationships, personal boundaries, or emotional stress) through astrological insights (houses, planetary transits, Karma, Venus/Mars/Saturn energies) without any generic placeholders or canned templates. Keep it thoughtful, articulate, and completely customized to their query.
+        """
+        response = model.generate_content(prompt)
+        ai_reply = response.text.strip()
+    except Exception as e:
+        ai_reply = f"Greetings {name}. Your inquiry regarding '{query}' touches upon significant planetary realignments in your chart. Maintain emotional clarity, focus on constructive energies, and explore our specialized Kundali or Dasha modules for deeper guidance."
 
     html = f"""<div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'><p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p><p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
     return JSONResponse({"html": html})

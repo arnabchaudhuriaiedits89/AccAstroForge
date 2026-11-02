@@ -6,7 +6,6 @@ import json
 import requests
 import sqlite3
 import razorpay
-from google import genai
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from reportlab.lib.pagesizes import letter
@@ -24,9 +23,7 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
-
-# Real Gemini Client Initialization with updated model
-gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY", "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE"))
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE")
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -1811,22 +1808,27 @@ async def api_ai(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
+    ai_reply = "Cosmic connection error. Please check API key."
     try:
-        prompt = f"""
-        You are an expert Vedic Astrologer and Life Coach on AccAstroForge. 
-        The user's name is {name}. 
-        The user's specific question/query is: "{query}".
+        # Direct REST API call ensuring zero library mapping version crashes
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        prompt_text = f"You are an expert Vedic Astrologer and Life Coach on AccAstroForge. The user's name is {name}. The user's question is: '{query}'. Provide a profound, professional astrological response in English addressing their query directly through astrological insights."
         
-        Provide a profound, professional, and comforting astrological response in English addressing their query directly through astrological insights (houses, planetary transits, Karma, Venus/Mars/Saturn energies).
-        """
-        # Updated to gemini-1.5-flash for stable and live execution
-        response = gemini_client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=prompt,
-        )
-        ai_reply = response.text.strip()
+        payload = {
+            "contents": [{
+                "parts": [{"text": prompt_text}]
+            }]
+        }
+        
+        resp = requests.post(url, json=payload, headers=headers, timeout=15)
+        if resp.status_code == 200:
+            res_json = resp.json()
+            ai_reply = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+        else:
+            ai_reply = f"API Error ({resp.status_code}): {resp.text}"
     except Exception as e:
-        ai_reply = f"Cosmic connection error: {str(e)}. Please check your API key configuration."
+        ai_reply = f"Connection exception: {str(e)}"
 
     html = f"""<div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'><p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p><p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
     return JSONResponse({"html": html})

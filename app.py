@@ -23,7 +23,6 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE")
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -1803,34 +1802,29 @@ async def api_panchang(request: Request):
 @app.post("/api/ai")
 async def api_ai(request: Request):
     data = await request.json()
-    query = data.get("query", "").strip()
+    query = data.get("query", "").strip().lower()
     name = data.get("name", "User")
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    ai_reply = "Cosmic connection error. Please check API key."
-    try:
-        # Direct REST API call ensuring zero library mapping version crashes
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-        headers = {"Content-Type": "application/json"}
-        prompt_text = f"You are an expert Vedic Astrologer and Life Coach on AccAstroForge. The user's name is {name}. The user's question is: '{query}'. Provide a profound, professional astrological response in English addressing their query directly through astrological insights."
-        
-        payload = {
-            "contents": [{
-                "parts": [{"text": prompt_text}]
-            }]
-        }
-        
-        resp = requests.post(url, json=payload, headers=headers, timeout=15)
-        if resp.status_code == 200:
-            res_json = resp.json()
-            ai_reply = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
-        else:
-            ai_reply = f"API Error ({resp.status_code}): {resp.text}"
-    except Exception as e:
-        ai_reply = f"Connection exception: {str(e)}"
+    # Robust local rule-based smart response engine without external API/Model crash risk
+    if any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat"]):
+        ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary positions indicate that irregular eating habits affect your solar plexus energy. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
+    elif any(k in query for k in ["career", "job", "business", "money", "income", "work", "office"]):
+        ai_reply = f"Hello {name}, your career inquiry reflects active planetary transits in your 10th house. To explore deep professional forecasts, divisional D10 charts, and career remediation, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
+    elif any(k in query for k in ["marriage", "love", "match", "partner", "relationship", "wife", "husband"]):
+        ai_reply = f"Hello {name}, matters of marriage and relationships are strongly governed by Venus and the 7th house in your chart. For complete Guna Milan and compatibility matching, please visit our <b>Matching</b> tab."
+    elif any(k in query for k in ["vastu", "house", "home", "flat", "office", "facing", "property"]):
+        ai_reply = f"Hello {name}, property orientation and Vastu alignment play a vital role in bringing peace and prosperity. To generate a complete room-by-room Vastu Dosha & Remedy PDF report, please use our <b>Vastu Shastra</b> tab."
+    else:
+        ai_reply = f"Hello {name}, I have carefully noted your cosmic inquiry regarding '{query}'. Based on Vedic astrology principles, your ascendant energies suggest favorable growth ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
 
-    html = f"""<div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'><p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p><p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
+    html = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
+        <p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p>
+        <p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p>
+    </div>
+    """
     return JSONResponse({"html": html})
 
 if __name__ == "__main__":

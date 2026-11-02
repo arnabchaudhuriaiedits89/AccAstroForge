@@ -16,7 +16,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 app = FastAPI()
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS
+# 0. CONFIGURATIONS & SECRETS (PROKELA & RAZORPAY)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
@@ -788,7 +788,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- MY COSMIC HUB -->
+        <!-- MY COSMIC HUB (SYNCED ACROSS ALL TABS) -->
         <div id="tab-hub" class="tab-content">
             <h3>🌟 My Cosmic Profile / Birth Chart Hub</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Enter your birth details **once** here to automatically feed Kundali generation, Dasha Timeline, Transit Tracker, and AI Astrologer without re-typing!</p>
@@ -1049,6 +1049,32 @@ HTML_TEMPLATE = """
 
         window.onload = async function() {
             updateLiveClock();
+            
+            // Auto-fill Hub Details across all tabs from localStorage on load
+            if(localStorage.getItem('hub_name')) {
+                let savedN = localStorage.getItem('hub_name');
+                let savedD = localStorage.getItem('hub_dob') || '';
+                let savedT = localStorage.getItem('hub_tob') || '';
+                let savedP = localStorage.getItem('hub_pob') || '';
+
+                ['hub-name', 'jh-name', 'exp-name', 'dasha-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el && !el.value) el.value = savedN;
+                });
+                ['hub-dob', 'jh-dob', 'dasha-dob', 'life-dob', 'gem-dob', 'k-dob', 'num-dob', 'p-date'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el && !el.value && savedD) el.value = savedD;
+                });
+                ['hub-tob', 'jh-tob', 'k-tob', 'life-tob'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el && !el.value && savedT) el.value = savedT;
+                });
+                ['hub-pob', 'jh-pob', 'k-pob', 'p-city', 'vastu-city'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el && !el.value && savedP) el.value = savedP;
+                });
+            }
+
             let hash = window.location.hash;
             if (hash && hash.includes("access_token")) {
                 let params = new URLSearchParams(hash.substring(1));
@@ -1276,7 +1302,26 @@ HTML_TEMPLATE = """
                 localStorage.setItem('hub_dob', dob);
                 localStorage.setItem('hub_tob', tob);
                 localStorage.setItem('hub_pob', pob);
-                document.getElementById('hub-result').innerHTML = `<p style="color:#4ade80;">✅ Success! Birth details saved to Cosmic Hub. They will auto-fill across all astrological tools.</p>`;
+                
+                // Auto-sync across other tabs
+                ['jh-name', 'exp-name', 'dasha-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el) el.value = name;
+                });
+                ['jh-dob', 'dasha-dob', 'life-dob', 'gem-dob', 'k-dob', 'num-dob', 'p-date'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el && dob) el.value = dob;
+                });
+                ['jh-tob', 'k-tob', 'life-tob'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el && tob) el.value = tob;
+                });
+                ['jh-pob', 'k-pob', 'p-city', 'vastu-city'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el && pob) el.value = pob;
+                });
+
+                document.getElementById('hub-result').innerHTML = `<p style="color:#4ade80;">✅ Success! Birth details saved & synced across all 15 astrological modules.</p>`;
             });
         }
 
@@ -1332,8 +1377,8 @@ HTML_TEMPLATE = """
         }
 
         async function submitLifePrediction() {
-            let name = document.getElementById('life-name').value;
-            let dob = document.getElementById('life-dob').value;
+            let name = document.getElementById('life-name').value || localStorage.getItem('hub_name') || 'User';
+            let dob = document.getElementById('life-dob').value || localStorage.getItem('hub_dob') || '2000-01-01';
             showMagicLoader(async () => {
                 let res = await fetch('/api/life', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
@@ -1351,8 +1396,8 @@ HTML_TEMPLATE = """
         }
 
         async function submitMatching() {
-            let boy_name = document.getElementById('b-name').value;
-            let girl_name = document.getElementById('g-name').value;
+            let boy_name = document.getElementById('b-name').value || 'Boy';
+            let girl_name = document.getElementById('g-name').value || 'Girl';
             showMagicLoader(async () => {
                 let res = await fetch('/api/matching', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({boy_name, girl_name, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
@@ -1361,7 +1406,7 @@ HTML_TEMPLATE = """
         }
 
         async function submitGemstone() {
-            let zodiac = document.getElementById('gem-zodiac').value;
+            let zodiac = document.getElementById('gem-zodiac').value || 'Aries';
             showMagicLoader(async () => {
                 let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({zodiac, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
@@ -1370,10 +1415,10 @@ HTML_TEMPLATE = """
         }
 
         async function submitVastuAnalysis() {
-            let name = document.getElementById('vastu-name').value;
+            let name = document.getElementById('vastu-name').value || localStorage.getItem('hub_name') || 'User';
             let p_type = document.getElementById('vastu-property-type').value;
             let facing = document.getElementById('vastu-facing').value;
-            let city = document.getElementById('vastu-city').value;
+            let city = document.getElementById('vastu-city').value || 'Kolkata';
             showMagicLoader(async () => {
                 let res = await fetch('/api/vastu', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, property_type: p_type, facing, city, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
@@ -1382,10 +1427,10 @@ HTML_TEMPLATE = """
         }
 
         async function submitKundaliPdf() {
-            let name = document.getElementById('k-name').value;
-            let dob = document.getElementById('k-dob').value;
-            let tob = document.getElementById('k-tob').value;
-            let pob = document.getElementById('k-pob').value;
+            let name = document.getElementById('k-name').value || localStorage.getItem('hub_name') || 'User';
+            let dob = document.getElementById('k-dob').value || localStorage.getItem('hub_dob') || '2000-01-01';
+            let tob = document.getElementById('k-tob').value || localStorage.getItem('hub_tob') || '12:00';
+            let pob = document.getElementById('k-pob').value || localStorage.getItem('hub_pob') || 'Kolkata';
             showMagicLoader(async () => {
                 let res = await fetch('/api/kundali-pdf', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, tob, pob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
@@ -1394,8 +1439,8 @@ HTML_TEMPLATE = """
         }
 
         async function submitNumerology() {
-            let name = document.getElementById('num-name').value;
-            let dob = document.getElementById('num-dob').value;
+            let name = document.getElementById('num-name').value || localStorage.getItem('hub_name') || 'User';
+            let dob = document.getElementById('num-dob').value || localStorage.getItem('hub_dob') || '2000-01-01';
             showMagicLoader(async () => {
                 let res = await fetch('/api/numerology', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
@@ -1404,8 +1449,8 @@ HTML_TEMPLATE = """
         }
 
         async function submitPanchang() {
-            let city = document.getElementById('p-city').value;
-            let date = document.getElementById('p-date').value;
+            let city = document.getElementById('p-city').value || 'Kolkata';
+            let date = document.getElementById('p-date').value || 'Today';
             let mode = document.getElementById('p-mode').value;
             showMagicLoader(async () => {
                 let res = await fetch('/api/panchang', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({city, date, mode, is_admin: isAdminUnlocked}) });

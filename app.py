@@ -850,13 +850,13 @@ HTML_TEMPLATE = """
         <div id="tab-transit" class="tab-content">
             <h3>🪐 Live Planetary Transit Tracker</h3>
             <div class="row" style="margin-top: 15px;">
+                <input type="text" id="transit-name" placeholder="Full Name (Auto-synced from Cosmic Hub)" autocomplete="off">
                 <select id="transit-planet">
                     <option value="Jupiter">Jupiter (Guru - Wealth & Expansion)</option>
                     <option value="Saturn">Saturn (Shani - Karma & Discipline)</option>
                     <option value="Rahu">Rahu (Ambition & Technology)</option>
                     <option value="Ketu">Ketu (Spiritual Liberation)</option>
                 </select>
-                <input type="text" id="transit-user-sign" placeholder="Your Rashi / Zodiac (Optional)" autocomplete="off">
             </div>
             <button class="primary-btn" onclick="loadTransitTracker()">🪐 Check Current Planetary Transits</button>
             <div id="transit-result" style="margin-top: 15px;"></div>
@@ -1049,7 +1049,7 @@ HTML_TEMPLATE = """
                 let savedT = localStorage.getItem('hub_tob') || '';
                 let savedP = localStorage.getItem('hub_pob') || '';
 
-                ['hub-name', 'jh-name', 'exp-name', 'dasha-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
+                ['hub-name', 'jh-name', 'exp-name', 'dasha-name', 'transit-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && !el.value) el.value = savedN;
                 });
@@ -1295,7 +1295,7 @@ HTML_TEMPLATE = """
                 localStorage.setItem('hub_tob', tob);
                 localStorage.setItem('hub_pob', pob);
                 
-                ['jh-name', 'exp-name', 'dasha-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
+                ['jh-name', 'exp-name', 'dasha-name', 'transit-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el) el.value = name;
                 });
@@ -1349,10 +1349,10 @@ HTML_TEMPLATE = """
         }
 
         async function loadTransitTracker() {
+            let name = document.getElementById('transit-name').value || localStorage.getItem('hub_name') || 'User';
             let planet = document.getElementById('transit-planet').value;
-            let zodiacSign = document.getElementById('transit-user-sign').value || localStorage.getItem('hub_name') || 'Aries';
             showMagicLoader(async () => {
-                let res = await fetch('/api/transit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({planet, zodiacSign}) });
+                let res = await fetch('/api/transit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, planet}) });
                 let data = await res.json();
                 document.getElementById('transit-result').innerHTML = data.html;
             });
@@ -1648,7 +1648,6 @@ async def api_dasha(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Personal Dasha Timeline", "details": f"DOB: {dob}", "payment_status": "Free Timeline"})
     
-    # Fully dynamic Dasha calculations based on name and DOB seed
     seed = sum(ord(c) for c in (name + dob).lower()) if (name or dob) else 108
     planets = ["Jupiter (Guru)", "Saturn (Shani)", "Mercury (Budha)", "Venus (Shukra)", "Sun (Surya)", "Moon (Chandra)", "Mars (Mangal)", "Rahu", "Ketu"]
     
@@ -1681,17 +1680,47 @@ async def api_dasha(request: Request):
 @app.post("/api/transit")
 async def api_transit(request: Request):
     data = await request.json()
-    planet = data.get("planet", "Jupiter")
-    zodiac_sign = data.get("zodiacSign", "Aries")
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Live Planetary Transit Tracker", "details": f"Planet: {planet}, Sign: {zodiac_sign}", "payment_status": "Free Live Tracker"})
+    name = data.get("name", "User").strip()
+    planet = data.get("planet", "Jupiter").strip()
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Live Planetary Transit Tracker", "details": f"Planet: {planet}", "payment_status": "Free Live Tracker"})
+    
+    # Fully dynamic transit calculations based on Name + Planet seed
+    seed = sum(ord(c) for c in (name + planet).lower()) if (name or planet) else 77
+    
+    zodiac_signs_list = [
+        "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
+        "Leo (Simha)", "Virgo (Kanya)", "Libra (Tula)", "Scorpio (Vrischika)",
+        "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"
+    ]
+    
+    transit_sign = zodiac_signs_list[seed % 12]
+    house_num = (seed % 12) + 1
+    
+    motion_types = ["Direct motion with expansion aspect", "Retrograde corrective phase", "Accelerated direct alignment", "Stationary stability transit"]
+    impact_types = [
+        "Favorable planetary aspect supporting career growth and financial accumulation.",
+        "Karmic realignment demanding patience, discipline, and structural revision.",
+        "Sudden breakthroughs in professional standing and technical innovation.",
+        "Spiritual introspection, inner purification, and long-term asset security."
+    ]
+    
+    chosen_motion = motion_types[seed % len(motion_types)]
+    chosen_impact = impact_types[seed % len(impact_types)]
     
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
-        <h4 style='color:#fde047;'>🪐 Live Planetary Transit for {zodiac_sign} (Selected Planet: {planet})</h4>
-        <div style='display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;'>
-            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>{planet} Movement:</b> Direct motion influencing {zodiac_sign} house of fortune & career.</div>
-            <div style='background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;'><b>Karmic Impact:</b> Favorable planetary aspect supporting long-term stability.</div>
+        <h4 style='color:#fde047;'>🪐 Live Planetary Transit for {name.upper()} (Selected Planet: {planet})</h4>
+        <p style='color: #f3e8ff; margin-bottom: 12px;'><b>Current Transit Sign:</b> {transit_sign} (House {house_num} from Ascendant)</p>
+        <div style='display:grid; grid-template-columns:1fr 1fr; gap:12px;'>
+            <div style='background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;'>
+                <b style='color:#fde047;'>{planet} Movement:</b> {chosen_motion} influencing {name}'s chart.
+            </div>
+            <div style='background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;'>
+                <b style='color:#4ade80;'>Karmic Impact:</b> {chosen_impact}
+            </div>
         </div>
+        <p style='color:#4ade80; margin-top:12px; font-size:0.85rem;'>✅ Unique dynamic transit calculations tailored specifically for {name} under {planet}.</p>
     </div>
     """
     return JSONResponse({"html": html})
@@ -1699,7 +1728,7 @@ async def api_transit(request: Request):
 @app.post("/api/palm")
 async def api_palm(request: Request):
     data = await request.json()
-    focus = data.get("focus", "Career & Life Line")
+    focus = data.get("focus", "Life Line & Career")
     is_admin = data.get("is_admin", False)
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Palmistry", "details": f"Focus: {focus}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹79)"})

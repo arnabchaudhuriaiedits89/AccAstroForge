@@ -234,55 +234,6 @@ def calculate_astrological_profile(name, dob_str):
             "dasha": "Favorable Planetary Dasha Cycle active."
         }
 
-def calculate_jagannath_hora_engine(name, dob_str, tob_str="12:00", pob_str="Kolkata"):
-    profile = calculate_astrological_profile(name, dob_str)
-    z_idx = ZODIAC_SIGNS.index(profile["zodiac"]) if profile["zodiac"] in ZODIAC_SIGNS else 0
-    
-    shodashvarga_charts = {
-        "D1 (Lagna Chart)": profile["zodiac"],
-        "D2 (Hora - Wealth)": ZODIAC_SIGNS[(z_idx + 1) % 12],
-        "D3 (Drekkana - Siblings/Courage)": ZODIAC_SIGNS[(z_idx + 4) % 12],
-        "D4 (Chaturthamsha - Assets/Home)": ZODIAC_SIGNS[(z_idx + 3) % 12],
-        "D7 (Saptamsha - Children/Progeny)": ZODIAC_SIGNS[(z_idx + 6) % 12],
-        "D9 (Navamsha - Marriage/Dharma)": ZODIAC_SIGNS[(z_idx + 8) % 12],
-        "D10 (Dashamsha - Profession/Karma)": ZODIAC_SIGNS[(z_idx + 9) % 12],
-        "D12 (Dwadasamsha - Parents/Ancestry)": ZODIAC_SIGNS[(z_idx + 11) % 12],
-        "D16 (Shodasamsha - Vehicles/Comforts)": ZODIAC_SIGNS[z_idx % 12],
-        "D20 (Vimsamsha - Spiritual Progress)": ZODIAC_SIGNS[(z_idx + 7) % 12],
-        "D24 (Chaturvimsamsha - Higher Education)": ZODIAC_SIGNS[(z_idx + 5) % 12],
-        "D27 (Saptavimsamsha - Strengths/Weakness)": ZODIAC_SIGNS[(z_idx + 2) % 12],
-        "D30 (Trimsamsha - Misfortunes/Arishta)": ZODIAC_SIGNS[(z_idx + 10) % 12],
-        "D40 (Khavedamsha - Auspicious Events)": ZODIAC_SIGNS[(z_idx + 3) % 12],
-        "D45 (Akshavedamsha - Character/Integrity)": ZODIAC_SIGNS[(z_idx + 6) % 12],
-        "D60 (Shastiamsha - Karma/Past Life Root)": ZODIAC_SIGNS[(z_idx + 1) % 12],
-    }
-
-    dashas = {
-        "Vimshottari Dasha": profile["dasha"],
-        "Yogini Dasha": f"Active Yogini: {['Mangala (Moon)', 'Pingala (Sun)', 'Dhanya (Jupiter)', 'Bhramari (Mars)', 'Bhadrika (Mercury)', 'Ulka (Saturn)', 'Siddha (Venus)', 'Sankata (Rahu)'][z_idx % 8]}",
-        "Chara Dasha (Jaimini)": f"Current Rashi Dasha: {profile['zodiac']}",
-        "Ashtottari Dasha": f"Active Planet: {['Sun', 'Moon', 'Mars', 'Mercury', 'Saturn', 'Jupiter', 'Rahu', 'Venus'][z_idx % 8]}"
-    }
-
-    ashtakavarga = {
-        "Sun": random.randint(3, 6),
-        "Moon": random.randint(3, 6),
-        "Mars": random.randint(2, 5),
-        "Mercury": random.randint(4, 7),
-        "Jupiter": random.randint(4, 7),
-        "Venus": random.randint(4, 6),
-        "Saturn": random.randint(2, 5),
-        "Sarvashtakavarga Total": random.randint(28, 38)
-    }
-
-    return {
-        "profile": profile,
-        "shodashvarga": shodashvarga_charts,
-        "dashas": dashas,
-        "ashtakavarga": ashtakavarga,
-        "transit_overlay": f"Jupiter in {ZODIAC_SIGNS[(z_idx+2)%12]} (Favorable), Saturn in {ZODIAC_SIGNS[(z_idx+10)%12]} (Karma Assessment)."
-    }
-
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 except Exception:
@@ -1298,7 +1249,7 @@ HTML_TEMPLATE = """
                 localStorage.setItem('hub_tob', tob);
                 localStorage.setItem('hub_pob', pob);
                 
-                ['jh-name', 'exp-name', 'dasha-name', 'transit-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
+                ['hub-name', 'jh-name', 'exp-name', 'dasha-name', 'transit-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el) el.value = name;
                 });
@@ -1376,7 +1327,7 @@ HTML_TEMPLATE = """
             showMagicLoader(async () => {
                 let res = await fetch('/api/life', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('life-result').innerHTML = data.teaser + (data.full_report || '') + (data.paywall || '');
+                document.getElementById('life-result').innerHTML = data.teaser + (data.full_report || '') + (data.pdf_download_btn || '') + (data.paywall || '');
             });
         }
 
@@ -1754,9 +1705,26 @@ async def api_life(request: Request):
     dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹149)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
     profile = calculate_astrological_profile(name, dob)
+    
+    # Generate PDF Report for Life Prediction so that Admin can download it
+    filename = f"Life_Forecast_{name.replace(' ', '_')}.pdf"
+    generate_pdf_report(
+        filename,
+        f"Vedic Astrology & Deep Life Forecast - {name}",
+        [
+            f"Date of Birth: {dob} | Rashi: {profile['zodiac']} | Nakshatra: {profile['nakshatra']}",
+            f"Active Dasha: {profile['dasha']} | Psychic Number: {profile['psychic_num']}",
+            "1. Core Personality & Karmic Blueprint: Under the profound influence of your ascendant and nakshatra, you possess an innate resilience and a distinct magnetic leadership aura.",
+            "2. Career Evolution, Wealth & Financial Accumulation: Stellar positioning in D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship and financial inflow.",
+            "3. Relationships, Marriage & Family Harmony: 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships, bringing peace and domestic stability.",
+            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels."
+        ]
+    )
+    
+    pdf_btn_html = f"""<div style='margin-top:15px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:12px 24px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; box-shadow: 0 4px 15px rgba(16,185,129,0.4);'>📥 Download Deep Life Forecast PDF Report</a></div>"""
     
     teaser = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed; margin-bottom: 12px;'>
@@ -1788,7 +1756,9 @@ async def api_life(request: Request):
     """ if is_admin else ""
     
     paywall = "" if is_admin else get_paywall_html("Complete Deep Life Forecast & PDF", 149, name)
-    return JSONResponse({"teaser": teaser, "full_report": full_report, "paywall": paywall})
+    download_btn = pdf_btn_html if is_admin else ""
+    
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/horoscope")
 async def api_horoscope(request: Request):

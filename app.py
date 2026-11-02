@@ -446,28 +446,19 @@ HTML_TEMPLATE = """
             background: transparent !important;
         }
 
-        /* FIXED STANDALONE ADMIN DOT POSITION */
         .admin-dot {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            width: 22px;
-            height: 22px;
-            min-width: 22px;
-            min-height: 22px;
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            min-height: 16px;
             background: radial-gradient(circle, #fde047 0%, #d97706 100%);
             border: 2px solid #fef08a;
             border-radius: 50%;
             display: inline-block;
             cursor: pointer;
-            box-shadow: 0 0 20px #fde047;
-            z-index: 999999;
-            animation: adminPulse 2s infinite;
-        }
-        @keyframes adminPulse {
-            0% { transform: scale(1); box-shadow: 0 0 10px #fde047; }
-            50% { transform: scale(1.15); box-shadow: 0 0 25px #fde047; }
-            100% { transform: scale(1); box-shadow: 0 0 10px #fde047; }
+            box-shadow: 0 0 15px #fde047;
+            margin-left: 10px;
+            z-index: 999;
         }
 
         .header-right-area {
@@ -668,18 +659,16 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <!-- FIXED STANDALONE ADMIN DOT -->
-    <span class="admin-dot" title="Click to open Admin Portal" onclick="toggleAdminPanel()"></span>
-
     <div id="loader-overlay">
         <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" alt="Cosmic Loader" class="loader-logo">
     </div>
 
     <div class="container">
-        <!-- HEADER WITH LOGO, LIVE DIGITAL CLOCK & QUICK LOGINS -->
+        <!-- HEADER WITH LOGO, ADMIN DOT, LIVE DIGITAL CLOCK & QUICK LOGINS -->
         <div class="header-container">
             <div class="logo-area">
                 LOGO_SRC_PLACEHOLDER
+                <span class="admin-dot" title="Click to open Admin Portal" onclick="toggleAdminPanel()"></span>
             </div>
             <div class="header-right-area">
                 <div id="live-digital-clock" class="live-digital-clock">00<span class="clock-colon">:</span>00<span class="clock-colon">:</span>00 IST</div>

@@ -1807,25 +1807,25 @@ async def api_ai(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    # Priority 1: Vastu / Property / Negative Energies / Haunted / Graveyard (Overrules single words like 'girl')
-    if any(k in query for k in ["haunted", "graveyard", "ghost", "vastu", "house", "home", "flat", "location", "shifting", "property", "land", "building"]):
+    # Priority 1: Career, IT Job, Sports/Cricket Dilemmas (Ensures Sanjana's career/job/cricket prompt goes to Jagannath Hora / D10 Explorer)
+    if any(k in query for k in ["cricket", "career", "job", "it sector", "earning", "passion", "profession", "money", "income", "work", "office", "promotion"]):
+        ai_reply = f"Hello {name}, evaluating a career transition between passion (like sports/cricket) and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
+    
+    # Priority 2: Marriage, In-laws, Family Decision, Spouse Support
+    elif any(k in query for k in ["marriage", "in-laws", "husband", "wife", "family", "wedding", "partner", "relationship", "love", "groom", "bride"]):
+        ai_reply = f"Hello {name}, family decisions, spouse/in-law support, and marital harmony are governed by the 7th and 4th houses in your chart. When balancing domestic support with personal ambition, understanding Guna Milan and planetary compatibility is vital. Explore our <b>Matching</b> or <b>Life Prediction</b> tabs for detailed guidance."
+    
+    # Priority 3: Vastu / Property / Haunted / Graveyard
+    elif any(k in query for k in ["haunted", "graveyard", "ghost", "vastu", "house", "flat", "location", "shifting", "property", "land", "building"]) and not any(k in query for k in ["cricket", "job", "career", "it sector", "earning"]):
         ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment is crucial before shifting to any location. Negative spatial energies or rumors require proper Vastu Purusha analysis and protective remedies. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra</b> or <b>Life Prediction</b> tabs."
     
-    # Priority 2: Serious Safety, Threats, Police, Political Crises
+    # Priority 4: Serious Safety, Threats, Police, Political Crises
     elif any(k in query for k in ["threat", "political", "police", "danger", "fear", "life threat", "attack", "enemy", "party", "kill"]):
         ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones</b> tabs."
     
-    # Priority 3: Marriage / Relationships (Only triggers when no Vastu/Property/Threat contexts are active)
-    elif any(k in query for k in ["girl", "partner", "relationship", "marriage", "love", "wife", "husband", "girlfriend", "boyfriend", "romance", "approach", "emotional"]):
-        ai_reply = f"Hello {name}, matters of the heart and emotional boundaries are closely linked to Venus and the 7th house in your chart. When dealing with unexpected emotional pressures, it is wise to maintain clear personal boundaries. For complete Guna Milan and detailed compatibility matching, please explore our <b>Matching</b> tab."
-    
-    # Priority 4: Health / Food / Body Routine
+    # Priority 5: Health / Food / Body Routine
     elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
         ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
-    
-    # Priority 5: Career / Job / Money / Business
-    elif any(k in query for k in ["career", "job", "business", "money", "income", "work", "office", "promotion"]):
-        ai_reply = f"Hello {name}, your professional inquiry reflects active planetary energies in your 10th house of Karma. To explore deep career forecasts, divisional D10 charts, and professional remedies, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
     
     # Fallback General Vedic Prediction
     else:

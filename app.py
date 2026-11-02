@@ -210,17 +210,20 @@ NAKSHATRAS = [
 def calculate_astrological_profile(name, dob_str):
     try:
         dt = datetime.datetime.strptime(dob_str, "%Y-%m-%d")
+        name_seed = sum(ord(c) for c in name.lower()) if name else 42
         day_sum = sum(int(digit) for digit in dob_str if digit.isdigit())
         while day_sum > 9:
             day_sum = sum(int(d) for d in str(day_sum))
-        zodiac_index = (dt.month - 1 + (dt.day // 3)) % 12
-        nakshatra_index = (dt.day + dt.month * 2) % 27
+        zodiac_index = (dt.month + name_seed) % 12
+        nakshatra_index = (dt.day + dt.month * 2 + name_seed) % 27
+        planet_list = ['Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu']
+        dasha_active = planet_list[(name_seed + dt.day) % len(planet_list)]
         return {
             "name": name if name else "User",
             "zodiac": ZODIAC_SIGNS[zodiac_index],
             "nakshatra": NAKSHATRAS[nakshatra_index],
             "psychic_num": day_sum,
-            "dasha": f"Mahadasha of {['Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu'][day_sum % 9]} is active."
+            "dasha": f"Mahadasha of {dasha_active} is active."
         }
     except Exception:
         return {
@@ -758,11 +761,11 @@ HTML_TEMPLATE = """
                 <h4>💳 Wallet Balance: ₹ 0.00</h4>
                 <p>Use credits for instant unlocking of reports.</p>
                 <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(99)">⚡ ₹99</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(49)">⚡ ₹49</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(51)">⚡ ₹51</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(79)">⚡ ₹79</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(149)">⚡ ₹149</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(199)">⚡ ₹199</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(299)">⚡ ₹299</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(399)">⚡ ₹399</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(499)">⚡ ₹499</button>
                 </div>
                 <div id="wallet-result" style="margin-top:10px;"></div>
             </div>
@@ -1373,7 +1376,7 @@ HTML_TEMPLATE = """
             showMagicLoader(async () => {
                 let res = await fetch('/api/life', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('life-result').innerHTML = data.teaser + (data.paywall || '');
+                document.getElementById('life-result').innerHTML = data.teaser + (data.full_report || '') + (data.paywall || '');
             });
         }
 
@@ -1738,15 +1741,45 @@ async def api_palm(request: Request):
 @app.post("/api/life")
 async def api_life(request: Request):
     data = await request.json()
-    name = data.get("name", "User")
-    dob = data.get("dob", "2000-01-01")
+    name = data.get("name", "User").strip() or "User"
+    dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
     is_admin = data.get("is_admin", False)
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹149)"})
+    
     profile = calculate_astrological_profile(name, dob)
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🌟 Astrological Teaser for {name.upper()}</h4><p><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p></div>"""
+    
+    teaser = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed; margin-bottom: 12px;'>
+        <h4 style='color:#fde047; margin-top:0;'>✨ Astrological Teaser for {name.upper()}</h4>
+        <p style='font-size:1.05rem; color:#f3e8ff;'><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p>
+    </div>
+    """
+    
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:24px; border-radius:16px; border:2px solid #4ade80; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h3 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🌟 COMPREHENSIVE VEDIC LIFE FORECAST & DEEP REPORT FOR {name.upper()}</h3>
+        <p style='color: #fde047; font-weight: 600;'>Birth Profile Verified | Lagna Ascendant & Planetary Coordinates Active</p>
+        
+        <div style='margin-top: 15px; line-height: 1.8; color: #f3e8ff;'>
+            <h4 style='color: #fde047;'>1. Core Personality & Karmic Blueprint ({profile['zodiac']})</h4>
+            <p>Under the profound influence of <b>{profile['zodiac']}</b> and born under the sacred constellation of <b>{profile['nakshatra']}</b>, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number <b>{profile['psychic_num']}</b> highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.</p>
+            
+            <h4 style='color: #fde047; margin-top: 15px;'>2. Career Evolution, Wealth & Financial Accumulation</h4>
+            <p>The stellar positioning in your D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship, specialized technical consultancy, or leadership roles. Financial inflow will experience a notable upward surge during transit cycles involving Jupiter and Mercury. Long-term asset creation and real estate investments are highly favored during this phase.</p>
+            
+            <h4 style='color: #fde047; margin-top: 15px;'>3. Relationships, Marriage & Family Harmony</h4>
+            <p>Your 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships. Mutual respect and open communication will fortify your familial bonds, bringing peace, domestic stability, and harmonious support from your life partner and close associates.</p>
+            
+            <h4 style='color: #fde047; margin-top: 15px;'>4. Health, Vitality & Recommended Remedies</h4>
+            <p>Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels. To neutralize minor planetary friction and amplify positive cosmic frequencies, wearing a certified natural gemstone aligned with your ascendant and engaging in meditative grounding practices is strongly recommended.</p>
+        </div>
+        <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full 149/- Report Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+    
     paywall = "" if is_admin else get_paywall_html("Complete Deep Life Forecast & PDF", 149, name)
-    return JSONResponse({"teaser": teaser, "paywall": paywall})
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "paywall": paywall})
 
 @app.post("/api/horoscope")
 async def api_horoscope(request: Request):
@@ -1883,7 +1916,7 @@ async def api_ai(request: Request):
         ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra</b> tabs."
     elif any(k in query for k in ["hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "harm"]):
         ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones</b> and <b>Life Prediction</b> tabs."
-    elif any(k in query for k in ["spirit", "mother", "father", "ghost", "midnight", "bed", "blessing", "loss", "passed away", "dreams", "presence", "soul", "heal"]):
+    elif any(k in query for k:: ["spirit", "mother", "father", "ghost", "midnight", "bed", "blessing", "loss", "passed away", "dreams", "presence", "soul", "heal"]):
         ai_reply = f"Hello {name}, feeling the spiritual presence or comforting energy of departed parents (Pitru/Matru blessings) during vulnerable hours is deeply emotional and connected to ancestral 9th and 4th house alignments in your chart. While rituals or yoga can help center mental peace, the deep emotional bond is a matter of inner solace. For emotional strength, mental peace, and spiritual remedies, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones</b> tabs."
     elif any(k in query for k in ["cricket", "career", "job", "it sector", "earning", "passion", "profession", "money", "income", "work", "office", "promotion"]) and not any(k in query for k in ["hurt", "injured", "injury", "hit", "bandage"]):
         ai_reply = f"Hello {name}, evaluating a career transition between passion (like sports/cricket) and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
@@ -1894,7 +1927,7 @@ async def api_ai(request: Request):
     elif any(k in query for k in ["threat", "political", "police", "danger", "fear", "life threat", "attack", "enemy", "party", "kill"]):
         ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones</b> tabs."
     elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
-        ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
+        ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or `Life Prediction` tabs."
     else:
         ai_reply = f"Hello {name}, I have carefully analyzed your cosmic query regarding '{query}'. Vedic principles indicate a transformative phase ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
 

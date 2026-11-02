@@ -5,3 +5,4 @@ razorpay
 reportlab
 requests
 python-multipart
+google-genai

@@ -6,7 +6,7 @@ import json
 import requests
 import sqlite3
 import razorpay
-import google.generativeai as genai
+from google import genai
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from reportlab.lib.pagesizes import letter
@@ -17,7 +17,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 app = FastAPI()
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (PROKELA & RAZORPAY & GEMINI)
+# 0. CONFIGURATIONS & SECRETS
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
@@ -25,9 +25,8 @@ RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 
-# Real Gemini API Configuration
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE")
-genai.configure(api_key=GEMINI_API_KEY)
+# Real Gemini Client Initialization
+gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY", "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE"))
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -1304,15 +1303,15 @@ HTML_TEMPLATE = """
                     let el = document.getElementById(id);
                     if(el) el.value = name;
                 });
-                ['jh-dob', 'jh-dob', 'dasha-dob', 'life-dob', 'gem-dob', 'k-dob', 'num-dob', 'p-date'].forEach(id => {
+                ['hub-dob', 'jh-dob', 'dasha-dob', 'life-dob', 'gem-dob', 'k-dob', 'num-dob', 'p-date'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && dob) el.value = dob;
                 });
-                ['jh-tob', 'k-tob', 'life-tob'].forEach(id => {
+                ['hub-tob', 'k-tob', 'life-tob'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && tob) el.value = tob;
                 });
-                ['jh-pob', 'k-pob', 'p-city', 'vastu-city'].forEach(id => {
+                ['hub-pob', 'jh-pob', 'k-pob', 'p-city', 'vastu-city'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && pob) el.value = pob;
                 });
@@ -1813,19 +1812,21 @@ async def api_ai(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
     try:
-        # Zero Dummy Logic: Directly calling Real Gemini API (gemini-1.5-flash) for dynamic response
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # STRICT REAL GEMINI CLIENT CALL (No Exception Fallback looping user query)
         prompt = f"""
         You are an expert Vedic Astrologer and Life Coach on AccAstroForge. 
         The user's name is {name}. 
         The user's specific question/query is: "{query}".
         
-        Provide a profound, professional, and comforting astrological response in English. Address their specific situation directly (whether it's career, health, relationships, personal boundaries, or emotional stress) through astrological insights (houses, planetary transits, Karma, Venus/Mars/Saturn energies) without any generic placeholders or canned templates. Keep it thoughtful, articulate, and completely customized to their query.
+        Provide a profound, professional, and comforting astrological response in English addressing their query directly through astrological insights (houses, planetary transits, Karma, Venus/Mars/Saturn energies).
         """
-        response = model.generate_content(prompt)
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
         ai_reply = response.text.strip()
     except Exception as e:
-        ai_reply = f"Greetings {name}. Your inquiry regarding '{query}' touches upon significant planetary realignments in your chart. Maintain emotional clarity, focus on constructive energies, and explore our specialized Kundali or Dasha modules for deeper guidance."
+        ai_reply = f"Cosmic connection error: {str(e)}. Please verify your Gemini API key in the server environment variables."
 
     html = f"""<div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'><p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p><p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
     return JSONResponse({"html": html})

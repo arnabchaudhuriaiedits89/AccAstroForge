@@ -1780,7 +1780,7 @@ async def api_numerology(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹69)"})
     profile = calculate_astrological_profile(name, dob)
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047; '>{profile['psychic_num']}</b></p></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
     paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 69, name)
     return JSONResponse({"teaser": teaser, "paywall": paywall})
 
@@ -1807,31 +1807,35 @@ async def api_ai(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    # Priority 1: Physical Injury, Sports Injury, Head/Body Hit, Accidents, Protective Shielding (Arnav's case)
-    if any(k in query for k in ["hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "accident", "harm"]):
+    # Priority 1: Vehicle Safety, Car, SUV, Road Accident, Four-Wheeler Hazards & D16 Vehicle Shodashvarga
+    if any(k in query for k in ["car", "suv", "vehicle", "four-wheeler", "accident", "drive", "ride", "hand rekhas", "road", "collision"]):
+        ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra</b> tabs."
+    
+    # Priority 2: Physical Injury, Sports Injury, Head/Body Hit, Accidents, Protective Shielding (Arnav's case)
+    elif any(k in query for k in ["hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "harm"]):
         ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones</b> and <b>Life Prediction</b> tabs."
     
-    # Priority 2: Emotional, Spiritual, Parent Loss, Dreams, Presence of Spirit / Ancestral Blessings (Suhani's case)
+    # Priority 3: Emotional, Spiritual, Parent Loss, Dreams, Presence of Spirit / Ancestral Blessings (Suhani's case)
     elif any(k in query for k in ["spirit", "mother", "father", "ghost", "midnight", "bed", "blessing", "loss", "passed away", "dreams", "presence", "soul", "heal"]):
         ai_reply = f"Hello {name}, feeling the spiritual presence or comforting energy of departed parents (Pitru/Matru blessings) during vulnerable hours is deeply emotional and connected to ancestral 9th and 4th house alignments in your chart. While rituals or yoga can help center mental peace, the deep emotional bond is a matter of inner solace. For emotional strength, mental peace, and spiritual remedies, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones</b> tabs."
     
-    # Priority 3: Career, IT Job, Sports/Cricket Career Goals (Without injury context)
+    # Priority 4: Career, IT Job, Sports/Cricket Career Goals (Without injury context)
     elif any(k in query for k in ["cricket", "career", "job", "it sector", "earning", "passion", "profession", "money", "income", "work", "office", "promotion"]) and not any(k in query for k in ["hurt", "injured", "injury", "hit", "bandage"]):
         ai_reply = f"Hello {name}, evaluating a career transition between passion (like sports/cricket) and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
     
-    # Priority 4: Marriage, In-laws, Family Decision, Spouse Support
+    # Priority 5: Marriage, In-laws, Family Decision, Spouse Support
     elif any(k in query for k in ["marriage", "in-laws", "husband", "wife", "family", "wedding", "partner", "relationship", "love", "groom", "bride"]):
         ai_reply = f"Hello {name}, family decisions, spouse/in-law support, and marital harmony are governed by the 7th and 4th houses in your chart. When balancing domestic support with personal ambition, understanding Guna Milan and planetary compatibility is vital. Explore our <b>Matching</b> or <b>Life Prediction</b> tabs for detailed guidance."
     
-    # Priority 5: Vastu / Property / Haunted (Physical House)
+    # Priority 6: Vastu / Property / Haunted (Physical House)
     elif any(k in query for k in ["haunted", "graveyard", "vastu", "house", "flat", "location", "shifting", "property", "land", "building"]) and not any(k in query for k in ["passed away", "mother", "father", "spirit"]):
         ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment is crucial before shifting to any location. Negative spatial energies or rumors require proper Vastu Purusha analysis and protective remedies. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra</b> or <b>Life Prediction</b> tabs."
     
-    # Priority 6: Serious Safety, Threats, Police, Political Crises
+    # Priority 7: Serious Safety, Threats, Police, Political Crises
     elif any(k in query for k in ["threat", "political", "police", "danger", "fear", "life threat", "attack", "enemy", "party", "kill"]):
         ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones</b> tabs."
     
-    # Priority 7: Health / Food / Body Routine
+    # Priority 8: Health / Food / Body Routine
     elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
         ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
     

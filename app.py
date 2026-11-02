@@ -1050,7 +1050,6 @@ HTML_TEMPLATE = """
         window.onload = async function() {
             updateLiveClock();
             
-            // Auto-fill Hub Details across all tabs from localStorage on load
             if(localStorage.getItem('hub_name')) {
                 let savedN = localStorage.getItem('hub_name');
                 let savedD = localStorage.getItem('hub_dob') || '';
@@ -1303,7 +1302,6 @@ HTML_TEMPLATE = """
                 localStorage.setItem('hub_tob', tob);
                 localStorage.setItem('hub_pob', pob);
                 
-                // Auto-sync across other tabs
                 ['jh-name', 'exp-name', 'dasha-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el) el.value = name;
@@ -1815,14 +1813,18 @@ async def api_ai(request: Request):
     name = data.get("name", "User")
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    if any(k in query for k in ["vastu", "office", "house", "facing", "direction", "factory"]):
-        ai_reply = f"🏛️ Vastu Guidance for {name}: Ensuring your main entrance is in the North or East direction brings abundance. Keep the North-East (Ishan) zone clean and clutter-free."
-    elif any(k in query for k in ["kundali", "birth chart", "lagna", "janam"]):
-        ai_reply = f"📜 Janam Kundali Insight for {name}: Your chart shows a strong Lagna house. Focus on consistent professional efforts for optimal growth."
-    elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna"]):
-        ai_reply = f"💎 Gemstone Recommendation for {name}: Wearing a certified Emerald (Panna) or Yellow Sapphire will enhance focus and prosperity."
+    if any(k in query for k in ["job", "career", "work", "office", "business", "money", "financial"]):
+        ai_reply = f"💼 Career & Wealth Guidance for {name}: Your chart indicates strong planetary alignment in the 10th house of profession. Current transit of Jupiter supports overcoming workplace hurdles. Focus on structured planning and long-term investments rather than short-term risks."
+    elif any(k in query for k in ["love", "marriage", "relationship", "partner", "wife", "husband", "dating"]):
+        ai_reply = f"❤️ Relationship & Compatibility Insight for {name}: Venus and the 7th house influences are active in your profile. Patience and clear communication are key to resolving emotional friction and strengthening harmony with your partner."
+    elif any(k in query for k in ["health", "fitness", "body", "energy", "sport", "vitality"]):
+        ai_reply = f"🌿 Health & Vitality Reading for {name}: Your physical energy (Life Line vitality) is robust, but Saturn's aspect suggests avoiding burnout. Incorporate consistent breathing exercises, balanced hydration, and proper rest into your daily routine."
+    elif any(k in query for k in ["vastu", "house", "facing", "direction", "home", "flat"]):
+        ai_reply = f"🏛️ Vastu Shastra Advice for {name}: Ensure your main living spaces are clutter-free, and place water elements or light sources towards the North-East (Ishan) zone to maximize positive energy flow."
+    elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna", "lucky"]):
+        ai_reply = f"💎 Gemstone Recommendation for {name}: Based on your ascendant, wearing a certified Emerald or Yellow Sapphire after proper Vedic purification will greatly enhance concentration and prosperity."
     else:
-        ai_reply = f"✨ AI Astrologer Response for {name}: Planetary transits show highly favorable outcomes for your endeavors. Keep regular meditation and positive intent."
+        ai_reply = f"✨ Cosmic Astrologer Response for {name}: Your query touches upon important life transitions. The current Dasha cycle encourages perseverance, mindfulness, and maintaining a positive spiritual intent for optimal success."
 
     html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><p><b>Query:</b> {query}</p><p style='color:#4ade80;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
     return JSONResponse({"html": html})

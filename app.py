@@ -12,17 +12,27 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from google import genai
+from google.genai import types
 
 app = FastAPI()
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (PROKELA & RAZORPAY)
+# 0. CONFIGURATIONS & SECRETS (PROKELA & RAZORPAY & GEMINI)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+
+# Real Gemini Client Initialization
+GEMINI_API_KEY = "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE"
+try:
+    gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+except Exception as e:
+    print(f"Gemini Init Error: {e}")
+    gemini_client = None
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -1809,27 +1819,37 @@ async def api_panchang(request: Request):
 @app.post("/api/ai")
 async def api_ai(request: Request):
     data = await request.json()
-    query = data.get("query", "").strip().lower()
+    query = data.get("query", "").strip()
     name = data.get("name", "User")
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    # Corrected and Strict Priority Keyword Matching logic to prevent syntax crash
-    if any(k in query for k in ["parent", "father", "mother", "family", "conflict", "issue with"]):
-        ai_reply = f"👨‍👩‍👧 Family & Relationship Guidance for {name}: Conflicts with parents often stem from 4th house and Saturn/Mars alignments influencing domestic peace. Practicing active listening, wearing a pearl or calming gemstone for emotional balance, and maintaining respectful dialogue will greatly harmonize family bonds."
-    elif any(k in query for k in ["love", "marriage", "relationship", "partner", "wife", "husband", "dating", "boyfriend", "girlfriend"]):
-        ai_reply = f"❤️ Relationship & Compatibility Insight for {name}: Venus and the 7th house influences are active in your profile. Patience and clear communication are key to resolving emotional friction and strengthening harmony with your partner."
-    elif any(k in query for k in ["job", "career", "office", "business", "money", "financial", "salary", "work"]) and not any(sub in query for sub in ["parent", "family"]):
-        ai_reply = f"💼 Career & Wealth Guidance for {name}: Your chart indicates strong planetary alignment in the 10th house of profession. Current transit of Jupiter supports overcoming workplace hurdles. Focus on structured planning and long-term investments rather than short-term risks."
-    elif any(k in query for k in ["health", "fitness", "body", "energy", "sport", "vitality"]):
-        ai_reply = f"🌿 Health & Vitality Reading for {name}: Your physical energy (Life Line vitality) is robust, but Saturn's aspect suggests avoiding burnout. Incorporate consistent breathing exercises, balanced hydration, and proper rest into your daily routine."
-    elif any(k in query for k in ["vastu", "house", "facing", "direction", "home", "flat"]) and not any(sub in query for sub in ["parent", "family"]):
-        ai_reply = f"🏛️ Vastu Shastra Advice for {name}: Ensure your main living spaces are clutter-free, and place water elements or light sources towards the North-East (Ishan) zone to maximize positive energy flow."
-    elif any(k in query for k in ["gemstone", "panna", "stone", "ring", "ratna", "lucky"]):
-        ai_reply = f"💎 Gemstone Recommendation for {name}: Based on your ascendant, wearing a certified Emerald or Yellow Sapphire after proper Vedic purification will greatly enhance concentration and prosperity."
-    else:
-        ai_reply = f"✨ Cosmic Astrologer Response for {name}: Your query touches upon important life transitions. The current Dasha cycle encourages perseverance, mindfulness, and maintaining a positive spiritual intent for optimal success."
+    ai_reply = ""
+    if gemini_client:
+        try:
+            prompt = f"""You are 'AccAstroForge AI Astrologer', a wise, friendly, and deeply intuitive Vedic astrologer. 
+            The user asking you is named {name}. 
+            User's Query: "{query}"
+            
+            Instructions:
+            - Give a personalized, warm, and natural conversational response just like an expert AI astrologer.
+            - Address the user's specific query directly and deeply (whether it's about career turbulence, eating habits, love life, relationship conflicts, or personal growth).
+            - Keep it insightful and engaging, but do NOT give absolute final remedies, specific gemstone carat recommendations, or full PDF reports (remind them politely that they can unlock detailed paid reports or PDF charts on the respective site tabs if they need deep remediation).
+            - Keep the tone professional, mystical, encouraging, and completely conversational without robotic templates.
+            """
+            response = gemini_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            if response and response.text:
+                ai_reply = response.text
+        except Exception as e:
+            print(f"Gemini API Call Error: {e}")
 
-    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><p><b>Query:</b> {query}</p><p style='color:#4ade80;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
+    # Fallback if API fails or isn't configured
+    if not ai_reply:
+        ai_reply = f"✨ Namaste {name}. Your cosmic transit indicates a period of profound transition. Maintain focus, stay aligned with your inner purpose, and explore our specialized Kundali or Dasha modules for deeper insights."
+
+    html = f"""<div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'><p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p><p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
     return JSONResponse({"html": html})
 
 if __name__ == "__main__":

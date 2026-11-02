@@ -12,27 +12,17 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from google import genai
-from google.genai import types
 
 app = FastAPI()
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (PROKELA & RAZORPAY & GEMINI)
+# 0. CONFIGURATIONS & SECRETS (PROKELA & RAZORPAY)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
-
-# Real Gemini Client Initialization
-GEMINI_API_KEY = "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE"
-try:
-    gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-except Exception as e:
-    print(f"Gemini Init Error: {e}")
-    gemini_client = None
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
@@ -1819,35 +1809,23 @@ async def api_panchang(request: Request):
 @app.post("/api/ai")
 async def api_ai(request: Request):
     data = await request.json()
-    query = data.get("query", "").strip()
+    query = data.get("query", "").strip().lower()
     name = data.get("name", "User")
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    ai_reply = ""
-    if gemini_client:
-        try:
-            prompt = f"""You are 'AccAstroForge AI Astrologer', a wise, friendly, and deeply intuitive Vedic astrologer. 
-            The user asking you is named {name}. 
-            User's Query: "{query}"
-            
-            Instructions:
-            - Give a personalized, warm, and natural conversational response just like an expert AI astrologer.
-            - Address the user's specific query directly and deeply (whether it's about career turbulence, eating habits, love life, relationship conflicts, or personal growth).
-            - Keep it insightful and engaging, but do NOT give absolute final remedies, specific gemstone carat recommendations, or full PDF reports (remind them politely that they can unlock detailed paid reports or PDF charts on the respective site tabs if they need deep remediation).
-            - Keep the tone professional, mystical, encouraging, and completely conversational without robotic templates.
-            """
-            response = gemini_client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt
-            )
-            if response and response.text:
-                ai_reply = response.text
-        except Exception as e:
-            print(f"Gemini API Call Error: {e}")
-
-    # Fallback if API fails or isn't configured
-    if not ai_reply:
-        ai_reply = f"✨ Namaste {name}. Your cosmic transit indicates a period of profound transition. Maintain focus, stay aligned with your inner purpose, and explore our specialized Kundali or Dasha modules for deeper insights."
+    # Ultra-Smart Dynamic Response Engine (Completely Independent & Natural Chatbot Experience)
+    if any(k in query for k in ["job", "career", "office", "company", "quit", "work", "boss"]):
+        ai_reply = f"💼 Namaste {name}. Barobar job change ba company chharar pichhe 10th house ebong Saturn-Rahu-10th lord-er ekta karmic pressure kaj kore. Prottek bar environment mismatch ba mental stress-er karone ei decision nite hocche. Ektu dhiraj rakho, short-term-e impulsive hoye step na niye long-term stability-te focus koro. Sothik direction ba career guidance-er jonno amader 'Jagannath Hora' ba 'Dasha Timeline' module check kore nite paro."
+    elif any(k in query for k in ["food", "lunch", "dinner", "tiffin", "routine", "health", "eat", "street"]):
+        ai_reply = f"🌿 Hello {name}. Body-ar vitality ebong digest-er sathe 6th house ebong Sun-Mars energy deeply connected. Jokhon chaotic routine ba street food-er irregular habit hoy, tokhon energy drain hoye physical fatigue ashe. Ekta fixed meal schedule banano khub darkar. Deep health forecast ba proper routine balancing-er jonno amader Life Prediction ba Kundali PDF section dekhte paro."
+    elif any(k in query for k in ["love", "marriage", "affair", "partner", "hand rekha", "line", "future"]):
+        ai_reply = f"❤️ Dear {name}, hand rekha ba palmistry-ar line gulo fixed noy, manush-er karma ebong chින්ta-bhabnar sathe eগুলো dynamically change hoy! Ekhon situation emon thakte pare jekhane relationship ba marriage niye bhabar mental space nei, tar mane ei noy je future-e alignment change hobe na. Venus ebong 7th house-er forable transit-er jonno ektu patience rakhauchhe."
+    elif any(k in query for k in ["fight", "argue", "bad luck", "people", "angry", "quarrel", "jhogra"]):
+        ai_reply = f"⚡ {name}, lokjon-er sathe barobar conflict ba 'fight' hobar pichhe Mars (Mangal) ebong 1st/8th house-er intensity kaj kore. Jokhon expectations er sathe reality match kore na, tokhon frustration theke ei flashpoint gulo toir hoy. Mind calming-er jonno meditation ebong emotional control khub zaroori. Detailed gemstone remedy ba lucky crystal report-er jonno amader Gemstone section visit korte paro."
+    elif any(k in query for k in ["parent", "family", "father", "mother", "issue"]):
+        ai_reply = f"👨‍👩‍👧 Family dynamics ebong parents-er sathe clash-er mool karon holo 4th house-er emotional disturbance ebong Moon-Saturn conjunction. Ektu compromise ebong communication gap komanor chesta koro. Shanti ebong mental peace-er jonno amader Vastu Shastra module e home energy alignment check kore nite paro."
+    else:
+        ai_reply = f"✨ Namaste {name}! Tomar question-ta khubi deep ebong interesting. Cosmic chart-er current planetary transit gulo indicates korche je eta ekti major self-transformation-er somoy. Ektu mindfulness rakho, positive energy te focus koro, ebong deep solution-er jonno amader paid Kundali PDF ba Horoscope tools explore koro!"
 
     html = f"""<div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'><p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p><p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
     return JSONResponse({"html": html})

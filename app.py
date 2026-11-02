@@ -1983,22 +1983,39 @@ async def api_ai(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    if any(k in query for k in ["car", "suv", "vehicle", "four-wheeler", "accident", "drive", "ride", "hand rekhas", "road", "collision"]):
-        ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra</b> tabs."
-    elif any(k in query for k in ["hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "harm"]):
-        ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones</b> and <b>Life Prediction</b> tabs."
-    elif any(k in query for k in ["spirit", "mother", "father", "ghost", "midnight", "bed", "blessing", "loss", "passed away", "dreams", "presence", "soul", "heal"]):
+    # Priority 1: Haunted / Graveyard / Vastu / Land / Shifting Query (High-Priority Matching)
+    if any(k in query for k in ["haunted", "graveyard", "vastu", "house", "flat", "location", "shifting", "property", "land", "building", "bardhaman"]):
+        ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment (such as plots near southern zones or old lands) is crucial before shifting location. Regarding concerns about past history or unusual sounds, proper Vastu Purusha analysis and spatial energy cleansing are essential. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra</b> or <b>Life Prediction</b> tabs."
+
+    # Priority 2: Political Threats / Enemies / Legal / Police Danger
+    elif any(k in query for k in ["threat", "political", "police", "danger", "fear", "life threat", "attack", "enemy", "party", "kill", "dominated"]):
+        ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones</b> tabs."
+
+    # Priority 3: Departed Parents / Ancestral Spirits / Mother & Father Presence (Strict Exclusion of Land/Haunted keywords)
+    elif any(k in query for k in ["spirit", "mother", "father", "passed away", "departed", "midnight", "bed", "blessing", "presence", "soul"]) and not any(k in query for k in ["haunted", "graveyard", "vastu", "land", "property", "bardhaman"]):
         ai_reply = f"Hello {name}, feeling the spiritual presence or comforting energy of departed parents (Pitru/Matru blessings) during vulnerable hours is deeply emotional and connected to ancestral 9th and 4th house alignments in your chart. While rituals or yoga can help center mental peace, the deep emotional bond is a matter of inner solace. For emotional strength, mental peace, and spiritual remedies, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones</b> tabs."
-    elif any(k in query for k in ["cricket", "career", "job", "it sector", "earning", "passion", "profession", "money", "income", "work", "office", "promotion"]) and not any(k in query for k in ["hurt", "injured", "injury", "hit", "bandage"]):
-        ai_reply = f"Hello {name}, evaluating a career transition between passion (like sports/cricket) and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
+
+    # Priority 4: Vehicle / Car / SUV Purchase & Road Accidents
+    elif any(k in query for k in ["car", "suv", "vehicle", "four-wheeler", "accident", "drive", "ride", "hand rekhas", "road", "collision"]):
+        ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra</b> tabs."
+
+    # Priority 5: Sports Injuries / Cricket Wounds / Physical Impacts
+    elif any(k in query for k in ["hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "harm", "cricket"]) and any(k in query for k in ["hurt", "injured", "injury", "hit", "bandage", "wound"]):
+        ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones</b> and <b>Life Prediction</b> tabs."
+
+    # Priority 6: Career & Profession Transitions
+    elif any(k in query for k in ["career", "job", "it sector", "earning", "passion", "profession", "money", "income", "work", "office", "promotion"]):
+        ai_reply = f"Hello {name}, evaluating a career transition between passion and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
+
+    # Priority 7: Marriage & Family Compatibility
     elif any(k in query for k in ["marriage", "in-laws", "husband", "wife", "family", "wedding", "partner", "relationship", "love", "groom", "bride"]):
         ai_reply = f"Hello {name}, family decisions, spouse/in-law support, and marital harmony are governed by the 7th and 4th houses in your chart. When balancing domestic support with personal ambition, understanding Guna Milan and planetary compatibility is vital. Explore our <b>Matching</b> or <b>Life Prediction</b> tabs for detailed guidance."
-    elif any(k in query for k in ["haunted", "graveyard", "vastu", "house", "flat", "location", "shifting", "property", "land", "building"]) and not any(k in query for k in ["passed away", "mother", "father", "spirit"]):
-        ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment is crucial before shifting to your location. Negative spatial energies or rumors require proper Vastu Purusha analysis and protective remedies. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra</b> or <b>Life Prediction</b> tabs."
-    elif any(k in query for k in ["threat", "political", "police", "danger", "fear", "life threat", "attack", "enemy", "party", "kill"]):
-        ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones</b> tabs."
+
+    # Priority 8: Health & Daily Routine
     elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
         ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
+
+    # Fallback Option
     else:
         ai_reply = f"Hello {name}, I have carefully analyzed your cosmic query regarding '{query}'. Vedic principles indicate a transformative phase ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
 

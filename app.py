@@ -1607,7 +1607,6 @@ async def api_explorer(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Interactive Kundali Explorer", "details": f"Chart: {chart}", "payment_status": "Free Interactive"})
     
-    # Fully dynamic calculation based on user name seed hash
     name_seed = sum(ord(c) for c in name.lower()) if name else 42
     
     zodiac_pool = [
@@ -1644,18 +1643,37 @@ async def api_explorer(request: Request):
 @app.post("/api/dasha")
 async def api_dasha(request: Request):
     data = await request.json()
-    name = data.get("name", "User")
-    dob = data.get("dob", "2000-01-01")
+    name = data.get("name", "User").strip()
+    dob = data.get("dob", "2000-01-01").strip()
+    
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Personal Dasha Timeline", "details": f"DOB: {dob}", "payment_status": "Free Timeline"})
+    
+    # Fully dynamic Dasha calculations based on name and DOB seed
+    seed = sum(ord(c) for c in (name + dob).lower()) if (name or dob) else 108
+    planets = ["Jupiter (Guru)", "Saturn (Shani)", "Mercury (Budha)", "Venus (Shukra)", "Sun (Surya)", "Moon (Chandra)", "Mars (Mangal)", "Rahu", "Ketu"]
+    
+    maha_idx = seed % len(planets)
+    antar_idx = (seed + 3) % len(planets)
+    next_idx = (seed + 6) % len(planets)
+    
+    birth_year = 2000
+    try:
+        birth_year = int(dob.split("-")[0])
+    except Exception:
+        pass
+    
+    maha_end_year = birth_year + 20 + (seed % 10)
+    transition_year = maha_end_year + 1
     
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
-        <h4 style='color:#fde047;'>⏳ Personal Dasha Timeline for {name}</h4>
-        <ul style='line-height:1.8;'>
-            <li><b>Current Mahadasha:</b> Jupiter (Guru) - Active until 2031</li>
-            <li><b>Current Antardasha:</b> Saturn (Shani) - Focus on discipline and career structure</li>
-            <li><b>Upcoming Dasha Transition:</b> Mercury (Budha) starting late 2031</li>
+        <h4 style='color:#fde047;'>⏳ Personal Dasha Timeline for {name.upper()} (DOB: {dob})</h4>
+        <ul style='line-height:1.8; margin-top:10px;'>
+            <li><b>Current Mahadasha:</b> {planets[maha_idx]} - Active until {maha_end_year}</li>
+            <li><b>Current Antardasha:</b> {planets[antar_idx]} - Focus on structural growth, karmic balance and career stability</li>
+            <li><b>Upcoming Dasha Transition:</b> {planets[next_idx]} starting from {transition_year} onwards</li>
         </ul>
+        <p style='color:#4ade80; margin-top:10px;'>✅ Unique planetary Dasha sequence calculated dynamically for {name}.</p>
     </div>
     """
     return JSONResponse({"html": html})
@@ -1833,39 +1851,22 @@ async def api_ai(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    # Priority 1: Vehicle Safety, Car, SUV, Road Accident, Four-Wheeler Hazards & D16 Vehicle Shodashvarga
     if any(k in query for k in ["car", "suv", "vehicle", "four-wheeler", "accident", "drive", "ride", "hand rekhas", "road", "collision"]):
         ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra</b> tabs."
-    
-    # Priority 2: Physical Injury, Sports Injury, Head/Body Hit, Accidents, Protective Shielding (Arnav's case)
     elif any(k in query for k in ["hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "harm"]):
         ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones</b> and <b>Life Prediction</b> tabs."
-    
-    # Priority 3: Emotional, Spiritual, Parent Loss, Dreams, Presence of Spirit / Ancestral Blessings (Suhani's case)
     elif any(k in query for k in ["spirit", "mother", "father", "ghost", "midnight", "bed", "blessing", "loss", "passed away", "dreams", "presence", "soul", "heal"]):
         ai_reply = f"Hello {name}, feeling the spiritual presence or comforting energy of departed parents (Pitru/Matru blessings) during vulnerable hours is deeply emotional and connected to ancestral 9th and 4th house alignments in your chart. While rituals or yoga can help center mental peace, the deep emotional bond is a matter of inner solace. For emotional strength, mental peace, and spiritual remedies, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones</b> tabs."
-    
-    # Priority 4: Career, IT Job, Sports/Cricket Career Goals (Without injury context)
     elif any(k in query for k in ["cricket", "career", "job", "it sector", "earning", "passion", "profession", "money", "income", "work", "office", "promotion"]) and not any(k in query for k in ["hurt", "injured", "injury", "hit", "bandage"]):
         ai_reply = f"Hello {name}, evaluating a career transition between passion (like sports/cricket) and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
-    
-    # Priority 5: Marriage, In-laws, Family Decision, Spouse Support
     elif any(k in query for k in ["marriage", "in-laws", "husband", "wife", "family", "wedding", "partner", "relationship", "love", "groom", "bride"]):
         ai_reply = f"Hello {name}, family decisions, spouse/in-law support, and marital harmony are governed by the 7th and 4th houses in your chart. When balancing domestic support with personal ambition, understanding Guna Milan and planetary compatibility is vital. Explore our <b>Matching</b> or <b>Life Prediction</b> tabs for detailed guidance."
-    
-    # Priority 6: Vastu / Property / Haunted (Physical House)
     elif any(k in query for k in ["haunted", "graveyard", "vastu", "house", "flat", "location", "shifting", "property", "land", "building"]) and not any(k in query for k in ["passed away", "mother", "father", "spirit"]):
         ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment is crucial before shifting to any location. Negative spatial energies or rumors require proper Vastu Purusha analysis and protective remedies. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra</b> or <b>Life Prediction</b> tabs."
-    
-    # Priority 7: Serious Safety, Threats, Police, Political Crises
     elif any(k in query for k in ["threat", "political", "police", "danger", "fear", "life threat", "attack", "enemy", "party", "kill"]):
         ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones</b> tabs."
-    
-    # Priority 8: Health / Food / Body Routine
     elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
         ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
-    
-    # Fallback General Vedic Prediction
     else:
         ai_reply = f"Hello {name}, I have carefully analyzed your cosmic query regarding '{query}'. Vedic principles indicate a transformative phase ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
 

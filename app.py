@@ -25,7 +25,7 @@ RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 
-# Real Gemini Client Initialization
+# Real Gemini Client Initialization with updated model
 gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY", "AIzaSyAHgQhuc4RAd_2H9pNCZM1Zpsii5EVzAFE"))
 
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
@@ -1812,7 +1812,6 @@ async def api_ai(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
     try:
-        # STRICT REAL GEMINI CLIENT CALL (No Exception Fallback looping user query)
         prompt = f"""
         You are an expert Vedic Astrologer and Life Coach on AccAstroForge. 
         The user's name is {name}. 
@@ -1820,13 +1819,14 @@ async def api_ai(request: Request):
         
         Provide a profound, professional, and comforting astrological response in English addressing their query directly through astrological insights (houses, planetary transits, Karma, Venus/Mars/Saturn energies).
         """
+        # Updated to gemini-1.5-flash for stable and live execution
         response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-1.5-flash',
             contents=prompt,
         )
         ai_reply = response.text.strip()
     except Exception as e:
-        ai_reply = f"Cosmic connection error: {str(e)}. Please verify your Gemini API key in the server environment variables."
+        ai_reply = f"Cosmic connection error: {str(e)}. Please check your API key configuration."
 
     html = f"""<div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'><p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p><p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p></div>"""
     return JSONResponse({"html": html})

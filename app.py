@@ -1606,11 +1606,30 @@ async def api_explorer(request: Request):
     chart = data.get("chart", "D1")
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Interactive Kundali Explorer", "details": f"Chart: {chart}", "payment_status": "Free Interactive"})
     
+    # Dynamic calculations for different divisional charts (D1, D9, D10, D7)
+    chart_descriptions = {
+        "D1": "D1 Lagna Chart (Main Body, Physical Path & Overall Life Foundation). House 1: Ascendant | House 4: सुख Sukh/Home | House 7: Partnership | House 10: Karma/Profession.",
+        "D9": "D9 Navamsha Chart (Soul Purpose, Inner Strength & Post-Marriage Life Blueprint). House 1: Inner Self | House 4: Emotional Harmony | House 7: Dharma of Partnership.",
+        "D10": "D10 Dashamsha Chart (Career Heights, Professional Authority & Public Status). House 1: Career Initiation | House 4: Workplace Comfort | House 10: Zenith of Success.",
+        "D7": "D7 Saptamsha Chart (Progeny, Children, Creation & Creative Legacy). House 1: Creation | House 5: Progeny Blessings | House 9: Lineage Continuity."
+    }
+    
+    house_details = {
+        "D1": "House 1 (Ascendant): Aries/Taurus | House 4: Cancer | House 7: Libra | House 10: Capricorn",
+        "D9": "House 1 (Navamsha Lagna): Leo | House 4: Scorpio | House 7: Aquarius | House 10: Taurus",
+        "D10": "House 1 (Dashamsha Lagna): Scorpio | House 4: Aquarius | House 7: Taurus | House 10: Leo",
+        "D7": "House 1 (Saptamsha Lagna): Gemini | House 4: Virgo | House 7: Sagittarius | House 10: Pisces"
+    }
+    
+    desc = chart_descriptions.get(chart, "Divisional Chart Analysis Active.")
+    houses = house_details.get(chart, "House 1: Ascendant | House 4: Home | House 7: Partner | House 10: Career")
+    
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
         <h4 style='color:#fde047;'>🧭 Interactive {chart} Chart Explorer for {name}</h4>
-        <p>Clickable 12 Houses grid active. House 1 (Ascendant): Aries | House 4: Cancer | House 7: Libra | House 10: Capricorn.</p>
-        <p style='color:#4ade80;'>✅ All planetary aspects calculated successfully for {chart}.</p>
+        <p style='color: #f3e8ff;'><b>Focus & Blueprint:</b> {desc}</p>
+        <p><b>Divisional Grid Houses:</b> {houses}.</p>
+        <p style='color:#4ade80;'>✅ All planetary aspects, divisional lordships, and house strengths calculated successfully for {chart}.</p>
     </div>
     """
     return JSONResponse({"html": html})

@@ -1807,17 +1807,17 @@ async def api_ai(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    # Robust local rule-based smart response engine without external API/Model crash risk
-    if any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat"]):
-        ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary positions indicate that irregular eating habits affect your solar plexus energy. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
-    elif any(k in query for k in ["career", "job", "business", "money", "income", "work", "office"]):
-        ai_reply = f"Hello {name}, your career inquiry reflects active planetary transits in your 10th house. To explore deep professional forecasts, divisional D10 charts, and career remediation, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
-    elif any(k in query for k in ["marriage", "love", "match", "partner", "relationship", "wife", "husband"]):
-        ai_reply = f"Hello {name}, matters of marriage and relationships are strongly governed by Venus and the 7th house in your chart. For complete Guna Milan and compatibility matching, please visit our <b>Matching</b> tab."
-    elif any(k in query for k in ["vastu", "house", "home", "flat", "office", "facing", "property"]):
-        ai_reply = f"Hello {name}, property orientation and Vastu alignment play a vital role in bringing peace and prosperity. To generate a complete room-by-room Vastu Dosha & Remedy PDF report, please use our <b>Vastu Shastra</b> tab."
+    # Strictly segregated keyword checks to prevent overlapping
+    if any(k in query for k in ["girl", "partner", "relationship", "marriage", "love", "wife", "husband", "girlfriend", "boyfriend", "romance", "approach", "emotional"]):
+        ai_reply = f"Hello {name}, matters of the heart and emotional boundaries are closely linked to Venus and the 7th house in your chart. When dealing with unexpected emotional pressures, it is wise to maintain clear personal boundaries. For complete Guna Milan and detailed compatibility matching, please explore our <b>Matching</b> tab."
+    elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
+        ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
+    elif any(k in query for k in ["career", "job", "business", "money", "income", "work", "office", "promotion"]):
+        ai_reply = f"Hello {name}, your professional inquiry reflects active planetary energies in your 10th house of Karma. To explore deep career forecasts, divisional D10 charts, and professional remedies, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
+    elif any(k in query for k in ["vastu", "house", "home", "flat", "office", "facing", "property", "plot"]):
+        ai_reply = f"Hello {name}, proper property orientation and Vastu alignment are essential for peace and financial growth. To generate a complete room-by-room Vastu Dosha & Remedy PDF report, please use our <b>Vastu Shastra</b> tab."
     else:
-        ai_reply = f"Hello {name}, I have carefully noted your cosmic inquiry regarding '{query}'. Based on Vedic astrology principles, your ascendant energies suggest favorable growth ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
+        ai_reply = f"Hello {name}, I have carefully analyzed your cosmic query regarding '{query}'. Vedic principles indicate a transformative phase ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
 
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>

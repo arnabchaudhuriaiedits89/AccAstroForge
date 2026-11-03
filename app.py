@@ -2354,52 +2354,75 @@ async def api_panchang(request: Request):
     mode = data.get("mode", "free")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Vedic Panchang", "details": f"City: {city}, Date: {date_str}", "payment_status": "Free/Admin Bypassed" if is_admin else "Free/Pending"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Vedic Panchang", "details": f"City: {city}, Date: {date_str}, Mode: {mode}", "payment_status": "Free/Admin Bypassed" if (mode == "free" or is_admin) else "Pending (₹99)"})
     
     today_formatted = datetime.datetime.now().strftime("%B %d, %Y") if date_str in ["Today", ""] else date_str
     
-    html = f"""
-    <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>
-        <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>
-            <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>📅 Daily Vedic Panchang ({city})</h4>
-            <span style='color: #4ade80; font-weight: 600; font-size: 0.9rem;'>{today_formatted}</span>
-        </div>
-        
-        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;'>
-            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
-                <b style='color: #fde047; display: block;'>📜 Tithi:</b>
-                <span style='color: #f3e8ff;'>Shukla Paksha Navami (till 04:15 PM)</span>
+    # FREE PANCHANG LOGIC
+    if mode == "free":
+        html = f"""
+        <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>
+            <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>
+                <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>📅 Free Daily Vedic Panchang ({city})</h4>
+                <span style='color: #4ade80; font-weight: 600; font-size: 0.9rem;'>{today_formatted}</span>
             </div>
-            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
-                <b style='color: #fde047; display: block;'>⭐ Nakshatra:</b>
-                <span style='color: #f3e8ff;'>Rohini Nakshatra (Auspicious)</span>
-            </div>
-            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
-                <b style='color: #fde047; display: block;'>🧘 Yoga & Karana:</b>
-                <span style='color: #f3e8ff;'>Shukla Yoga / Kaulava Karana</span>
-            </div>
-            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
-                <b style='color: #ef4444; display: block;'>⚠️ Rahu Kalam:</b>
-                <span style='color: #f3e8ff;'>10:30 AM - 12:00 PM (Inauspicious)</span>
-            </div>
-            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
-                <b style='color: #4ade80; display: block;'>✨ Abhijit Muhurat:</b>
-                <span style='color: #f3e8ff;'>11:45 AM - 12:32 PM (Highly Shubha)</span>
-            </div>
-            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
-                <b style='color: #fde047; display: block;'>☀️ Sun & Moon:</b>
-                <span style='color: #f3e8ff;'>Sunrise: 05:58 AM | Sunset: 05:22 PM</span>
+            
+            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;'>
+                <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                    <b style='color: #fde047; display: block;'>📜 Tithi:</b>
+                    <span style='color: #f3e8ff;'>Shukla Paksha Navami (Basic Daily View)</span>
+                </div>
+                <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                    <b style='color: #fde047; display: block;'>⭐ Nakshatra:</b>
+                    <span style='color: #f3e8ff;'>Rohini Nakshatra</span>
+                </div>
+                <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                    <b style='color: #ef4444; display: block;'>⚠️ Rahu Kalam:</b>
+                    <span style='color: #f3e8ff;'>10:30 AM - 12:00 PM</span>
+                </div>
+                <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                    <b style='color: #4ade80; display: block;'>☀️ Sun & Moon:</b>
+                    <span style='color: #f3e8ff;'>Sunrise: 05:58 AM | Sunset: 05:22 PM</span>
+                </div>
             </div>
         </div>
-    </div>
-    """
-    
-    paywall = ""
-    if mode == "detailed" and not is_admin:
-        paywall = get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
-        
-    return JSONResponse({"html": html, "paywall": paywall})
+        """
+        return JSONResponse({"html": html, "paywall": ""})
 
+    # PAID DETAILED SHUBH MUHURAT REPORT (₹99) LOGIC
+    else:
+        html = f"""
+        <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #db2777; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5); margin-top: 15px;'>
+            <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>
+                <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>🌟 Detailed Shubh Muhurat & Planetary Ephemeris Report ({city})</h4>
+                <span style='color: #fde047; font-weight: 600; font-size: 0.9rem;'>{today_formatted}</span>
+            </div>
+            
+            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;'>
+                <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
+                    <b style='color: #fde047; display: block;'>✨ Abhijit Muhurat (Best for Starting New Work):</b>
+                    <span style='color: #f3e8ff;'>11:45 AM - 12:32 PM (Highly Auspicious Vedic Window)</span>
+                </div>
+                <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
+                    <b style='color: #fde047; display: block;'>🌙 Amrit Kalam & Brahma Muhurat:</b>
+                    <span style='color: #f3e8ff;'>04:20 AM - 05:08 AM (Divine Spiritual Energy)</span>
+                </div>
+                <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
+                    <b style='color: #ef4444; display: block;'>⚠️ Yamaganda & Gulika Kalam:</b>
+                    <span style='color: #f3e8ff;'>Yamaganda: 03:15 PM - 04:45 PM (Avoid New Ventures)</span>
+                </div>
+                <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
+                    <b style='color: #38bdf8; display: block;'>🪐 Hora Lords & Planetary Alignments:</b>
+                    <span style='color: #f3e8ff;'>Surya Hora active in morning; Guru Hora supporting financial decisions.</span>
+                </div>
+            </div>
+            <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Detailed Shubh Muhurat Report Unlocked Successfully via Paid Access (₹99)!</p>
+        </div>
+        """
+        
+        paywall = "" if is_admin else get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
+        return JSONResponse({"html": html, "paywall": paywall})
+        
 @app.post("/api/ai")
 async def api_ai(request: Request):
     data = await request.json()

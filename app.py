@@ -1399,7 +1399,7 @@ HTML_TEMPLATE = """
             showMagicLoader(async () => {
                 let res = await fetch('/api/palm', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({focus, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('palm-result').innerHTML = data.teaser + (data.paywall || '');
+                document.getElementById('palm-result').innerHTML = (data.teaser || '') + (data.full_report || '') + (data.pdf_download_btn || '') + (data.paywall || '');
             });
         }
 
@@ -1814,13 +1814,50 @@ async def api_transit(request: Request):
 @app.post("/api/palm")
 async def api_palm(request: Request):
     data = await request.json()
-    focus = data.get("focus", "Life Line & Career")
+    focus = data.get("focus", "Life Line & Career").strip() or "Life Line & Career"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Palmistry", "details": f"Focus: {focus}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹79)"})
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4><p style='color:#4ade80;'>✅ Palm photo successfully analyzed. Promising deep curve on Life Line indicating strong vitality.</p></div>"""
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Palmistry", "details": f"Focus: {focus}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"})
+    
+    filename = f"Palmistry_Report_{focus.replace(' ', '_')}.pdf"
+    generate_pdf_report(
+        filename,
+        f"AI Palmistry & Hand Analysis Report - {focus}",
+        [
+            f"Focus Area: {focus}",
+            "1. Life Line Analysis: Deep, unbroken curvature indicating robust vitality, sustained physical energy, and strong recuperative powers.",
+            "2. Head Line Analysis: Clear, well-defined line showing sharp intellectual focus, sound decision-making, and analytical depth.",
+            "3. Heart Line Analysis: Deep and balanced curve denoting emotional stability, empathy, and harmonious relationships.",
+            "4. Fate & Career Line: Prominent upward trajectory pointing toward professional success, entrepreneurial breakthroughs, and financial stability."
+        ]
+    )
+    
+    pdf_btn_html = f"""<div style='margin-top:15px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:12px 24px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; box-shadow: 0 4px 15px rgba(16,185,129,0.4);'>📥 Download AI Palmistry PDF Report</a></div>"""
+    
+    teaser = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
+        <h4 style='color:#fde047; margin-top:0;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4>
+        <p style='color:#4ade80;'>✅ Palm image successfully processed. Promising deep curve on Life Line indicating strong vitality and clear destiny markers.</p>
+    </div>
+    """
+    
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🖐️ COMPLETE AI PALMISTRY & HAND READING REPORT ({focus.upper()})</h4>
+        <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem; margin-top:10px;'>
+            <li><b>Life Line:</b> Indicates strong vitality, physical resilience, and robust overall health.</li>
+            <li><b>Head Line:</b> Denotes sharp mental clarity, strong logical reasoning, and decisive execution.</li>
+            <li><b>Heart Line:</b> Signifies deep emotional intelligence, empathy, and relationship stability.</li>
+            <li><b>Fate / Career Line:</b> Points toward steady professional ascension, financial growth, and success in ventures.</li>
+        </ul>
+        <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Full Palmistry Report Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+    
     paywall = "" if is_admin else get_paywall_html("Complete AI Palmistry & Hand Reading Report", 79, "User")
-    return JSONResponse({"teaser": teaser, "paywall": paywall})
+    download_btn = pdf_btn_html if is_admin else ""
+    
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/life")
 async def api_life(request: Request):
@@ -2285,17 +2322,14 @@ async def api_numerology(request: Request):
     except Exception:
         day = 1
 
-    # 1. Correct Mulank (Psychic Number = sum of birth day digits reduced to single digit)
     mulank = sum(int(d) for d in str(day))
     while mulank > 9:
         mulank = sum(int(d) for d in str(mulank))
         
-    # 2. Correct Bhagyank (Destiny Number = sum of all digits in DOB reduced to single digit)
     bhagyank = sum(int(d) for d in dob if d.isdigit())
     while bhagyank > 9:
         bhagyank = sum(int(d) for d in str(bhagyank))
         
-    # 3. Ruling Planetary Lord based on Mulank
     ruling_planets = {
         1: "Sun (Surya)", 2: "Moon (Chandra)", 3: "Jupiter (Guru)",
         4: "Rahu", 5: "Mercury (Budha)", 6: "Venus (Shukra)",
@@ -2303,7 +2337,6 @@ async def api_numerology(request: Request):
     }
     ruling_p = ruling_planets.get(mulank, "Sun (Surya)")
 
-    # 4. Accurate and Unique Compatible Numbers based on Mulank
     compatibility_map = {
         1: [1, 2, 3, 5, 9],
         2: [1, 2, 5, 3],
@@ -2358,7 +2391,6 @@ async def api_panchang(request: Request):
     
     today_formatted = datetime.datetime.now().strftime("%B %d, %Y") if date_str in ["Today", ""] else date_str
     
-    # Dynamic Seeding based on City and Date inputs
     seed = sum(ord(c) for c in (city + str(date_str)).lower())
     
     tithis = [
@@ -2406,7 +2438,6 @@ async def api_panchang(request: Request):
     yamaganda_val = yamagandas[(seed + 2) % len(yamagandas)]
     hora_val = horas[seed % len(horas)]
 
-    # FREE PANCHANG LOGIC
     if mode == "free":
         html = f"""
         <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>
@@ -2436,8 +2467,6 @@ async def api_panchang(request: Request):
         </div>
         """
         return JSONResponse({"html": html, "paywall": ""})
-
-    # PAID DETAILED SHUBH MUHURAT REPORT (₹99) LOGIC
     else:
         html = f"""
         <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #db2777; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5); margin-top: 15px;'>
@@ -2467,7 +2496,6 @@ async def api_panchang(request: Request):
             <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Detailed Shubh Muhurat Report Unlocked Successfully via Paid Access (₹99)!</p>
         </div>
         """
-        
         paywall = "" if is_admin else get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
         return JSONResponse({"html": html, "paywall": paywall})
         

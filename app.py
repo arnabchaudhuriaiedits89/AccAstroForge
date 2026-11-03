@@ -1876,8 +1876,6 @@ async def api_horoscope(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Guest/Member", "service": "Daily Horoscope", "details": f"Sign: {raw_sign}", "payment_status": "Free"})
     
     today_str = datetime.datetime.now().strftime("%B %d, %Y")
-    
-    # Deterministic dynamic generation based on date and sign
     seed_val = sum(ord(c) for c in (raw_sign + today_str))
     
     lucky_numbers = [3, 7, 9, 11, 14, 21, 27, 33, 45, 88]
@@ -1983,7 +1981,7 @@ async def api_matching(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Vedic Kundali Matching", "details": "Guna Milan Ashtakoota Analysis", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹49)"})
     
     seed = sum(ord(c) for c in (b + g).lower())
-    guna_score = 18 + (seed % 15)  # 18 to 32 out of 36
+    guna_score = 18 + (seed % 15)
     match_pct = int((guna_score / 36.0) * 100)
     
     varna = 1 if seed % 2 == 0 else 0.5
@@ -2197,7 +2195,6 @@ async def api_numerology(request: Request):
     profile = calculate_astrological_profile(name, dob)
     psychic_num = profile["psychic_num"]
     
-    # Calculate destiny number from entire date
     destiny_sum = sum(int(d) for d in dob if d.isdigit())
     while destiny_sum > 9:
         destiny_sum = sum(int(d) for d in str(destiny_sum))

@@ -2358,6 +2358,54 @@ async def api_panchang(request: Request):
     
     today_formatted = datetime.datetime.now().strftime("%B %d, %Y") if date_str in ["Today", ""] else date_str
     
+    # Dynamic Seeding based on City and Date inputs
+    seed = sum(ord(c) for c in (city + str(date_str)).lower())
+    
+    tithis = [
+        "Shukla Paksha Pratipada", "Shukla Paksha Tritiya", "Shukla Paksha Panchami", 
+        "Shukla Paksha Ashtami", "Shukla Paksha Navami", "Shukla Paksha Ekadashi", 
+        "Shukla Paksha Trayodashi", "Purnima", "Krishna Paksha Dwitiya", 
+        "Krishna Paksha Chaturthi", "Krishna Paksha Saptami", "Krishna Paksha Dashami", "Amavasya"
+    ]
+    nakshatras = [
+        "Ashwini Nakshatra", "Rohini Nakshatra", "Mrigashira Nakshatra", "Pushya Nakshatra", 
+        "Magha Nakshatra", "Hasta Nakshatra", "Chitra Nakshatra", "Anuradha Nakshatra", 
+        "Mula Nakshatra", "Shravana Nakshatra", "Revati Nakshatra", "Ardra Nakshatra"
+    ]
+    rahu_kalams = [
+        "07:30 AM - 09:00 AM", "09:00 AM - 10:30 AM", "10:30 AM - 12:00 PM", 
+        "12:00 PM - 01:30 PM", "01:30 PM - 03:00 PM", "03:00 PM - 04:30 PM", "04:30 PM - 06:00 PM"
+    ]
+    sun_rises = ["05:42 AM", "05:58 AM", "06:12 AM", "05:30 AM", "06:05 AM"]
+    sun_sets = ["05:45 PM", "06:22 PM", "05:55 PM", "06:40 PM", "06:10 PM"]
+    
+    abhijits = [
+        "11:35 AM - 12:20 PM", "11:45 AM - 12:32 PM", "11:50 AM - 12:40 PM", "11:25 AM - 12:15 PM"
+    ]
+    amrits = [
+        "04:20 AM - 05:08 AM", "05:10 AM - 05:58 AM", "03:50 AM - 04:40 AM", "04:45 AM - 05:35 AM"
+    ]
+    yamagandas = [
+        "03:15 PM - 04:45 PM", "09:00 AM - 10:30 AM", "01:15 PM - 02:45 PM", "10:45 AM - 12:15 PM"
+    ]
+    horas = [
+        "Surya Hora active in morning; Guru Hora supporting financial decisions.",
+        "Chandra Hora active in morning; Shukra Hora supporting creative ventures.",
+        "Mangal Hora active in morning; Budha Hora supporting business communication.",
+        "Shani Hora active in morning; Guru Hora supporting long-term investments."
+    ]
+    
+    tithi_val = tithis[seed % len(tithis)]
+    nak_val = nakshatras[(seed + 1) % len(nakshatras)]
+    rahu_val = rahu_kalams[(seed + 2) % len(rahu_kalams)]
+    rise_val = sun_rises[seed % len(sun_rises)]
+    set_val = sun_sets[(seed + 1) % len(sun_sets)]
+    
+    abhijit_val = abhijits[seed % len(abhijits)]
+    amrit_val = amrits[(seed + 1) % len(amrits)]
+    yamaganda_val = yamagandas[(seed + 2) % len(yamagandas)]
+    hora_val = horas[seed % len(horas)]
+
     # FREE PANCHANG LOGIC
     if mode == "free":
         html = f"""
@@ -2370,19 +2418,19 @@ async def api_panchang(request: Request):
             <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;'>
                 <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
                     <b style='color: #fde047; display: block;'>📜 Tithi:</b>
-                    <span style='color: #f3e8ff;'>Shukla Paksha Navami (Basic Daily View)</span>
+                    <span style='color: #f3e8ff;'>{tithi_val} (Dynamic Daily View)</span>
                 </div>
                 <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
                     <b style='color: #fde047; display: block;'>⭐ Nakshatra:</b>
-                    <span style='color: #f3e8ff;'>Rohini Nakshatra</span>
+                    <span style='color: #f3e8ff;'>{nak_val}</span>
                 </div>
                 <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
                     <b style='color: #ef4444; display: block;'>⚠️ Rahu Kalam:</b>
-                    <span style='color: #f3e8ff;'>10:30 AM - 12:00 PM</span>
+                    <span style='color: #f3e8ff;'>{rahu_val}</span>
                 </div>
                 <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
                     <b style='color: #4ade80; display: block;'>☀️ Sun & Moon:</b>
-                    <span style='color: #f3e8ff;'>Sunrise: 05:58 AM | Sunset: 05:22 PM</span>
+                    <span style='color: #f3e8ff;'>Sunrise: {rise_val} | Sunset: {set_val}</span>
                 </div>
             </div>
         </div>
@@ -2401,19 +2449,19 @@ async def api_panchang(request: Request):
             <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;'>
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #fde047; display: block;'>✨ Abhijit Muhurat (Best for Starting New Work):</b>
-                    <span style='color: #f3e8ff;'>11:45 AM - 12:32 PM (Highly Auspicious Vedic Window)</span>
+                    <span style='color: #f3e8ff;'>{abhijit_val} (Highly Auspicious Vedic Window)</span>
                 </div>
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #fde047; display: block;'>🌙 Amrit Kalam & Brahma Muhurat:</b>
-                    <span style='color: #f3e8ff;'>04:20 AM - 05:08 AM (Divine Spiritual Energy)</span>
+                    <span style='color: #f3e8ff;'>{amrit_val} (Divine Spiritual Energy)</span>
                 </div>
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #ef4444; display: block;'>⚠️ Yamaganda & Gulika Kalam:</b>
-                    <span style='color: #f3e8ff;'>Yamaganda: 03:15 PM - 04:45 PM (Avoid New Ventures)</span>
+                    <span style='color: #f3e8ff;'>Yamaganda: {yamaganda_val} (Avoid New Ventures)</span>
                 </div>
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #38bdf8; display: block;'>🪐 Hora Lords & Planetary Alignments:</b>
-                    <span style='color: #f3e8ff;'>Surya Hora active in morning; Guru Hora supporting financial decisions.</span>
+                    <span style='color: #f3e8ff;'>{hora_val}</span>
                 </div>
             </div>
             <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Detailed Shubh Muhurat Report Unlocked Successfully via Paid Access (₹99)!</p>

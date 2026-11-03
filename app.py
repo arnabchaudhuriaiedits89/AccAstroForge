@@ -245,55 +245,6 @@ def calculate_astrological_profile(name, dob_str):
             "dasha": "Favorable Planetary Dasha Cycle active."
         }
 
-def calculate_jagannath_hora_engine(name, dob_str, tob_str="12:00", pob_str="Kolkata"):
-    profile = calculate_astrological_profile(name, dob_str)
-    z_idx = ZODIAC_SIGNS.index(profile["zodiac"]) if profile["zodiac"] in ZODIAC_SIGNS else 0
-    
-    shodashvarga_charts = {
-        "D1 (Lagna Chart)": profile["zodiac"],
-        "D2 (Hora - Wealth)": ZODIAC_SIGNS[(z_idx + 1) % 12],
-        "D3 (Drekkana - Siblings/Courage)": ZODIAC_SIGNS[(z_idx + 4) % 12],
-        "D4 (Chaturthamsha - Assets/Home)": ZODIAC_SIGNS[(z_idx + 3) % 12],
-        "D7 (Saptamsha - Children/Progeny)": ZODIAC_SIGNS[(z_idx + 6) % 12],
-        "D9 (Navamsha - Marriage/Dharma)": ZODIAC_SIGNS[(z_idx + 8) % 12],
-        "D10 (Dashamsha - Profession/Karma)": ZODIAC_SIGNS[(z_idx + 9) % 12],
-        "D12 (Dwadasamsha - Parents/Ancestry)": ZODIAC_SIGNS[(z_idx + 11) % 12],
-        "D16 (Shodasamsha - Vehicles/Comforts)": ZODIAC_SIGNS[z_idx % 12],
-        "D20 (Vimsamsha - Spiritual Progress)": ZODIAC_SIGNS[(z_idx + 7) % 12],
-        "D24 (Chaturvimsamsha - Higher Education)": ZODIAC_SIGNS[(z_idx + 5) % 12],
-        "D27 (Saptavimsamsha - Strengths/Weakness)": ZODIAC_SIGNS[(z_idx + 2) % 12],
-        "D30 (Trimsamsha - Misfortunes/Arishta)": ZODIAC_SIGNS[(z_idx + 10) % 12],
-        "D40 (Khavedamsha - Auspicious Events)": ZODIAC_SIGNS[(z_idx + 3) % 12],
-        "D45 (Akshavedamsha - Character/Integrity)": ZODIAC_SIGNS[(z_idx + 6) % 12],
-        "D60 (Shastiamsha - Karma/Past Life Root)": ZODIAC_SIGNS[(z_idx + 1) % 12],
-    }
-
-    dashas = {
-        "Vimshottari Dasha": profile["dasha"],
-        "Yogini Dasha": f"Active Yogini: {['Mangala (Moon)', 'Pingala (Sun)', 'Dhanya (Jupiter)', 'Bhramari (Mars)', 'Bhadrika (Mercury)', 'Ulka (Saturn)', 'Siddha (Venus)', 'Sankata (Rahu)'][z_idx % 8]}",
-        "Chara Dasha (Jaimini)": f"Current Rashi Dasha: {profile['zodiac']}",
-        "Ashtottari Dasha": f"Active Planet: {['Sun', 'Moon', 'Mars', 'Mercury', 'Saturn', 'Jupiter', 'Rahu', 'Venus'][z_idx % 8]}"
-    }
-
-    ashtakavarga = {
-        "Sun": random.randint(3, 6),
-        "Moon": random.randint(3, 6),
-        "Mars": random.randint(2, 5),
-        "Mercury": random.randint(4, 7),
-        "Jupiter": random.randint(4, 7),
-        "Venus": random.randint(4, 6),
-        "Saturn": random.randint(2, 5),
-        "Sarvashtakavarga Total": random.randint(28, 38)
-    }
-
-    return {
-        "profile": profile,
-        "shodashvarga": shodashvarga_charts,
-        "dashas": dashas,
-        "ashtakavarga": ashtakavarga,
-        "transit_overlay": f"Jupiter in {ZODIAC_SIGNS[(z_idx+2)%12]} (Favorable), Saturn in {ZODIAC_SIGNS[(z_idx+10)%12]} (Karma Assessment)."
-    }
-
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 except Exception:
@@ -699,7 +650,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TABS BAR WITH UPDATED NAMES FOR PDF TABS -->
+        <!-- TABS BAR -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-hub')">🌟 MY COSMIC HUB</button>
@@ -881,7 +832,7 @@ HTML_TEMPLATE = """
             <div id="transit-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- LIFE PREDICTION / LIVE PREDICTION PDF -->
+        <!-- LIFE PREDICTION -->
         <div id="tab-life" class="tab-content">
             <h3>🌌 Vedic Astrology & Deep Life Forecast PDF</h3>
             <div class="row">
@@ -906,7 +857,7 @@ HTML_TEMPLATE = """
             <div id="horo-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- MATCHING / MATCHING PDF -->
+        <!-- MATCHING -->
         <div id="tab-matching" class="tab-content">
             <h3>💍 Vedic Compatibility & Guna Milan PDF</h3>
             <div class="row">
@@ -921,14 +872,21 @@ HTML_TEMPLATE = """
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- GEMSTONES -->
+        <!-- GEMSTONES (FULLY ACTIVATED & DYNAMIC) -->
         <div id="tab-gemstones" class="tab-content">
-            <h3>🧿 Lucky Gemstones & Cosmic Remedies</h3>
+            <h3>💎 Lucky Gemstones & Cosmic Remedies</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Enter your birth details or select your zodiac sign to calculate your precise primary life gemstone (Lagna Stone) and fortune crystal with complete wearing rituals.</p>
             <div class="row">
+                <input type="text" id="gem-name" placeholder="Full Name (e.g. Rajesh Sharma)">
                 <input type="date" id="gem-dob">
-                <input type="text" id="gem-zodiac" placeholder="Zodiac Sign">
             </div>
-            <button class="primary-btn" onclick="submitGemstone()">💎 Find My Gemstone (₹51)</button>
+            <div class="row">
+                <select id="gem-zodiac">
+                    ZODIAC_OPTIONS_PLACEHOLDER
+                </select>
+                <input type="text" id="gem-pob" placeholder="Place of Birth (e.g. Kolkata)">
+            </div>
+            <button class="primary-btn" onclick="submitGemstone()">💎 Calculate Precise Lucky Gemstone & Rituals (₹51)</button>
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -1068,7 +1026,7 @@ HTML_TEMPLATE = """
                 let savedT = localStorage.getItem('hub_tob') || '';
                 let savedP = localStorage.getItem('hub_pob') || '';
 
-                ['hub-name', 'jh-name', 'exp-name', 'dasha-name', 'transit-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
+                ['hub-name', 'jh-name', 'exp-name', 'dasha-name', 'transit-name', 'life-name', 'k-name', 'num-name', 'vastu-name', 'gem-name'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && !el.value) el.value = savedN;
                 });
@@ -1080,7 +1038,7 @@ HTML_TEMPLATE = """
                     let el = document.getElementById(id);
                     if(el && !el.value && savedT) el.value = savedT;
                 });
-                ['hub-pob', 'jh-pob', 'k-pob', 'p-city', 'vastu-city'].forEach(id => {
+                ['hub-pob', 'jh-pob', 'k-pob', 'p-city', 'vastu-city', 'gem-pob'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && !el.value && savedP) el.value = savedP;
                 });
@@ -1318,7 +1276,7 @@ HTML_TEMPLATE = """
                 localStorage.setItem('hub_tob', tob);
                 localStorage.setItem('hub_pob', pob);
                 
-                ['hub-name', 'jh-name', 'exp-name', 'dasha-name', 'transit-name', 'life-name', 'k-name', 'num-name', 'vastu-name'].forEach(id => {
+                ['hub-name', 'jh-name', 'exp-name', 'dasha-name', 'transit-name', 'life-name', 'k-name', 'num-name', 'vastu-name', 'gem-name'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el) el.value = name;
                 });
@@ -1326,11 +1284,11 @@ HTML_TEMPLATE = """
                     let el = document.getElementById(id);
                     if(el && dob) el.value = dob;
                 });
-                ['hub-tob', 'k-tob', 'life-tob'].forEach(id => {
+                ['hub-tob', 'jh-tob', 'k-tob', 'life-tob'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && tob) el.value = tob;
                 });
-                ['hub-pob', 'jh-pob', 'k-pob', 'p-city', 'vastu-city'].forEach(id => {
+                ['hub-pob', 'jh-pob', 'k-pob', 'p-city', 'vastu-city', 'gem-pob'].forEach(id => {
                     let el = document.getElementById(id);
                     if(el && pob) el.value = pob;
                 });
@@ -1432,11 +1390,20 @@ HTML_TEMPLATE = """
         }
 
         async function submitGemstone() {
-            let zodiac = document.getElementById('gem-zodiac').value || 'Aries';
+            let name = document.getElementById('gem-name').value || localStorage.getItem('hub_name') || 'User';
+            let dob = document.getElementById('gem-dob').value || localStorage.getItem('hub_dob') || '2000-01-01';
+            let zodiac = document.getElementById('gem-zodiac').value || 'Aries (Mesha)';
+            let pob = document.getElementById('gem-pob').value || localStorage.getItem('hub_pob') || 'Kolkata';
             showMagicLoader(async () => {
-                let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({zodiac, is_admin: isAdminUnlocked}) });
-                let data = await res.json();
-                document.getElementById('gem-result').innerHTML = data.teaser + (data.full_report || '') + (data.paywall || '');
+                try {
+                    let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, zodiac, pob, is_admin: isAdminUnlocked}) });
+                    let data = await res.json();
+                    let outputHtml = (data.teaser || '') + (data.full_report || '') + (data.pdf_download_btn || '') + (data.paywall || '');
+                    document.getElementById('gem-result').innerHTML = outputHtml;
+                } catch(err) {
+                    console.log("Gemstone Error:", err);
+                    document.getElementById('gem-result').innerHTML = "<p style='color:#ef4444;'>❌ Processing error. Please try again.</p>";
+                }
             });
         }
 
@@ -2056,59 +2023,83 @@ async def api_matching(request: Request):
 @app.post("/api/gemstone")
 async def api_gemstone(request: Request):
     data = await request.json()
-    z = data.get("zodiac", "Aries").strip() or "Aries"
+    name = data.get("name", "User").strip() or "User"
+    dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
+    raw_zodiac = data.get("zodiac", "Aries (Mesha)").strip() or "Aries (Mesha)"
+    pob = data.get("pob", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Lucky Gemstone Guidance", "details": f"Zodiac: {z}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹51)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹51)"})
     
     gem_map = {
-        "Aries (Mesha)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper / Gold", "finger": "Ring Finger"},
-        "Taurus (Vrishabha)": {"life": "Diamond (Heera) / White Sapphire", "luck": "Emerald (Panna)", "metal": "Silver / White Gold", "finger": "Middle / Small Finger"},
-        "Gemini (Mithuna)": {"life": "Emerald (Panna)", "luck": "Blue Sapphire (Neelam)", "metal": "Bronze / Gold", "finger": "Little Finger"},
-        "Cancer (Karka)": {"life": "Natural Pearl (Moti)", "luck": "Red Coral (Moonga)", "metal": "Pure Silver", "finger": "Little Finger"},
-        "Leo (Simha)": {"life": "Ruby (Manik)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Gold / Copper", "finger": "Ring Finger"},
-        "Virgo (Kanya)": {"life": "Emerald (Panna)", "luck": "Diamond / White Zircon", "metal": "Gold / Panchdhatu", "finger": "Little Finger"},
-        "Libra (Tula)": {"life": "Diamond (Heera) / Opal", "luck": "Blue Sapphire (Neelam)", "metal": "Silver / Platinum", "finger": "Middle Finger"},
-        "Scorpio (Vrischika)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper", "finger": "Ring Finger"},
-        "Sagittarius (Dhanu)": {"life": "Yellow Sapphire (Pukhraj)", "luck": "Ruby (Manik)", "metal": "Yellow Gold", "finger": "Index Finger"},
-        "Capricorn (Makara)": {"life": "Blue Sapphire (Neelam)", "luck": "Emerald (Panna)", "metal": "Steel / Silver", "finger": "Middle Finger"},
-        "Aquarius (Kumbha)": {"life": "Blue Sapphire (Neelam)", "luck": "Diamond / Opal", "metal": "Silver / Iron", "finger": "Middle Finger"},
-        "Pisces (Meena)": {"life": "Yellow Sapphire (Pukhraj)", "luck": "Red Coral (Moonga)", "metal": "Yellow Gold", "finger": "Index Finger"}
+        "Aries (Mesha)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper / Gold", "finger": "Ring Finger", "planet": "Mars (Mangal)", "day": "Tuesday (Morning)"},
+        "Taurus (Vrishabha)": {"life": "Diamond (Heera) / White Sapphire", "luck": "Emerald (Panna)", "metal": "Silver / White Gold", "finger": "Middle / Small Finger", "planet": "Venus (Shukra)", "day": "Friday (Morning)"},
+        "Gemini (Mithuna)": {"life": "Emerald (Panna)", "luck": "Blue Sapphire (Neelam)", "metal": "Bronze / Gold", "finger": "Little Finger", "planet": "Mercury (Budha)", "day": "Wednesday (Morning)"},
+        "Cancer (Karka)": {"life": "Natural Pearl (Moti)", "luck": "Red Coral (Moonga)", "metal": "Pure Silver", "finger": "Little Finger", "planet": "Moon (Chandra)", "day": "Monday (Evening)"},
+        "Leo (Simha)": {"life": "Ruby (Manik)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Gold / Copper", "finger": "Ring Finger", "planet": "Sun (Surya)", "day": "Sunday (Morning)"},
+        "Virgo (Kanya)": {"life": "Emerald (Panna)", "luck": "Diamond / White Zircon", "metal": "Gold / Panchdhatu", "finger": "Little Finger", "planet": "Mercury (Budha)", "day": "Wednesday (Morning)"},
+        "Libra (Tula)": {"life": "Diamond (Heera) / Opal", "luck": "Blue Sapphire (Neelam)", "metal": "Silver / Platinum", "finger": "Middle Finger", "planet": "Venus (Shukra)", "day": "Friday (Morning)"},
+        "Scorpio (Vrischika)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper", "finger": "Ring Finger", "planet": "Mars (Mangal)", "day": "Tuesday (Morning)"},
+        "Sagittarius (Dhanu)": {"life": "Yellow Sapphire (Pukhraj)", "luck": "Ruby (Manik)", "metal": "Yellow Gold", "finger": "Index Finger", "planet": "Jupiter (Guru)", "day": "Thursday (Morning)"},
+        "Capricorn (Makara)": {"life": "Blue Sapphire (Neelam)", "luck": "Emerald (Panna)", "metal": "Steel / Silver", "finger": "Middle Finger", "planet": "Saturn (Shani)", "day": "Saturday (Evening)"},
+        "Aquarius (Kumbha)": {"life": "Blue Sapphire (Neelam)", "luck": "Diamond / Opal", "metal": "Silver / Iron", "finger": "Middle Finger", "planet": "Saturn (Shani)", "day": "Saturday (Evening)"},
+        "Pisces (Meena)": {"life": "Yellow Sapphire (Pukhraj)", "luck": "Red Coral (Moonga)", "metal": "Yellow Gold", "finger": "Index Finger", "planet": "Jupiter (Guru)", "day": "Thursday (Morning)"}
     }
     
-    info = gem_map.get(z, gem_map["Aries (Mesha)"])
+    info = gem_map.get(raw_zodiac, gem_map["Aries (Mesha)"])
+    
+    filename = f"Gemstone_Report_{name.replace(' ', '_')}.pdf"
+    generate_pdf_report(
+        filename,
+        f"Vedic Gemstone & Remedial Report - {name}",
+        [
+            f"Client Name: {name} | DOB: {dob} | POB: {pob}",
+            f"Zodiac / Ascendant: {raw_zodiac}",
+            f"Primary Life Stone (Lagna Ratna): {info['life']}",
+            f"Fortune & Wealth Stone (Bhagya Ratna): {info['luck']}",
+            f"Ruling Planetary Lord: {info['planet']}",
+            f"Recommended Metal: {info['metal']} | Wearing Finger: {info['finger']}",
+            f"Auspicious Wearing Day: {info['day']}",
+            "Ritual Instructions: Cleanse the gemstone in Gangajal and raw cow milk, energize with planetary mantras during Shukla Paksha, and wear with devotion."
+        ]
+    )
+    
+    pdf_btn_html = f"""<div style='margin-top:15px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:12px 24px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; box-shadow: 0 4px 15px rgba(16,185,129,0.4);'>📥 Download Gemstone & Rituals PDF Report</a></div>"""
     
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 20px; border-radius: 14px; box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); margin-top: 15px;'>
-        <h4 style='color:#fde047; margin-top:0;'>🧿 Lucky Gemstone & Remedial Guide for {z}</h4>
-        <div style='display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:10px;'>
-            <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px;'>
-                <span style='color:#f3e8ff; font-size:0.8rem; display:block;'>Primary Life Stone (Lagna Gem)</span>
-                <b style='color:#4ade80; font-size:1.1rem;'>{info['life']}</b>
+        <h4 style='color:#fde047; margin-top:0;'>💎 Dynamic Gemstone Analysis for {name.upper()} ({raw_zodiac})</h4>
+        <div style='display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:12px;'>
+            <div style='background:rgba(124,58,237,0.25); padding:12px; border-radius:10px; border:1px solid rgba(244,114,182,0.3);'>
+                <span style='color:#f3e8ff; font-size:0.8rem; display:block;'>Primary Life Stone (Lagna Ratna)</span>
+                <b style='color:#4ade80; font-size:1.15rem;'>{info['life']}</b>
             </div>
-            <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px;'>
-                <span style='color:#f3e8ff; font-size:0.8rem; display:block;'>Fortune & Wealth Gem (Bhagya Gem)</span>
-                <b style='color:#fde047; font-size:1.1rem;'>{info['luck']}</b>
+            <div style='background:rgba(124,58,237,0.25); padding:12px; border-radius:10px; border:1px solid rgba(244,114,182,0.3);'>
+                <span style='color:#f3e8ff; font-size:0.8rem; display:block;'>Fortune & Wealth Stone (Bhagya Ratna)</span>
+                <b style='color:#fde047; font-size:1.15rem;'>{info['luck']}</b>
             </div>
         </div>
+        <p style='color:#f3e8ff; margin-top:12px;'><b>Ruling Planet:</b> {info['planet']} | <b>Auspicious Day:</b> {info['day']}</p>
     </div>
     """
     
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
-        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>💎 COMPLETE GEMSTONE WEARING RITUALS & METALS FOR {z.upper()}</h4>
-        <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem;'>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🧿 COMPLETE GEMSTONES, METALS & CONSECRATION RITUALS FOR {name.upper()}</h4>
+        <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem; margin-top:10px;'>
             <li><b>Recommended Metal:</b> {info['metal']}</li>
-            <li><b>Wearing Finger:</b> {info['finger']} on the Right Hand</li>
-            <li><b>Purification Ritual:</b> Dip gemstone ring/pendant in raw unpasteurized milk and Gangajal for 15 minutes before wearing during Shukla Paksha morning hours.</li>
-            <li><b>Consecration Mantra:</b> Chant 108 times the corresponding planet Beeja Mantra prior to wearing.</li>
+            <li><b>Wearing Finger:</b> {info['finger']} of the right hand</li>
+            <li><b>Purification Protocol:</b> Submerge the gemstone ring or pendant in fresh Gangajal and raw unpasteurized cow milk for 15 minutes to cleanse all negative energies prior to wearing.</li>
+            <li><b>Consecration & Mantra:</b> Wear during {info['day']} while chanting the respective planetary Beeja mantra 108 times with complete focus and devotion.</li>
         </ul>
-        <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Complete Gemstone Guide Unlocked Successfully via Admin Access!</p>
+        <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Complete Gemstone Report & PDF Unlocked Successfully via Admin Access!</p>
     </div>
     """ if is_admin else ""
     
-    paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 51, "User")
-    return JSONResponse({"teaser": teaser, "full_report": full_report, "paywall": paywall})
+    paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 51, name)
+    download_btn = pdf_btn_html if is_admin else ""
+    
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/vastu")
 async def api_vastu(request: Request):
@@ -2156,7 +2147,7 @@ async def api_kundali_pdf(request: Request):
     data = await request.json()
     name = data.get("name", "User")
     dob = data.get("dob", "2000-01-01")
-    tob = data.get("tob", "10:00")
+    tob = data.get("tob", "12:00")
     pob = data.get("pob", "Kolkata")
     is_admin = data.get("is_admin", False)
     

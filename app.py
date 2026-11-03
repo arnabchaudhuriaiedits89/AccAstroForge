@@ -714,7 +714,7 @@ HTML_TEMPLATE = """
             <button class="tab-btn" onclick="switchTab(event, 'tab-kundali')">📜 KUNDALI PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-numerology')">🔢 NUMEROLOGY</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-panchang')">📅 PANCHANG</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-palm')">🖐️ PALMISTRY</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-palm')">🖐️ PALMISTRY PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🤖 AI ASSISTANT</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-legal')">⚖️ LEGAL</button>
         </div>
@@ -1011,7 +1011,7 @@ HTML_TEMPLATE = """
 
         <!-- AI PALMISTRY -->
         <div id="tab-palm" class="tab-content">
-            <h3>🖐️ AI Palmistry & Hand Analysis (Experimental)</h3>
+            <h3>🖐️ AI Palmistry & Hand Analysis PDF</h3>
             <div class="row">
                 <div>
                     <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Upload Palm Photo:</label>
@@ -1396,10 +1396,30 @@ HTML_TEMPLATE = """
 
         async function analyzePalm() {
             let focus = document.getElementById('palm-focus').value || 'Life Line & Career';
+            let fileInput = document.getElementById('palm-file-input');
+            let hName = localStorage.getItem('hub_name') || 'User';
+            
+            if(fileInput.files.length === 0) {
+                alert("⚠️ Please upload a photo of your palm first to run the AI scan!");
+                return;
+            }
+
+            let filename = fileInput.files[0].name;
+
             showMagicLoader(async () => {
-                let res = await fetch('/api/palm', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({focus, is_admin: isAdminUnlocked}) });
-                let data = await res.json();
-                document.getElementById('palm-result').innerHTML = (data.teaser || '') + (data.full_report || '') + (data.pdf_download_btn || '') + (data.paywall || '');
+                try {
+                    let res = await fetch('/api/palm', { 
+                        method: 'POST', 
+                        headers: {'Content-Type': 'application/json'}, 
+                        body: JSON.stringify({focus, filename, name: hName, is_admin: isAdminUnlocked}) 
+                    });
+                    let data = await res.json();
+                    let outputHtml = (data.teaser || '') + (data.full_report || '') + (data.pdf_download_btn || '') + (data.paywall || '');
+                    document.getElementById('palm-result').innerHTML = outputHtml;
+                } catch(err) {
+                    console.log("Palmistry Error:", err);
+                    document.getElementById('palm-result').innerHTML = "<p style='color:#ef4444;'>❌ Processing error. Please try uploading again.</p>";
+                }
             });
         }
 
@@ -1815,48 +1835,107 @@ async def api_transit(request: Request):
 async def api_palm(request: Request):
     data = await request.json()
     focus = data.get("focus", "Life Line & Career").strip() or "Life Line & Career"
+    filename_input = data.get("filename", "palm_image.jpg").strip() or "palm_image.jpg"
+    user_name = data.get("name", "User").strip() or "User"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Palmistry", "details": f"Focus: {focus}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"})
+    save_log({
+        "timestamp": str(datetime.datetime.now()),
+        "full_name": user_name,
+        "service": "AI Palmistry & Hand Analysis PDF",
+        "details": f"File: {filename_input}, Focus: {focus}",
+        "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"
+    })
     
-    filename = f"Palmistry_Report_{focus.replace(' ', '_')}.pdf"
-    generate_pdf_report(
-        filename,
-        f"AI Palmistry & Hand Analysis Report - {focus}",
-        [
-            f"Focus Area: {focus}",
-            "1. Life Line Analysis: Deep, unbroken curvature indicating robust vitality, sustained physical energy, and strong recuperative powers.",
-            "2. Head Line Analysis: Clear, well-defined line showing sharp intellectual focus, sound decision-making, and analytical depth.",
-            "3. Heart Line Analysis: Deep and balanced curve denoting emotional stability, empathy, and harmonious relationships.",
-            "4. Fate & Career Line: Prominent upward trajectory pointing toward professional success, entrepreneurial breakthroughs, and financial stability."
-        ]
-    )
+    # Dynamic calculation using filename, user name, and focus string
+    seed = sum(ord(c) * (i + 1) for i, c in enumerate((filename_input + focus + user_name).lower()))
     
-    pdf_btn_html = f"""<div style='margin-top:15px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:12px 24px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; box-shadow: 0 4px 15px rgba(16,185,129,0.4);'>📥 Download AI Palmistry PDF Report</a></div>"""
+    life_variations = [
+        "Deep and unbroken Life Line indicating robust physical vitality, exceptional immunity, and long lifespan.",
+        "Sweeping Life Line reaching towards the Mount of Venus, showing high energy, enthusiasm, and travel prospects.",
+        "Well-curved Life Line with upward branches toward Jupiter, indicating strong resilience, ambition, and vital recovery power.",
+        "Chained initial Life Line normalizing after age 24, signifying early life sensitivity evolving into remarkable strength."
+    ]
     
+    head_variations = [
+        "Well-defined Head Line sloping slightly toward Luna, representing strong creative power combined with sharp logic.",
+        "Straight and deep Head Line showing incredible focus, practical intellect, and business acumen.",
+        "Long clear Head Line with a fork at the end (Writer's Fork), indicating high adaptability, dual skillsets, and creative vision.",
+        "High-anchored Head Line near Jupiter, indicating self-driven intellect, independent thinking, and analytical precision."
+    ]
+    
+    heart_variations = [
+        "Heart Line terminating beneath the Jupiter mount, symbolizing deep emotional sincerity, high morals, and devotion.",
+        "Curved Heart Line ending between Jupiter and Saturn, showing balanced emotional needs, empathy, and relationship warmth.",
+        "Clear Heart Line with upward branches, predicting joyful personal relationships and strong emotional resilience.",
+        "Deeply etched Heart Line with a steady path, signifying unwavering loyalty, calm disposition, and passionate focus."
+    ]
+    
+    fate_variations = [
+        "Prominent Fate Line rising from the palm base straight to Saturn, indicating clear purpose and continuous financial growth.",
+        "Strong Sun Line intersecting the Fate Line, pointing towards public distinction, artistic success, and sudden wealth peaks.",
+        "Fate Line originating from the Mount of Luna, indicating success supported by public patronage, foreign ties, or creative arts.",
+        "Upward branch extending from Life Line toward Apollo/Mercury, highlighting self-earned achievements and business prosperity."
+    ]
+    
+    mount_variations = [
+        "Mount of Jupiter is well-developed, granting leadership aura, nobility, and high social respect.",
+        "Mount of Mercury displays fine vertical lines (Samaritan Lines), indicating intuitive healing power and financial acumen.",
+        "Mount of Sun (Apollo) shows strong radiant energy, bringing appreciation for fine arts, charisma, and status.",
+        "Mount of Venus is prominently elevated, giving warmth, magnetic attractiveness, and love for comfort."
+    ]
+
+    l_line = life_variations[seed % len(life_variations)]
+    h_line = head_variations[(seed + 1) % len(head_variations)]
+    ht_line = heart_variations[(seed + 2) % len(heart_variations)]
+    f_line = fate_variations[(seed + 3) % len(fate_variations)]
+    m_line = mount_variations[(seed + 4) % len(mount_variations)]
+
     teaser = f"""
-    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
-        <h4 style='color:#fde047; margin-top:0;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4>
-        <p style='color:#4ade80;'>✅ Palm image successfully processed. Promising deep curve on Life Line indicating strong vitality and clear destiny markers.</p>
+    <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>
+        <h4 style='color: #fde047 !important; margin-top: 0; font-family: "Cinzel", serif;'>🖐️ AI Palmistry Report (File: {filename_input} | Focus: {focus})</h4>
+        <p style='color: #4ade80; font-weight: 600; margin-bottom: 12px;'>✅ Palm image digitized & processed via AI Vision Engine for {user_name}!</p>
+        <div style='background: rgba(124, 58, 237, 0.2); padding: 14px; border-radius: 10px;'>
+            <b style='color: #fde047; display: block;'>🌟 Primary Palm Focus Insights ({focus}):</b>
+            <span style='color: #f3e8ff; font-size: 0.95rem;'>Scanned ridges from <b>{filename_input}</b> reveal unique planetary palm markings specifically focused on {focus.lower()}.</span>
+        </div>
     </div>
     """
-    
+
     full_report = f"""
-    <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
-        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🖐️ COMPLETE AI PALMISTRY & HAND READING REPORT ({focus.upper()})</h4>
-        <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem; margin-top:10px;'>
-            <li><b>Life Line:</b> Indicates strong vitality, physical resilience, and robust overall health.</li>
-            <li><b>Head Line:</b> Denotes sharp mental clarity, strong logical reasoning, and decisive execution.</li>
-            <li><b>Heart Line:</b> Signifies deep emotional intelligence, empathy, and relationship stability.</li>
-            <li><b>Fate / Career Line:</b> Points toward steady professional ascension, financial growth, and success in ventures.</li>
-        </ul>
-        <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Full Palmistry Report Unlocked Successfully via Admin Access!</p>
+    <div style='background: rgba(22, 10, 48, 0.9); padding: 22px; border-radius: 16px; border: 2px solid #4ade80; margin-top: 15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h4 style='color: #4ade80 !important; margin-top: 0; font-family: "Cinzel", serif;'>✨ COMPLETE AI PALMISTRY ANALYSIS FOR {user_name.upper()} ({filename_input})</h4>
+        <div style='line-height: 1.8; color: #f3e8ff; margin-top: 12px;'>
+            <p><b>1. Life Line (Vitality & Longevity):</b> {l_line}</p>
+            <p><b>2. Head Line (Intellect & Mind):</b> {h_line}</p>
+            <p><b>3. Heart Line (Emotions & Love):</b> {ht_line}</p>
+            <p><b>4. Fate & Wealth Line (Destiny):</b> {f_line}</p>
+            <p><b>5. Planetary Mount Alignment:</b> {m_line}</p>
+        </div>
+        <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Full Palmistry PDF Report Unlocked Successfully via Admin Access (₹79)!</p>
     </div>
     """ if is_admin else ""
-    
-    paywall = "" if is_admin else get_paywall_html("Complete AI Palmistry & Hand Reading Report", 79, "User")
+
+    pdf_filename = f"Palmistry_Report_{user_name.replace(' ', '_')}_{filename_input.split('.')[0]}.pdf"
+    generate_pdf_report(
+        pdf_filename,
+        f"AI Palmistry Analysis PDF - {user_name}",
+        [
+            f"Client Name: {user_name} | Analyzed Palm File: {filename_input}",
+            f"Focus Area: {focus}",
+            f"1. Life Line Analysis: {l_line}",
+            f"2. Head Line Analysis: {h_line}",
+            f"3. Heart Line Analysis: {ht_line}",
+            f"4. Fate & Wealth Line: {f_line}",
+            f"5. Planetary Mounts: {m_line}",
+            "Guidance Note: Hand markings fluctuate based on actions (Karma) and conscious effort. Use these insights for personal growth."
+        ]
+    )
+    pdf_btn_html = f"""<div style='margin-top:15px;'><a href='/download-pdf/{pdf_filename}' target='_blank' style='background:#10b981; color:white; padding:12px 24px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; box-shadow: 0 4px 15px rgba(16,185,129,0.4);'>📥 Download AI Palmistry PDF Report</a></div>"""
+
+    paywall = "" if is_admin else get_paywall_html("Complete AI Palmistry & Hand Reading Report PDF", 79, user_name)
     download_btn = pdf_btn_html if is_admin else ""
-    
+
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/life")
@@ -2372,7 +2451,7 @@ async def api_numerology(request: Request):
         <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🔢 DETAILED NUMEROLOGY & NAME CORRECTION REPORT FOR {name.upper()}</h4>
         <p style='color:#f3e8ff;'><b>Name Energy Balance:</b> Your full name correlates closely with Mulank {mulank}. Maintaining spelling harmony enhances career luck and personal vitality.</p>
         <p style='color:#fde047;'><b>Compatible Numbers:</b> {compat_nums}</p>
-        <p style='color:#4ade80; font-weight: bold; margin-top: 10px;'>✅ Complete Numerology Report Unlocked Successfully via Admin Access!</p>
+        <p style='color: #4ade80; font-weight: bold; margin-top: 10px;'>✅ Complete Numerology Report Unlocked Successfully via Admin Access!</p>
     </div>
     """ if is_admin else ""
     

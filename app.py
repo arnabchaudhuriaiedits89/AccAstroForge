@@ -872,7 +872,7 @@ HTML_TEMPLATE = """
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- GEMSTONES (FULLY DYNAMIC & UPDATED) -->
+        <!-- GEMSTONES -->
         <div id="tab-gemstones" class="tab-content">
             <h3>💎 LUCKY GEMSTONES & COSMIC REMEDIES PDF</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Enter your birth details or select your zodiac sign to calculate your precise primary life gemstone (Lagna Stone) and fortune crystal with complete wearing rituals.</p>
@@ -890,15 +890,16 @@ HTML_TEMPLATE = """
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- VASTU SHASTRA -->
+        <!-- VASTU SHASTRA (EXPANDED PROPERTY OPTIONS & SEPARATE DYNAMIC RULES) -->
         <div id="tab-vastu" class="tab-content">
-            <h3>🏛️ VASTU SHASTRA & COMMERCIAL/HOME PROPERTY ANALYSIS PDF</h3>
+            <h3>🏛️ VASTU SHASTRA & PROPERTY ANALYSIS PDF</h3>
             <div class="row">
                 <input type="text" id="vastu-name" placeholder="Owner / Applicant Name" autocomplete="off">
                 <select id="vastu-property-type">
                     <option value="Residential House / Flat">Residential House / Flat</option>
                     <option value="Commercial Office / Shop">Commercial Office / Shop</option>
-                    <option value="Factory / Warehouse">Factory / Warehouse</option>
+                    <option value="Factory / Manufacturing Unit">Factory / Manufacturing Unit</option>
+                    <option value="Warehouse / Storage Hub">Warehouse / Storage Hub</option>
                     <option value="Plot / Land">Plot / Land</option>
                 </select>
             </div>
@@ -915,7 +916,7 @@ HTML_TEMPLATE = """
                 </select>
                 <input type="text" id="vastu-city" placeholder="City / Location" autocomplete="off">
             </div>
-            <button class="primary-btn" onclick="submitVastuAnalysis()">🏛️ Generate Vastu Dosha & Remedy Report (₹149)</button>
+            <button class="primary-btn" onclick="submitVastuAnalysis()">🏛️ Generate Property-Specific Vastu Report (₹149)</button>
             <div id="vastu-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -1560,7 +1561,7 @@ async def api_login(request: Request):
         u_name = found_user.get("name", found_user.get("Name", "Member"))
         save_log({"timestamp": str(datetime.datetime.now()), "full_name": u_name, "service": "Member Sign In", "details": f"Email: {email}", "payment_status": "Active Session"})
         return JSONResponse({"success": True, "msg": "<p style='color:#4ade80;'>🎉 Login Successful!</p>"})
-    return JSONResponse({"success": False, "msg": "<p style='color:#ef4444;'>❌ Account not found. Please register first.</p>"})
+    return JSONResponse({"success": False, "msg": "<p style='color:#4ade80;'>❌ Account not found. Please register first.</p>"})
 
 @app.post("/api/topup")
 async def api_topup(request: Request):
@@ -2031,7 +2032,6 @@ async def api_gemstone(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
     
-    # FULLY DYNAMIC GEMSTONE ENGINE BASED ON NAME & DOB SEED
     seed = sum(ord(c) for c in (name + dob + raw_zodiac).lower()) if (name or dob or raw_zodiac) else 108
     
     primary_gems = [
@@ -2125,6 +2125,17 @@ async def api_vastu(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
+    # PROPERTY-SPECIFIC DYNAMIC VASTU RULES & ZONAL BREAKDOWN
+    prop_specific_notes = {
+        "Residential House / Flat": "Focus on Master Bedroom in South-West, Kitchen in South-East (Agneya), and Living room in North/East for optimal family health and peace.",
+        "Commercial Office / Shop": "Focus on Owner/Manager cabin in South-West facing North/East, cash locker in North zone (Kubera), and client seating in North-West.",
+        "Factory / Manufacturing Unit": "Heavy machinery placement in South and West zones, raw materials in North-West, finished goods in North-West/North, and heavy electrical transformers in South-East.",
+        "Warehouse / Storage Hub": "Heavy stacking and inventory in South and West quadrants, dispatch bays towards North-West, and administrative desk in North/East.",
+        "Plot / Land": "Ensure regular shape (square or rectangular) with North-East extension (Ishan vriddhi), proper slope towards North-East, and compound wall higher in South-West."
+    }
+    
+    base_prop_note = prop_specific_notes.get(p_type, "Ensure balanced elemental distribution across all quadrants.")
+    
     remedy_map = {
         "North Facing": "North is governed by Kubera (Wealth). Ensure the entrance is clean and unobstructed. Keep water fountains or underground water tanks in the North-East Ishan corner for maximum financial flow.",
         "East Facing": "East is governed by Surya (Health & Vitality). Avoid heavy structural blocking in the East. Large windows and open balconies here invite positive solar energy.",
@@ -2145,8 +2156,8 @@ async def api_vastu(request: Request):
         [
             f"Client Name: {name} | Property Type: {p_type}",
             f"Direction Facing: {facing} | Location: {city}",
-            f"1. Vastu Purusha Mandala Analysis: The {p_type} facing {facing} in {city} shows specific directional planetary strengths.",
-            f"2. Directional Energy Insights: {specific_remedy}",
+            f"1. Property-Specific Vastu Blueprint ({p_type}): {base_prop_note}",
+            f"2. Directional Energy Insights ({facing}): {specific_remedy}",
             "3. Corrective Remedies & Enhancements: Place Vastu copper pyramids in afflicted corners, install brass helix corrections for extension/cut zones, and maintain bright lighting in the entrance."
         ]
     )
@@ -2155,9 +2166,10 @@ async def api_vastu(request: Request):
     
     teaser = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
-        <h4 style='color:#fde047; margin-top:0;'>🏛️ Vastu Analysis Preview for {name.upper()} ({p_type})</h4>
+        <h4 style='color:#fde047; margin-top:0;'>🏛️ Vastu Analysis Preview for {name.upper()} ({p_type.upper()})</h4>
         <p style='color:#f3e8ff;'><b>Facing Direction:</b> {facing} | <b>Location:</b> {city}</p>
-        <p style='color:#4ade80; font-size:0.92rem; margin-top:6px;'><b>Zonal Insight:</b> {specific_remedy[:120]}...</p>
+        <p style='color:#4ade80; font-size:0.92rem; margin-top:6px;'><b>Property Guideline:</b> {base_prop_note}</p>
+        <p style='color:#38bdf8; font-size:0.92rem; margin-top:4px;'><b>Zonal Insight:</b> {specific_remedy[:120]}...</p>
     </div>
     """
     
@@ -2165,8 +2177,9 @@ async def api_vastu(request: Request):
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
         <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🏛️ COMPREHENSIVE VASTU SHASTRA & PROPERTY ASSESSMENT REPORT FOR {name.upper()}</h4>
         <p style='color: #f3e8ff; line-height: 1.8;'><b>Property:</b> {p_type} | <b>Facing:</b> {facing} | <b>City:</b> {city}</p>
-        <p style='color: #f3e8ff; line-height: 1.8;'><b>Detailed Zonal Breakdown:</b> {specific_remedy}</p>
-        <p style='color: #f3e8ff; line-height: 1.8; margin-top:10px;'><b>Remedial Blueprint:</b> Installing copper pyramids in negative quadrants and keeping the North-East zone illuminated will maximize financial prosperity, health, and family harmony.</p>
+        <p style='color: #f3e8ff; line-height: 1.8; margin-top:8px;'><b>Property-Specific Analysis:</b> {base_prop_note}</p>
+        <p style='color: #f3e8ff; line-height: 1.8; margin-top:8px;'><b>Detailed Zonal Breakdown:</b> {specific_remedy}</p>
+        <p style='color: #f3e8ff; line-height: 1.8; margin-top:10px;'><b>Remedial Blueprint:</b> Installing copper pyramids in negative quadrants and keeping the North-East zone illuminated will maximize financial prosperity, operational efficiency, and family harmony.</p>
         <p style='color: #4ade80; font-weight: bold; margin-top: 10px;'>✅ Full Vastu Report Unlocked Successfully via Admin Access!</p>
     </div>
     """ if is_admin else ""
@@ -2327,7 +2340,7 @@ async def api_ai(request: Request):
     elif any(k in query for k in ["car", "suv", "vehicle", "four-wheeler", "accident", "drive", "ride", "hand rekhas", "road", "collision"]):
         ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra PDF</b> tabs."
     elif any(k in query for k in ["hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "harm", "cricket"]) and any(k in query for k in ["hurt", "injured", "injury", "hit", "bandage", "wound"]):
-        ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones PDF</b> and <b>Life Prediction</b> tabs."
+        ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones PDF</b> and <b style='color:#fde047;'>Life Prediction</b> tabs."
     elif any(k in query for k in ["career", "job", "it sector", "earning", "passion", "profession", "money", "income", "work", "office", "promotion"]):
         ai_reply = f"Hello {name}, evaluating a career transition between passion and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
     elif any(k in query for k in ["marriage", "in-laws", "husband", "wife", "family", "wedding", "partner", "relationship", "love", "groom", "bride"]):

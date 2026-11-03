@@ -1847,49 +1847,60 @@ async def api_palm(request: Request):
         "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"
     })
     
-    # Dynamic calculation using filename, user name, and focus string
-    seed = sum(ord(c) * (i + 1) for i, c in enumerate((filename_input + focus + user_name).lower()))
+    # ---------------------------------------------------------------------
+    # DYNAMIC MULTI-VARIANT SEEDING ALGORITHM FOR PALMISTRY
+    # Calculates unique index values based on filename, user name and focus area
+    # ---------------------------------------------------------------------
+    raw_key = (filename_input + user_name + focus).lower()
+    base_hash = sum(ord(c) * (i + 1) for i, c in enumerate(raw_key))
+    name_hash = sum(ord(c) * (i + 7) for i, c in enumerate(user_name.lower()))
+    file_hash = sum(ord(c) * (i + 13) for i, c in enumerate(filename_input.lower()))
     
     life_variations = [
         "Deep and unbroken Life Line indicating robust physical vitality, exceptional immunity, and long lifespan.",
         "Sweeping Life Line reaching towards the Mount of Venus, showing high energy, enthusiasm, and travel prospects.",
         "Well-curved Life Line with upward branches toward Jupiter, indicating strong resilience, ambition, and vital recovery power.",
-        "Chained initial Life Line normalizing after age 24, signifying early life sensitivity evolving into remarkable strength."
+        "Chained initial Life Line normalizing after age 24, signifying early life sensitivity evolving into remarkable strength.",
+        "Double Life Line (Martian Line) offering extraordinary protective aura, accident resistance, and strong inner endurance."
     ]
     
     head_variations = [
         "Well-defined Head Line sloping slightly toward Luna, representing strong creative power combined with sharp logic.",
         "Straight and deep Head Line showing incredible focus, practical intellect, and business acumen.",
         "Long clear Head Line with a fork at the end (Writer's Fork), indicating high adaptability, dual skillsets, and creative vision.",
-        "High-anchored Head Line near Jupiter, indicating self-driven intellect, independent thinking, and analytical precision."
+        "High-anchored Head Line near Jupiter, indicating self-driven intellect, independent thinking, and analytical precision.",
+        "Slightly curved Head Line terminating in the upper Mount of Moon, granting deep intuition, strategic planning, and foresight."
     ]
     
     heart_variations = [
         "Heart Line terminating beneath the Jupiter mount, symbolizing deep emotional sincerity, high morals, and devotion.",
         "Curved Heart Line ending between Jupiter and Saturn, showing balanced emotional needs, empathy, and relationship warmth.",
         "Clear Heart Line with upward branches, predicting joyful personal relationships and strong emotional resilience.",
-        "Deeply etched Heart Line with a steady path, signifying unwavering loyalty, calm disposition, and passionate focus."
+        "Deeply etched Heart Line with a steady path, signifying unwavering loyalty, calm disposition, and passionate focus.",
+        "Trifurcated Heart Line (Trishul marking at termination), indicating immense compassion, popularity, and spiritual harmony."
     ]
     
     fate_variations = [
         "Prominent Fate Line rising from the palm base straight to Saturn, indicating clear purpose and continuous financial growth.",
         "Strong Sun Line intersecting the Fate Line, pointing towards public distinction, artistic success, and sudden wealth peaks.",
         "Fate Line originating from the Mount of Luna, indicating success supported by public patronage, foreign ties, or creative arts.",
-        "Upward branch extending from Life Line toward Apollo/Mercury, highlighting self-earned achievements and business prosperity."
+        "Upward branch extending from Life Line toward Apollo/Mercury, highlighting self-earned achievements and business prosperity.",
+        "Double Fate Line (Secondary Fortune Line) active from age 28 onwards, ensuring multiple streams of income and property assets."
     ]
     
     mount_variations = [
         "Mount of Jupiter is well-developed, granting leadership aura, nobility, and high social respect.",
         "Mount of Mercury displays fine vertical lines (Samaritan Lines), indicating intuitive healing power and financial acumen.",
         "Mount of Sun (Apollo) shows strong radiant energy, bringing appreciation for fine arts, charisma, and status.",
-        "Mount of Venus is prominently elevated, giving warmth, magnetic attractiveness, and love for comfort."
+        "Mount of Venus is prominently elevated, giving warmth, magnetic attractiveness, and love for comfort.",
+        "Mount of Mars (Inner & Outer) is exceptionally firm, granting unyielding courage, tactical intelligence, and physical bravery."
     ]
 
-    l_line = life_variations[seed % len(life_variations)]
-    h_line = head_variations[(seed + 1) % len(head_variations)]
-    ht_line = heart_variations[(seed + 2) % len(heart_variations)]
-    f_line = fate_variations[(seed + 3) % len(fate_variations)]
-    m_line = mount_variations[(seed + 4) % len(mount_variations)]
+    l_line = life_variations[base_hash % len(life_variations)]
+    h_line = head_variations[(name_hash + 1) % len(head_variations)]
+    ht_line = heart_variations[(file_hash + 2) % len(heart_variations)]
+    f_line = fate_variations[(base_hash + name_hash) % len(fate_variations)]
+    m_line = mount_variations[(file_hash + base_hash) % len(mount_variations)]
 
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>

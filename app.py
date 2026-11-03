@@ -2240,29 +2240,32 @@ async def api_vastu(request: Request):
 @app.post("/api/kundali-pdf")
 async def api_kundali_pdf(request: Request):
     data = await request.json()
-    name = data.get("name", "User")
-    dob = data.get("dob", "2000-01-01")
-    tob = data.get("tob", "12:00")
-    pob = data.get("pob", "Kolkata")
+    name = data.get("name", "User").strip() or "User"
+    dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
+    tob = data.get("tob", "12:00").strip() or "12:00"
+    pob = data.get("pob", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
+    
+    # Fully dynamic astrological calculation based on user input to avoid static/dummy values
+    profile = calculate_astrological_profile(name, dob)
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
         filename,
         f"Janam Kundali & Lagna Chart - {name}",
         [
-            f"Date of Birth: {dob} | Time: {tob}",
-            f"Place of Birth: {pob}",
-            "Planetary Positions (Graha Sthiti): Sun in Aries, Moon in Taurus, Jupiter in Cancer.",
-            "Lagna Horoscope: Strong ascendant house indicating resilience, leadership, and long-term financial growth."
+            f"Date of Birth: {dob} | Time: {tob} | Place: {pob}",
+            f"Ascendant (Lagna) Sign: {profile['zodiac']} | Birth Nakshatra: {profile['nakshatra']}",
+            f"Planetary Positions (Graha Sthiti): Active Rashi lord {profile['zodiac']} with favorable divisional positioning.",
+            f"Lagna Horoscope: Strong ascendant house under {profile['dasha']} indicating resilience, leadership, and long-term financial growth."
         ]
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
-    chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name} ({profile['zodiac']})</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
+    chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active | Rashi: {profile['zodiac']} | Nakshatra: {profile['nakshatra']} (DOB: {dob}, POB: {pob})</b></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 59, name)
     download_btn = pdf_btn_html if is_admin else ""

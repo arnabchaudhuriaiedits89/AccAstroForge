@@ -16,7 +16,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 app = FastAPI()
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS (प्रोক্রেলা / AccAstroForge)
+# 0. CONFIGURATIONS & SECRETS (AccAstroForge)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
@@ -938,7 +938,7 @@ HTML_TEMPLATE = """
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- VASTU SHASTRA (EXPANDED PROPERTY OPTIONS & SEPARATE DYNAMIC RULES) -->
+        <!-- VASTU SHASTRA -->
         <div id="tab-vastu" class="tab-content">
             <h3>🏛️ VASTU SHASTRA & PROPERTY ANALYSIS PDF</h3>
             <div class="row">
@@ -2173,7 +2173,6 @@ async def api_vastu(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
-    # PROPERTY-SPECIFIC DYNAMIC VASTU RULES & ZONAL BREAKDOWN
     prop_specific_notes = {
         "Residential House / Flat": f"{p_type} facing {facing}: Focus on Master Bedroom in South-West, Kitchen in South-East (Agneya), and Living room in North/East for optimal family health and peace.",
         "Commercial Office / Shop": f"{p_type} facing {facing}: Focus on Owner/Manager cabin in South-West facing North/East, cash locker in North zone (Kubera), and client seating in North-West.",
@@ -2248,7 +2247,6 @@ async def api_kundali_pdf(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
     
-    # Fully dynamic astrological calculation based on user input to avoid static/dummy values
     profile = calculate_astrological_profile(name, dob)
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
@@ -2281,27 +2279,55 @@ async def api_numerology(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vedic Numerology Analysis", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹69)"})
     
-    profile = calculate_astrological_profile(name, dob)
-    psychic_num = profile["psychic_num"]
-    
-    destiny_sum = sum(int(d) for d in dob if d.isdigit())
-    while destiny_sum > 9:
-        destiny_sum = sum(int(d) for d in str(destiny_sum))
+    try:
+        dt_parts = dob.split("-")
+        day = int(dt_parts[2])
+    except Exception:
+        day = 1
+
+    # 1. Correct Mulank (Psychic Number = sum of birth day digits reduced to single digit)
+    mulank = sum(int(d) for d in str(day))
+    while mulank > 9:
+        mulank = sum(int(d) for d in str(mulank))
         
-    ruling_planets = ["Sun", "Moon", "Jupiter", "Rahu", "Mercury", "Venus", "Ketu", "Saturn", "Mars"]
-    ruling_p = ruling_planets[(psychic_num - 1) % 9]
-    
+    # 2. Correct Bhagyank (Destiny Number = sum of all digits in DOB reduced to single digit)
+    bhagyank = sum(int(d) for d in dob if d.isdigit())
+    while bhagyank > 9:
+        bhagyank = sum(int(d) for d in str(bhagyank))
+        
+    # 3. Ruling Planetary Lord based on Mulank
+    ruling_planets = {
+        1: "Sun (Surya)", 2: "Moon (Chandra)", 3: "Jupiter (Guru)",
+        4: "Rahu", 5: "Mercury (Budha)", 6: "Venus (Shukra)",
+        7: "Ketu", 8: "Saturn (Shani)", 9: "Mars (Mangal)"
+    }
+    ruling_p = ruling_planets.get(mulank, "Sun (Surya)")
+
+    # 4. Accurate and Unique Compatible Numbers based on Mulank
+    compatibility_map = {
+        1: [1, 2, 3, 5, 9],
+        2: [1, 2, 5, 3],
+        3: [1, 3, 5, 7, 9],
+        4: [1, 5, 6, 7],
+        5: [1, 2, 3, 5, 6],
+        6: [3, 5, 6, 9],
+        7: [3, 4, 5, 7],
+        8: [3, 5, 6, 7],
+        9: [1, 3, 6, 9]
+    }
+    compat_nums = ", ".join(map(str, compatibility_map.get(mulank, [1, 3, 5])))
+
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 20px; border-radius: 14px; box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); margin-top: 15px;'>
         <h4 style='color:#fde047; margin-top:0;'>🔢 Numerology Analysis for {name.upper()} (DOB: {dob})</h4>
         <div style='display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px;'>
             <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px; text-align:center;'>
                 <span style='color:#f3e8ff; font-size:0.8rem;'>Psychic Number (Mulank)</span>
-                <b style='color:#4ade80; font-size:1.5rem; display:block;'>{psychic_num}</b>
+                <b style='color:#4ade80; font-size:1.5rem; display:block;'>{mulank}</b>
             </div>
             <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px; text-align:center;'>
                 <span style='color:#f3e8ff; font-size:0.8rem;'>Destiny Number (Bhagyank)</span>
-                <b style='color:#fde047; font-size:1.5rem; display:block;'>{destiny_sum}</b>
+                <b style='color:#fde047; font-size:1.5rem; display:block;'>{bhagyank}</b>
             </div>
         </div>
         <p style='color:#f3e8ff; margin-top:12px;'><b>Ruling Planetary Lord:</b> <span style='color:#fde047;'>{ruling_p}</span></p>
@@ -2311,8 +2337,8 @@ async def api_numerology(request: Request):
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
         <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🔢 DETAILED NUMEROLOGY & NAME CORRECTION REPORT FOR {name.upper()}</h4>
-        <p style='color:#f3e8ff;'><b>Name Energy Balance:</b> Your full name correlates closely with Mulank {psychic_num}. Maintaining spelling harmony enhances career luck.</p>
-        <p style='color:#fde047;'><b>Compatible Numbers:</b> {(psychic_num*2)%9 + 1}, {(psychic_num*3)%9 + 1}, {(psychic_num*5)%9 + 1}</p>
+        <p style='color:#f3e8ff;'><b>Name Energy Balance:</b> Your full name correlates closely with Mulank {mulank}. Maintaining spelling harmony enhances career luck and personal vitality.</p>
+        <p style='color:#fde047;'><b>Compatible Numbers:</b> {compat_nums}</p>
         <p style='color:#4ade80; font-weight: bold; margin-top: 10px;'>✅ Complete Numerology Report Unlocked Successfully via Admin Access!</p>
     </div>
     """ if is_admin else ""

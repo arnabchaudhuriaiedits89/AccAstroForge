@@ -2125,61 +2125,16 @@ async def api_vastu(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
-    vastu_matrix = {
-        "Residential House / Flat": {
-            "North Facing": "Residential North-Facing: Ensure master bedroom is in the South-West and kitchen in South-East. Keep the entrance clutter-free for financial growth.",
-            "East Facing": "Residential East-Facing: Ideal for solar energy absorption. Place pooja room in North-East and avoid heavy structural blockage in the East.",
-            "South Facing": "Residential South-Facing: Heavy master structures and owner's bedroom must be in South/South-West. Ensure no underground water tanks in South.",
-            "West Facing": "Residential West-Facing: Dining and children's rooms thrive here. Keep the South-West heavy and North-East open and light.",
-            "North-East (Ishan)": "Residential North-East Facing: The ultimate spiritual zone. Keep meditation space here and maintain absolute cleanliness.",
-            "South-East (Agneya)": "Residential South-East Facing: Fire element zone. Place the kitchen strictly here and keep electrical meters in this quadrant.",
-            "South-West (Nairutya)": "Residential South-West Facing: Earth stability zone. The head of the family must occupy this bedroom with wardrobes facing North.",
-            "North-West (Vayavya)": "Residential North-West Facing: Air element zone. Excellent for guest rooms and ventilation. Promotes smooth family relations."
-        },
-        "Commercial Office / Shop": {
-            "North Facing": "Commercial North-Facing: Kubera zone for wealth. Place cash counter and owner's desk facing North or East for maximum profit inflow.",
-            "East Facing": "Commercial East-Facing: Client reception and marketing desks should face East. Excellent for brand visibility and expansion.",
-            "South Facing": "Commercial South-Facing: Place heavy servers, storage, and managerial cabins in the South. Keep cash registers away from direct southern exposure.",
-            "West Facing": "Commercial West-Facing: Favorable for trading and client service businesses. Staff seating should face North or East.",
-            "North-East (Ishan)": "Commercial North-East Facing: Entrance and reception here bring immense goodwill, spiritual clarity, and steady corporate growth.",
-            "South-East (Agneya)": "Commercial South-East Facing: Pantry, server rooms, and electrical switchboards must be placed here.",
-            "South-West (Nairutya)": "Commercial South-West Facing: Director or CEO cabin must be positioned here with solid backing for supreme decision-making authority.",
-            "North-West (Vayavya)": "Commercial North-West Facing: Sales, marketing, and dispatch teams should operate from here for dynamic movement and networking."
-        },
-        "Factory / Manufacturing Unit": {
-            "North Facing": "Factory North-Facing: Raw material staging in North-West, finished goods dispatch towards North. Keep transit pathways clear.",
-            "East Facing": "Factory East-Facing: Boilers and heavy furnaces in South-East. Production line should move smoothly from West to East.",
-            "South Facing": "Factory South-Facing: Heavy machinery, generators, and compressors in South and South-West zones for structural stability.",
-            "West Facing": "Factory West-Facing: Heavy storage and inventory godowns in West. Administrative block can be placed in North-East.",
-            "North-East (Ishan)": "Factory North-East Facing: Administrative head office and underground water sumps should be located here.",
-            "South-East (Agneya)": "Factory South-East Facing: Mandatory zone for boilers, furnaces, electrical panels, and high-heat manufacturing units.",
-            "South-West (Nairutya)": "Factory South-West Facing: Heavy presses, heavy tool storage, and director office requiring maximum stability.",
-            "North-West (Vayavya)": "Factory North-West Facing: Packaging, finished goods assembly, and dispatch loading bays."
-        },
-        "Warehouse / Storage Hub": {
-            "North Facing": "Warehouse North-Facing: Fast-moving inventory and dispatch channels in the North and North-East zones.",
-            "East Facing": "Warehouse East-Facing: Receiving bays and sorting tables near East openings for natural daylight.",
-            "South Facing": "Warehouse South-Facing: Heavy pallet racking and long-term bulk storage stacked along South and West walls.",
-            "West Facing": "Warehouse West-Facing: Heavy structural shelving in West with smooth forklift access aisles.",
-            "North-East (Ishan)": "Warehouse North-East Facing: Security desk, office administration, and lightweight packing material storage.",
-            "South-East (Agneya)": "Warehouse South-East Facing: Battery charging stations, electrical distribution boards, and safety equipment.",
-            "South-West (Nairutya)": "Warehouse South-West Facing: Heaviest bulk inventory, secure vaults, and high-value stock storage.",
-            "North-West (Vayavya)": "Warehouse North-West Facing: Outbound shipping docks, truck loading bays, and temporary transit sorting."
-        },
-        "Plot / Land": {
-            "North Facing": "Plot North-Facing: Ensure slope towards North-East (Ishan vriddhi). Boundary wall should be lower in North and East.",
-            "East Facing": "Plot East-Facing: Regular square or rectangular shape preferred. Ensure main gate opens in the auspicious East-North quadrant.",
-            "South Facing": "Plot South-Facing: Ensure higher and heavier compound wall in South and West. Avoid cuts in South-East or South-West.",
-            "West Facing": "Plot West-Facing: Extension in North-West or North-East is beneficial. Keep soil levels balanced.",
-            "North-East (Ishan)": "Plot North-East Facing: Highly auspicious plot orientation. Keep water boring or underground sump in North-East corner.",
-            "South-East (Agneya)": "Plot South-East Facing: Fire corner plot. Plan electrical transformer and security cabin accordingly.",
-            "South-West (Nairutya)": "Plot South-West Facing: Must be higher in elevation than North-East. Build the main structure towards South-West.",
-            "North-West (Vayavya)": "Plot North-West Facing: Excellent for wind flow and connectivity. Ensure proper boundary leveling."
-        }
+    # PROPERTY-SPECIFIC DYNAMIC VASTU RULES & ZONAL BREAKDOWN
+    prop_specific_notes = {
+        "Residential House / Flat": "Focus on Master Bedroom in South-West, Kitchen in South-East (Agneya), and Living room in North/East for optimal family health and peace.",
+        "Commercial Office / Shop": "Focus on Owner/Manager cabin in South-West facing North/East, cash locker in North zone (Kubera), and client seating in North-West.",
+        "Factory / Manufacturing Unit": "Heavy machinery placement in South and West zones, raw materials in North-West, finished goods in North-West/North, and heavy electrical transformers in South-East.",
+        "Warehouse / Storage Hub": "Heavy stacking and inventory in South and West quadrants, dispatch bays towards North-West, and administrative desk in North/East.",
+        "Plot / Land": "Ensure regular shape (square or rectangular) with North-East extension (Ishan vriddhi), proper slope towards North-East, and compound wall higher in South-West."
     }
     
-    property_dict = vastu_matrix.get(p_type, vastu_matrix["Residential House / Flat"])
-    base_prop_note = property_dict.get(facing, f"Ensure balanced elemental distribution for {p_type} with {facing}.")
+    base_prop_note = prop_specific_notes.get(p_type, "Ensure balanced elemental distribution across all quadrants.")
     
     remedy_map = {
         "North Facing": "North is governed by Kubera (Wealth). Ensure the entrance is clean and unobstructed. Keep water fountains or underground water tanks in the North-East Ishan corner for maximum financial flow.",
@@ -2192,7 +2147,7 @@ async def api_vastu(request: Request):
         "North-West (Vayavya)": "The Air zone. Ideal for guest rooms, storage, or ventilation ducts. Promotes smooth social relationships and travel success."
     }
     
-    specific_remedy = remedy_map.get(facing, "Ensure proper balance of the five basic elements across all zones.")
+    specific_remedy = remedy_map.get(facing, "Ensure proper balance of the five basic elements (Panchamahabhuta) across all zones.")
     
     filename = f"Vastu_Report_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -2201,9 +2156,9 @@ async def api_vastu(request: Request):
         [
             f"Client Name: {name} | Property Type: {p_type}",
             f"Direction Facing: {facing} | Location: {city}",
-            f"1. Property-Specific Vastu Blueprint: {base_prop_note}",
-            f"2. Directional Energy Insights: {specific_remedy}",
-            "3. Corrective Remedies & Enhancements: Place Vastu copper pyramids in afflicted corners, install brass helix corrections, and maintain bright lighting."
+            f"1. Property-Specific Vastu Blueprint ({p_type}): {base_prop_note}",
+            f"2. Directional Energy Insights ({facing}): {specific_remedy}",
+            "3. Corrective Remedies & Enhancements: Place Vastu copper pyramids in afflicted corners, install brass helix corrections for extension/cut zones, and maintain bright lighting in the entrance."
         ]
     )
     
@@ -2233,7 +2188,87 @@ async def api_vastu(request: Request):
     download_btn = pdf_btn_html if is_admin else ""
     
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
+
+@app.post("/api/kundali-pdf")
+async def api_kundali_pdf(request: Request):
+    data = await request.json()
+    name = data.get("name", "User")
+    dob = data.get("dob", "2000-01-01")
+    tob = data.get("tob", "12:00")
+    pob = data.get("pob", "Kolkata")
+    is_admin = data.get("is_admin", False)
     
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
+    
+    filename = f"Kundali_{name.replace(' ', '_')}.pdf"
+    generate_pdf_report(
+        filename,
+        f"Janam Kundali & Lagna Chart - {name}",
+        [
+            f"Date of Birth: {dob} | Time: {tob}",
+            f"Place of Birth: {pob}",
+            "Planetary Positions (Graha Sthiti): Sun in Aries, Moon in Taurus, Jupiter in Cancer.",
+            "Lagna Horoscope: Strong ascendant house indicating resilience, leadership, and long-term financial growth."
+        ]
+    )
+    
+    pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
+    chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
+    
+    paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 59, name)
+    download_btn = pdf_btn_html if is_admin else ""
+    
+    return JSONResponse({"teaser": teaser, "chart": chart, "pdf_download_btn": download_btn, "paywall": paywall})
+
+@app.post("/api/numerology")
+async def api_numerology(request: Request):
+    data = await request.json()
+    name = data.get("name", "User").strip() or "User"
+    dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
+    is_admin = data.get("is_admin", False)
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vedic Numerology Analysis", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹69)"})
+    
+    profile = calculate_astrological_profile(name, dob)
+    psychic_num = profile["psychic_num"]
+    
+    destiny_sum = sum(int(d) for d in dob if d.isdigit())
+    while destiny_sum > 9:
+        destiny_sum = sum(int(d) for d in str(destiny_sum))
+        
+    ruling_planets = ["Sun", "Moon", "Jupiter", "Rahu", "Mercury", "Venus", "Ketu", "Saturn", "Mars"]
+    ruling_p = ruling_planets[(psychic_num - 1) % 9]
+    
+    teaser = f"""
+    <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 20px; border-radius: 14px; box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); margin-top: 15px;'>
+        <h4 style='color:#fde047; margin-top:0;'>🔢 Numerology Analysis for {name.upper()} (DOB: {dob})</h4>
+        <div style='display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px;'>
+            <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px; text-align:center;'>
+                <span style='color:#f3e8ff; font-size:0.8rem;'>Psychic Number (Mulank)</span>
+                <b style='color:#4ade80; font-size:1.5rem; display:block;'>{psychic_num}</b>
+            </div>
+            <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px; text-align:center;'>
+                <span style='color:#f3e8ff; font-size:0.8rem;'>Destiny Number (Bhagyank)</span>
+                <b style='color:#fde047; font-size:1.5rem; display:block;'>{destiny_sum}</b>
+            </div>
+        </div>
+        <p style='color:#f3e8ff; margin-top:12px;'><b>Ruling Planetary Lord:</b> <span style='color:#fde047;'>{ruling_p}</span></p>
+    </div>
+    """
+    
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🔢 DETAILED NUMEROLOGY & NAME CORRECTION REPORT FOR {name.upper()}</h4>
+        <p style='color:#f3e8ff;'><b>Name Energy Balance:</b> Your full name correlates closely with Mulank {psychic_num}. Maintaining spelling harmony enhances career luck.</p>
+        <p style='color:#fde047;'><b>Compatible Numbers:</b> {(psychic_num*2)%9 + 1}, {(psychic_num*3)%9 + 1}, {(psychic_num*5)%9 + 1}</p>
+        <p style='color:#4ade80; font-weight: bold; margin-top: 10px;'>✅ Complete Numerology Report Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+    
+    paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 69, name)
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "paywall": paywall})
+
 @app.post("/api/panchang")
 async def api_panchang(request: Request):
     data = await request.json()

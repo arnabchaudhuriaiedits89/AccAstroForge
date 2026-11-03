@@ -917,7 +917,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="g-name" placeholder="Girl's Name">
                 <input type="date" id="g-dob">
             </div>
-            <button class="primary-btn" onclick="submitMatching()">❤️ Match Kundalis & PDF Now (₹49)</button>
+            <button class="primary-btn" onclick="submitMatching()">❤️ Match Kundalis & PDF Now (₹59)</button>
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -1978,7 +1978,7 @@ async def api_matching(request: Request):
     g = data.get("girl_name", "Girl").strip() or "Girl"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Vedic Kundali Matching PDF", "details": "Guna Milan Ashtakoota Analysis", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹49)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Vedic Kundali Matching PDF", "details": "Guna Milan Ashtakoota Analysis", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
     
     seed = sum(ord(c) for c in (b + g).lower())
     guna_score = 18 + (seed % 15)
@@ -2048,7 +2048,7 @@ async def api_matching(request: Request):
     </div>
     """ if is_admin else ""
     
-    paywall = "" if is_admin else get_paywall_html("Complete Kundali Matching & Guna Report", 49, f"{b} & {g}")
+    paywall = "" if is_admin else get_paywall_html("Complete Kundali Matching & Guna Report", 59, f"{b} & {g}")
     download_btn = pdf_btn_html if is_admin else ""
     
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})

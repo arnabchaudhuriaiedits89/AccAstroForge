@@ -661,8 +661,8 @@ HTML_TEMPLATE = """
             <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIVE PREDICTION PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-horoscope')">☀️ HOROSCOPE</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-matching')">❤️ MATCHING PDF</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-gemstones')">💎 GEMSTONES</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-vastu')">🏛️ VASTU SHASTRA</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-gemstones')">💎 GEMSTONES PDF</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-vastu')">🏛️ VASTU SHASTRA PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-kundali')">📜 KUNDALI PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-numerology')">🔢 NUMEROLOGY</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-panchang')">📅 PANCHANG</button>
@@ -872,9 +872,9 @@ HTML_TEMPLATE = """
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- GEMSTONES (FULLY ACTIVATED & DYNAMIC) -->
+        <!-- GEMSTONES (UPDATED NAME & PRICE) -->
         <div id="tab-gemstones" class="tab-content">
-            <h3>💎 Lucky Gemstones & Cosmic Remedies</h3>
+            <h3>💎 LUCKY GEMSTONES & COSMIC REMEDIES PDF</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Enter your birth details or select your zodiac sign to calculate your precise primary life gemstone (Lagna Stone) and fortune crystal with complete wearing rituals.</p>
             <div class="row">
                 <input type="text" id="gem-name" placeholder="Full Name (e.g. Rajesh Sharma)">
@@ -886,13 +886,13 @@ HTML_TEMPLATE = """
                 </select>
                 <input type="text" id="gem-pob" placeholder="Place of Birth (e.g. Kolkata)">
             </div>
-            <button class="primary-btn" onclick="submitGemstone()">💎 Calculate Precise Lucky Gemstone & Rituals (₹51)</button>
+            <button class="primary-btn" onclick="submitGemstone()">💎 Calculate Precise Lucky Gemstone & Rituals (₹59)</button>
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- VASTU SHASTRA -->
+        <!-- VASTU SHASTRA (UPDATED NAME & FULLY FUNCTIONAL) -->
         <div id="tab-vastu" class="tab-content">
-            <h3>🏛️ Vastu Shastra & Commercial/Home Property Analysis</h3>
+            <h3>🏛️ VASTU SHASTRA & COMMERCIAL/HOME PROPERTY ANALYSIS PDF</h3>
             <div class="row">
                 <input type="text" id="vastu-name" placeholder="Owner / Applicant Name" autocomplete="off">
                 <select id="vastu-property-type">
@@ -2029,7 +2029,7 @@ async def api_gemstone(request: Request):
     pob = data.get("pob", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹51)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
     
     gem_map = {
         "Aries (Mesha)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper / Gold", "finger": "Ring Finger", "planet": "Mars (Mangal)", "day": "Tuesday (Morning)"},
@@ -2096,7 +2096,7 @@ async def api_gemstone(request: Request):
     </div>
     """ if is_admin else ""
     
-    paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 51, name)
+    paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 59, name)
     download_btn = pdf_btn_html if is_admin else ""
     
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
@@ -2104,35 +2104,57 @@ async def api_gemstone(request: Request):
 @app.post("/api/vastu")
 async def api_vastu(request: Request):
     data = await request.json()
-    name = data.get("name", "User")
-    p_type = data.get("property_type", "Residential")
-    facing = data.get("facing", "North Facing")
-    city = data.get("city", "Kolkata")
+    name = data.get("name", "User").strip() or "User"
+    p_type = data.get("property_type", "Residential House / Flat").strip()
+    facing = data.get("facing", "North Facing").strip()
+    city = data.get("city", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
+    # Dynamic Vastu Remedial Logic based on property type and facing direction
+    remedy_map = {
+        "North Facing": "North is governed by Kubera (Wealth). Ensure the entrance is clean and unobstructed. Keep water fountains or underground water tanks in the North-East Ishan corner for maximum financial flow.",
+        "East Facing": "East is governed by Surya (Health & Vitality). Avoid heavy structural blocking in the East. Large windows and open balconies here invite positive solar energy.",
+        "South Facing": "South is governed by Yama. Ensure bedrooms or heavy master structures are placed in the South/South-West. Avoid cuts or water bodies in the South zone.",
+        "West Facing": "West is governed by Varuna (Gains). Ideal for dining spaces and heavy storage. Keep the North-West Vayavya zone balanced with air flow.",
+        "North-East (Ishan)": "Extremely auspicious! This spiritual and water zone must be kept clutter-free. Perfect location for prayer rooms, meditation, or underground water storage.",
+        "South-East (Agneya)": "The Fire zone (Agni). Ideal for kitchens, electrical panels, and transformers. Avoid septic tanks or water storage in this corner.",
+        "South-West (Nairutya)": "The Earth zone of stability. The head of the family or owner should occupy the master bedroom here. Heavy wardrobes and lockers should face North.",
+        "North-West (Vayavya)": "The Air zone. Ideal for guest rooms, storage, or ventilation ducts. Promotes smooth social relationships and travel success."
+    }
+    
+    specific_remedy = remedy_map.get(facing, "Ensure proper balance of the five basic elements (Panchamahabhuta) across all zones.")
+    
     filename = f"Vastu_Report_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
         filename,
-        f"Vastu Shastra Assessment for {name}",
+        f"Vastu Shastra Assessment for {name} ({p_type})",
         [
-            f"Property Type: {p_type}",
-            f"Direction Facing: {facing}",
-            f"Location: {city}",
-            "Vastu Purusha Mandala Analysis: The main entrance and energy grids show favorable alignment.",
-            "Recommended Remedies: Place Vastu Pyramids in affected corners and ensure water elements are placed in the North-East Ishan corner."
+            f"Client Name: {name} | Property Type: {p_type}",
+            f"Direction Facing: {facing} | Location: {city}",
+            f"1. Vastu Purusha Mandala Analysis: The {p_type} facing {facing} in {city} shows specific directional planetary strengths.",
+            f"2. Directional Energy Insights: {specific_remedy}",
+            "3. Corrective Remedies & Enhancements: Place Vastu copper pyramids in afflicted corners, install brass helix corrections for extension/cut zones, and maintain bright lighting in the entrance."
         ]
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report</a></div>"""
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p></div>"""
+    
+    teaser = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
+        <h4 style='color:#fde047; margin-top:0;'>🏛️ Vastu Analysis Preview for {name.upper()} ({p_type})</h4>
+        <p style='color:#f3e8ff;'><b>Facing Direction:</b> {facing} | <b>Location:</b> {city}</p>
+        <p style='color:#4ade80; font-size:0.92rem; margin-top:6px;'><b>Zonal Insight:</b> {specific_remedy[:120]}...</p>
+    </div>
+    """
     
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
         <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🏛️ COMPREHENSIVE VASTU SHASTRA & PROPERTY ASSESSMENT REPORT FOR {name.upper()}</h4>
-        <p style='color: #f3e8ff; line-height: 1.8;'><b>Property:</b> {p_type} | <b>Facing Direction:</b> {facing} | <b>Location:</b> {city}</p>
-        <p style='color: #f3e8ff; line-height: 1.8;'>Detailed Vastu Purusha Mandala mapping indicates favorable energy flow in the North and East zones. Placing water elements in the Ishan corner and securing the South-West zone will maximize financial prosperity and family peace.</p>
+        <p style='color: #f3e8ff; line-height: 1.8;'><b>Property:</b> {p_type} | <b>Facing:</b> {facing} | <b>City:</b> {city}</p>
+        <p style='color: #f3e8ff; line-height: 1.8;'><b>Detailed Zonal Breakdown:</b> {specific_remedy}</p>
+        <p style='color: #f3e8ff; line-height: 1.8; margin-top:10px;'><b>Remedial Blueprint:</b> Installing copper pyramids in negative quadrants and keeping the North-East zone illuminated will maximize financial prosperity, health, and family harmony.</p>
         <p style='color: #4ade80; font-weight: bold; margin-top: 10px;'>✅ Full Vastu Report Unlocked Successfully via Admin Access!</p>
     </div>
     """ if is_admin else ""
@@ -2285,21 +2307,21 @@ async def api_ai(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
     if any(k in query for k in ["haunted", "graveyard", "vastu", "house", "flat", "location", "shifting", "property", "land", "building", "bardhaman"]):
-        ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment (such as plots near southern zones or old lands) is crucial before shifting location. Regarding concerns about past history or unusual sounds, proper Vastu Purusha analysis and spatial energy cleansing are essential. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra</b> or <b>Life Prediction</b> tabs."
+        ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment (such as plots near southern zones or old lands) is crucial before shifting location. Regarding concerns about past history or unusual sounds, proper Vastu Purusha analysis and spatial energy cleansing are essential. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra PDF</b> or <b>Life Prediction</b> tabs."
     elif any(k in query for k in ["threat", "political", "police", "danger", "fear", "life threat", "attack", "enemy", "party", "kill", "dominated"]):
-        ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones</b> tabs."
+        ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones PDF</b> tabs."
     elif any(k in query for k in ["spirit", "mother", "father", "passed away", "departed", "midnight", "bed", "blessing", "presence", "soul"]) and not any(k in query for k in ["haunted", "graveyard", "vastu", "land", "property", "bardhaman"]):
-        ai_reply = f"Hello {name}, feeling the spiritual presence or comforting energy of departed parents (Pitru/Matru blessings) during vulnerable hours is deeply emotional and connected to ancestral 9th and 4th house alignments in your chart. While rituals or yoga can help center mental peace, the deep emotional bond is a matter of inner solace. For emotional strength, mental peace, and spiritual remedies, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones</b> tabs."
+        ai_reply = f"Hello {name}, feeling the spiritual presence or comforting energy of departed parents (Pitru/Matru blessings) during vulnerable hours is deeply emotional and connected to ancestral 9th and 4th house alignments in your chart. While rituals or yoga can help center mental peace, the deep emotional bond is a matter of inner solace. For emotional strength, mental peace, and spiritual remedies, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones PDF</b> tabs."
     elif any(k in query for k in ["car", "suv", "vehicle", "four-wheeler", "accident", "drive", "ride", "hand rekhas", "road", "collision"]):
-        ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra</b> tabs."
+        ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra PDF</b> tabs."
     elif any(k in query for k in ["hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "harm", "cricket"]) and any(k in query for k in ["hurt", "injured", "injury", "hit", "bandage", "wound"]):
-        ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones</b> and <b>Life Prediction</b> tabs."
+        ai_reply = f"Hello {name}, frequent physical injuries, sudden impacts during sports (like cricket), and bodily trauma are strongly influenced by afflicted Mars (Mangal), Rahu, and malefic 6th house transits governing physical resistance and accidents. To shield against negative planetary impacts, physical hurdles, and promote safe recovery, please explore our <b>Lucky Gemstones PDF</b> and <b>Life Prediction</b> tabs."
     elif any(k in query for k in ["career", "job", "it sector", "earning", "passion", "profession", "money", "income", "work", "office", "promotion"]):
         ai_reply = f"Hello {name}, evaluating a career transition between passion and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
     elif any(k in query for k in ["marriage", "in-laws", "husband", "wife", "family", "wedding", "partner", "relationship", "love", "groom", "bride"]):
         ai_reply = f"Hello {name}, family decisions, spouse/in-law support, and marital harmony are governed by the 7th and 4th houses in your chart. When balancing domestic support with personal ambition, understanding Guna Milan and planetary compatibility is vital. Explore our <b>Matching</b> or <b>Life Prediction</b> tabs for detailed guidance."
     elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
-        ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones</b> or <b>Life Prediction</b> tabs."
+        ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones PDF</b> or <b>Life Prediction</b> tabs."
     else:
         ai_reply = f"Hello {name}, I have carefully analyzed your cosmic query regarding '{query}'. Vedic principles indicate a transformative phase ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
 

@@ -16,7 +16,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 app = FastAPI()
 
 # ---------------------------------------------------------
-# 0. CONFIGURATIONS & SECRETS
+# 0. CONFIGURATIONS & SECRETS (प्रोক্রেলা / AccAstroForge)
 # ---------------------------------------------------------
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
@@ -244,6 +244,54 @@ def calculate_astrological_profile(name, dob_str):
             "psychic_num": 7,
             "dasha": "Favorable Planetary Dasha Cycle active."
         }
+
+def calculate_jagannath_hora_engine(name, dob, tob, pob):
+    try:
+        seed = sum(ord(c) for c in (name + dob + pob).lower()) if (name or dob) else 108
+    except Exception:
+        seed = 108
+    
+    shodashvarga_charts = {
+        "D1 (Lagna / Main Body)": ZODIAC_SIGNS[seed % 12],
+        "D2 (Hora / Wealth & Assets)": "Sun & Moon Hora Balanced",
+        "D3 (Drekkana / Siblings & Courage)": ZODIAC_SIGNS[(seed + 2) % 12],
+        "D4 (Chaturthamsa / Property & Fortune)": ZODIAC_SIGNS[(seed + 4) % 12],
+        "D7 (Saptamsha / Progeny & Children)": ZODIAC_SIGNS[(seed + 6) % 12],
+        "D9 (Navamsha / Marriage & Soul Purpose)": ZODIAC_SIGNS[(seed + 8) % 12],
+        "D10 (Dashamsha / Career & Profession)": ZODIAC_SIGNS[(seed + 10) % 12],
+        "D12 (Dwadasamsa / Parents & Lineage)": ZODIAC_SIGNS[(seed + 1) % 12],
+        "D16 (Shodasamsa / Vehicles & Comforts)": ZODIAC_SIGNS[(seed + 3) % 12],
+        "D20 (Vimsamsa / Spiritual Progress)": ZODIAC_SIGNS[(seed + 5) % 12],
+        "D24 (Chaturvimshamsha / Knowledge & Learning)": ZODIAC_SIGNS[(seed + 7) % 12],
+        "D27 (Bhamsha / Strengths & Weaknesses)": ZODIAC_SIGNS[(seed + 9) % 12],
+        "D30 (Trimsamsa / Misfortunes & Neutralization)": ZODIAC_SIGNS[(seed + 11) % 12],
+        "D40 (Khavedamsa / Auspicious & Inauspicious Events)": ZODIAC_SIGNS[(seed + 4) % 12],
+        "D45 (Akshavedamsa / General Character & Ethics)": ZODIAC_SIGNS[(seed + 2) % 12],
+        "D60 (Shastiamsha / Past Karma & Overall Destiny)": ZODIAC_SIGNS[seed % 12]
+    }
+    
+    dashas = {
+        "Vimshottari Mahadasha": "Jupiter / Saturn Active Cycle",
+        "Yogini Dasha": "Bhadrika (Mercury) Yoga active",
+        "Chara Dasha": "Aries (Mesha) Direct Rashi Dasha",
+        "Ashtottari Dasha": "Rahu / Venus Protection Phase"
+    }
+    
+    ashtakavarga = {
+        "Sarvashtakavarga Total": 285 + (seed % 35),
+        "Sun Ashtakavarga": "29 Points (Favorable)",
+        "Moon Ashtakavarga": "31 Points (Strong)",
+        "Jupiter Ashtakavarga": "34 Points (Highly Auspicious)"
+    }
+    
+    profile = calculate_astrological_profile(name, dob)
+    return {
+        "profile": profile,
+        "shodashvarga": shodashvarga_charts,
+        "dashas": dashas,
+        "ashtakavarga": ashtakavarga,
+        "transit_overlay": "Jupiter in 9th house bringing wealth and spiritual expansion."
+    }
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
@@ -2127,14 +2175,14 @@ async def api_vastu(request: Request):
     
     # PROPERTY-SPECIFIC DYNAMIC VASTU RULES & ZONAL BREAKDOWN
     prop_specific_notes = {
-        "Residential House / Flat": "Focus on Master Bedroom in South-West, Kitchen in South-East (Agneya), and Living room in North/East for optimal family health and peace.",
-        "Commercial Office / Shop": "Focus on Owner/Manager cabin in South-West facing North/East, cash locker in North zone (Kubera), and client seating in North-West.",
-        "Factory / Manufacturing Unit": "Heavy machinery placement in South and West zones, raw materials in North-West, finished goods in North-West/North, and heavy electrical transformers in South-East.",
-        "Warehouse / Storage Hub": "Heavy stacking and inventory in South and West quadrants, dispatch bays towards North-West, and administrative desk in North/East.",
-        "Plot / Land": "Ensure regular shape (square or rectangular) with North-East extension (Ishan vriddhi), proper slope towards North-East, and compound wall higher in South-West."
+        "Residential House / Flat": f"{p_type} facing {facing}: Focus on Master Bedroom in South-West, Kitchen in South-East (Agneya), and Living room in North/East for optimal family health and peace.",
+        "Commercial Office / Shop": f"{p_type} facing {facing}: Focus on Owner/Manager cabin in South-West facing North/East, cash locker in North zone (Kubera), and client seating in North-West.",
+        "Factory / Manufacturing Unit": f"{p_type} facing {facing}: Heavy machinery placement in South and West zones, raw materials in North-West, finished goods in North-West/North, and heavy electrical transformers in South-East.",
+        "Warehouse / Storage Hub": f"{p_type} facing {facing}: Heavy pallet racking and long-term bulk storage stacked along South and West walls, dispatch bays towards North-West, and administrative desk in North/East.",
+        "Plot / Land": f"{p_type} facing {facing}: Ensure regular shape (square or rectangular) with North-East extension (Ishan vriddhi), proper slope towards North-East, and compound wall higher in South-West."
     }
     
-    base_prop_note = prop_specific_notes.get(p_type, "Ensure balanced elemental distribution across all quadrants.")
+    base_prop_note = prop_specific_notes.get(p_type, f"{p_type} facing {facing}: Ensure balanced elemental distribution across all quadrants.")
     
     remedy_map = {
         "North Facing": "North is governed by Kubera (Wealth). Ensure the entrance is clean and unobstructed. Keep water fountains or underground water tanks in the North-East Ishan corner for maximum financial flow.",

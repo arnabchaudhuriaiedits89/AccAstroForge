@@ -18,6 +18,7 @@ app = FastAPI()
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS
 # ---------------------------------------------------------
+
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_live_TpnrjMektRCWj8")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "tm4Ry6xdY63egZtf5cD0kP8T")
 RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
@@ -40,23 +41,23 @@ def init_db():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            email TEXT UNIQUE,
-            phone TEXT,
-            verified_at TEXT
-        )
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT UNIQUE,
+        phone TEXT,
+        verified_at TEXT
+    )
     """)
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS admin_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            full_name TEXT,
-            service TEXT,
-            details TEXT,
-            payment_status TEXT
-        )
+    CREATE TABLE IF NOT EXISTS admin_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
+        full_name TEXT,
+        service TEXT,
+        details TEXT,
+        payment_status TEXT
+    )
     """)
     conn.commit()
     conn.close()
@@ -187,7 +188,7 @@ logo_src = "data:image/png;base64," + logo_b64 if logo_b64 else ""
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {"accept": "application/json", "api-key": BREVO_API_KEY, "content-type": "application/json"}
-    payload = {"sender": {"name": "AccAstroForge", "email": "support@accastroforge.in"}, "to": [{"email": to_email, "name": user_name}], "subject": subject, "htmlContent": html_content}
+    payload = {"sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"}, "to": [{"email": to_email, "name": user_name}], "subject": subject, "htmlContent": html_content}
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
         return response.status_code in [200, 201, 202]
@@ -237,7 +238,7 @@ def calculate_astrological_profile(name, dob_str):
 def calculate_jagannath_hora_engine(name, dob_str, tob_str="12:00", pob_str="Kolkata"):
     profile = calculate_astrological_profile(name, dob_str)
     z_idx = ZODIAC_SIGNS.index(profile["zodiac"]) if profile["zodiac"] in ZODIAC_SIGNS else 0
-    
+
     shodashvarga_charts = {
         "D1 (Lagna Chart)": profile["zodiac"],
         "D2 (Hora - Wealth)": ZODIAC_SIGNS[(z_idx + 1) % 12],
@@ -317,13 +318,11 @@ def get_paywall_html(service_name, price, user_name="User"):
         amt_val = price
     pay_url = get_robust_razorpay_link(service_name, amt_val, display_name)
     return f"""
-    <div style="background: rgba(18, 8, 42, 0.70); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.4); backdrop-filter: blur(8px);">
-        <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
-        <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{amt_val}</p>
-        <a href="{pay_url}" target="_blank" onclick="triggerPaymentLoader(event, this.href)" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
-            🚀 Proceed to Pay ₹{amt_val} (UPI, GPay, PhonePe & Cards)
-        </a>
+    <div style="background: linear-gradient(135deg, rgba(219,39,119,0.15) 0%, rgba(124,58,237,0.15) 100%); border: 2px solid #db2777; border-radius: 14px; padding: 20px; text-align: center; margin-top: 15px;">
+        <h4 style="color: #fde047; margin-top: 0; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h4>
+        <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Dear {display_name}, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
+        <p style="color: #4ade80; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px;">Total Payable: ₹{amt_val}</p>
+        <a href="{pay_url}" onclick="triggerPaymentLoader(event, '{pay_url}')" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); color: #ffffff; padding: 12px 28px; border-radius: 12px; font-weight: bold; text-decoration: none; display: inline-block; box-shadow: 0 6px 20px rgba(219,39,119,0.6); border: 1px solid #fde047;">🚀 Proceed to Pay ₹{amt_val} (UPI, GPay, PhonePe & Cards)</a>
     </div>
     """
 
@@ -335,7 +334,7 @@ def draw_clean_pdf_decorations(canvas_obj, doc_obj):
     canvas_obj.setStrokeColor(colors.HexColor("#db2777"))
     canvas_obj.setLineWidth(1)
     canvas_obj.line(54, 742, 558, 742)
-    
+
     canvas_obj.setFont("Helvetica", 8)
     canvas_obj.setFillColor(colors.HexColor("#6b7280"))
     canvas_obj.drawString(54, 30, "Generated securely via AccAstroForge.in | All Rights Reserved")
@@ -346,7 +345,7 @@ def generate_pdf_report(filename, title, content_paragraphs):
     filepath = os.path.join(os.getcwd(), filename)
     doc = SimpleDocTemplate(filepath, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=40, bottomMargin=54)
     styles = getSampleStyleSheet()
-    
+
     title_style = ParagraphStyle(
         'PdfTitle',
         parent=styles['Heading1'],
@@ -356,7 +355,7 @@ def generate_pdf_report(filename, title, content_paragraphs):
         spaceAfter=12,
         alignment=1
     )
-    
+
     body_style = ParagraphStyle(
         'PdfBody',
         parent=styles['Normal'],
@@ -366,9 +365,9 @@ def generate_pdf_report(filename, title, content_paragraphs):
         spaceAfter=10,
         leading=16
     )
-    
+
     story = []
-    
+
     if os.path.exists("logo.png"):
         try:
             logo_img = RLImage("logo.png", width=85, height=85)
@@ -380,7 +379,7 @@ def generate_pdf_report(filename, title, content_paragraphs):
 
     story.append(Paragraph(title, title_style))
     story.append(Spacer(1, 6))
-    
+
     for para in content_paragraphs:
         story.append(Paragraph(para, body_style))
         story.append(Spacer(1, 6))
@@ -395,19 +394,14 @@ async def download_pdf(filename: str):
         return FileResponse(filepath, media_type="application/pdf", filename=filename)
     return JSONResponse({"error": "File not found"}, status_code=404)
 
-
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>AccAstroForge - Vedic Astrology & Vastu Engine</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AccAstroForge - AI Astrology & Vastu Guidance</title>
-    <link rel="icon" type="image/png" href="/favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
-
         html, body {
             background-color: #030014 !important;
             background-image: 
@@ -663,7 +657,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div id="loader-overlay">
-        <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/AccAstroForge%20Zodiac%20Logo%20Text%20Cut%20Through%20TRANSPERANT.png" alt="Cosmic Loader" class="loader-logo">
+        <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/logo.png" class="loader-logo" alt="Loading...">
     </div>
 
     <div class="container">
@@ -1016,7 +1010,7 @@ HTML_TEMPLATE = """
         <div id="tab-legal" class="tab-content">
             <h3>⚖️ Terms & Social Handles</h3>
             <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
-            <p><b>Support Email:</b> support@accastroforge.in</p>
+            <p><b>Support Email:</b> arnabchaudhuriaiedits@gmail.com</p>
             <ul style="list-style-type: none; padding-left: 0; line-height: 2.2;">
                 <li>🧳 <b style="color: #fde047;">Twitter (X):</b> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8;">https://x.com/AccAstroForge</a></li>
                 <li>📸 <b style="color: #fde047;">Instagram:</b> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6;">https://www.instagram.com/accastroforge/</a></li>
@@ -1481,9 +1475,9 @@ HTML_TEMPLATE = """
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    logo_html = f'<img src="{logo_src}" alt="AccAstroForge Logo">' if logo_src else '<span style="font-size: 26px; font-weight: 800; color: #fbcfe8; font-family: \'Cinzel\', serif;">AccAstroForge</span>'
+    logo_html = f'<img src="{logo_src}" alt="AccAstroForge">' if logo_src else 'AccAstroForge'
     zodiac_options_html = "".join([f'<option value="{s}">{s}</option>' for s in ZODIAC_SIGNS])
-    
+
     rendered_html = (
         HTML_TEMPLATE
         .replace("LOGO_SRC_PLACEHOLDER", logo_html)
@@ -1497,11 +1491,11 @@ def index(request: Request):
 async def api_admin(request: Request):
     data = await request.json()
     if data.get("password") != ADMIN_PASSWORD:
-        return JSONResponse({"success": False, "html": "<span style='color:#ef4444;'>❌ Incorrect Password! Access Denied.</span>"})
-    
+        return JSONResponse({"success": False, "html": "<p style='color:#ef4444;'>❌ Incorrect Password! Access Denied.</p>"})
+
     users = load_users()
     logs = load_logs()
-    
+
     summary_html = f"""<div style='color:#fff;'>
         <p style='color:#4ade80; font-weight:bold; font-size:1.05rem;'>✅ ADMIN DASHBOARD UNLOCKED (PAYWALL BYPASSED FOR TESTING)</p>
         <h4 style='color:#4ade80; margin-bottom: 8px;'>📋 Registered Users ({len(users)})</h4>
@@ -1546,7 +1540,7 @@ async def api_register(request: Request):
     email = data.get("email", "")
     phone = data.get("phone", "")
     otp_code = str(random.randint(100000, 999999))
-    send_brevo_email(email, name, "OTP Verification", f"<h2>Welcome {name}! Your OTP is {otp_code}</h2>")
+    send_brevo_email(email, name, "OTP Verification", f"Welcome {name}! Your OTP is {otp_code}")
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Registration OTP", "details": f"Email: {email}", "payment_status": "OTP Dispatched"})
     return JSONResponse({"otp": otp_code, "msg": "<p style='color:#4ade80;'>📧 OTP Sent to your email!</p>"})
 
@@ -1594,7 +1588,7 @@ async def api_jagannath_hora(request: Request):
     filename = f"Jagannath_Hora_{name.replace(' ', '_')}.pdf"
     shodash_list_pdf = [f"{k}: {v}" for k, v in jh_data["shodashvarga"].items()]
     dasha_list_pdf = [f"{k}: {v}" for k, v in jh_data["dashas"].items()]
-    
+
     generate_pdf_report(
         filename,
         f"Jagannath Hora Vedic Analysis - {name}",
@@ -1651,32 +1645,32 @@ async def api_explorer(request: Request):
     data = await request.json()
     name = data.get("name", "User").strip()
     chart = data.get("chart", "D1")
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Interactive Kundali Explorer", "details": f"Chart: {chart}", "payment_status": "Free Interactive"})
-    
+
     name_seed = sum(ord(c) for c in name.lower()) if name else 42
-    
+
     zodiac_pool = [
         "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
         "Leo (Simha)", "Virgo (Kanya)", "Libra (Tula)", "Scorpio (Vrischika)",
         "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"
     ]
-    
+
     lagna_idx = (name_seed + (0 if chart == "D1" else 3 if chart == "D9" else 6 if chart == "D10" else 9)) % 12
     h4_idx = (lagna_idx + 3) % 12
     h7_idx = (lagna_idx + 6) % 12
     h10_idx = (lagna_idx + 9) % 12
-    
+
     chart_descriptions = {
         "D1": f"D1 Lagna Chart for {name} (Main Body, Physical Path & Life Foundation).",
         "D9": f"D9 Navamsha Chart for {name} (Soul Purpose, Inner Strength & Post-Marriage Life Blueprint).",
         "D10": f"D10 Dashamsha Chart for {name} (Career Heights, Professional Authority & Public Status).",
         "D7": f"D7 Saptamsha Chart for {name} (Progeny, Children, Creation & Creative Legacy)."
     }
-    
+
     desc = chart_descriptions.get(chart, f"Divisional Chart Analysis for {name}.")
     houses_str = f"House 1 (Ascendant): {zodiac_pool[lagna_idx]} | House 4: {zodiac_pool[h4_idx]} | House 7: {zodiac_pool[h7_idx]} | House 10: {zodiac_pool[h10_idx]}"
-    
+
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
         <h4 style='color:#fde047;'>🧭 Interactive {chart} Chart Explorer for {name.upper()}</h4>
@@ -1692,25 +1686,25 @@ async def api_dasha(request: Request):
     data = await request.json()
     name = data.get("name", "User").strip()
     dob = data.get("dob", "2000-01-01").strip()
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Personal Dasha Timeline", "details": f"DOB: {dob}", "payment_status": "Free Timeline"})
-    
+
     seed = sum(ord(c) for c in (name + dob).lower()) if (name or dob) else 108
     planets = ["Jupiter (Guru)", "Saturn (Shani)", "Mercury (Budha)", "Venus (Shukra)", "Sun (Surya)", "Moon (Chandra)", "Mars (Mangal)", "Rahu", "Ketu"]
-    
+
     maha_idx = seed % len(planets)
     antar_idx = (seed + 3) % len(planets)
     next_idx = (seed + 6) % len(planets)
-    
+
     birth_year = 2000
     try:
         birth_year = int(dob.split("-")[0])
     except Exception:
         pass
-    
+
     maha_end_year = birth_year + 20 + (seed % 10)
     transition_year = maha_end_year + 1
-    
+
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
         <h4 style='color:#fde047;'>⏳ Personal Dasha Timeline for {name.upper()} (DOB: {dob})</h4>
@@ -1729,20 +1723,20 @@ async def api_transit(request: Request):
     data = await request.json()
     name = data.get("name", "User").strip()
     planet = data.get("planet", "Jupiter").strip()
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Live Planetary Transit Tracker", "details": f"Planet: {planet}", "payment_status": "Free Live Tracker"})
-    
+
     seed = sum(ord(c) for c in (name + planet).lower()) if (name or planet) else 77
-    
+
     zodiac_signs_list = [
         "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
         "Leo (Simha)", "Virgo (Kanya)", "Libra (Tula)", "Scorpio (Vrischika)",
         "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"
     ]
-    
+
     transit_sign = zodiac_signs_list[seed % 12]
     house_num = (seed % 12) + 1
-    
+
     motion_types = ["Direct motion with expansion aspect", "Retrograde corrective phase", "Accelerated direct alignment", "Stationary stability transit"]
     impact_types = [
         "Favorable planetary aspect supporting career growth and financial accumulation.",
@@ -1750,10 +1744,10 @@ async def api_transit(request: Request):
         "Sudden breakthroughs in professional standing and technical innovation.",
         "Spiritual introspection, inner purification, and long-term asset security."
     ]
-    
+
     chosen_motion = motion_types[seed % len(motion_types)]
     chosen_impact = impact_types[seed % len(impact_types)]
-    
+
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
         <h4 style='color:#fde047;'>🪐 Live Planetary Transit for {name.upper()} (Selected Planet: {planet})</h4>
@@ -1776,7 +1770,7 @@ async def api_palm(request: Request):
     data = await request.json()
     focus = data.get("focus", "Life Line & Career")
     is_admin = data.get("is_admin", False)
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "AI Palmistry", "details": f"Focus: {focus}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹79)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🖐️ AI Palmistry Analysis Preview ({focus})</h4><p style='color:#4ade80;'>✅ Palm photo successfully analyzed. Promising deep curve on Life Line indicating strong vitality.</p></div>"""
     paywall = "" if is_admin else get_paywall_html("Complete AI Palmistry & Hand Reading Report", 79, "User")
@@ -1788,11 +1782,11 @@ async def api_life(request: Request):
     name = data.get("name", "User").strip() or "User"
     dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
     is_admin = data.get("is_admin", False)
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
-    
+
     profile = calculate_astrological_profile(name, dob)
-    
+
     filename = f"Life_Forecast_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
         filename,
@@ -1806,16 +1800,16 @@ async def api_life(request: Request):
             "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels."
         ]
     )
-    
+
     pdf_btn_html = f"""<div style='margin-top:15px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:12px 24px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; box-shadow: 0 4px 15px rgba(16,185,129,0.4);'>📥 Download Deep Life Forecast PDF Report</a></div>"""
-    
+
     teaser = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed; margin-bottom: 12px;'>
         <h4 style='color:#fde047; margin-top:0;'>✨ Astrological Teaser for {name.upper()}</h4>
         <p style='font-size:1.05rem; color:#f3e8ff;'><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p>
     </div>
     """
-    
+
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:24px; border-radius:16px; border:2px solid #4ade80; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
         <h3 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🌟 COMPREHENSIVE VEDIC LIFE FORECAST & DEEP REPORT FOR {name.upper()}</h3>
@@ -1837,10 +1831,10 @@ async def api_life(request: Request):
         <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full 149/- Report Unlocked Successfully via Admin Access!</p>
     </div>
     """ if is_admin else ""
-    
+
     paywall = "" if is_admin else get_paywall_html("Complete Deep Life Forecast & PDF", 149, name)
     download_btn = pdf_btn_html if is_admin else ""
-    
+
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/horoscope")
@@ -1848,7 +1842,7 @@ async def api_horoscope(request: Request):
     data = await request.json()
     sign = data.get("sign", "Aries")
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Guest/Member", "service": "Horoscope", "details": f"Sign: {sign}", "payment_status": "Free"})
-    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔮 Daily Horoscope for {sign}</h4><p>Today brings high cosmic energy. Jupiter's aspect promises financial opportunities and peace.</p></div>"""
+    html = f"""🔮 Daily Horoscope for {sign}Today brings high cosmic energy. Jupiter's aspect promises financial opportunities and peace."""
     return JSONResponse({"html": html})
 
 @app.post("/api/matching")
@@ -1857,7 +1851,7 @@ async def api_matching(request: Request):
     b = data.get("boy_name", "Boy")
     g = data.get("girl_name", "Girl")
     is_admin = data.get("is_admin", False)
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Kundali Matching", "details": "Guna Milan Check", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹49)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>❤️ Compatibility Teaser for {b} & {g}</h4><p>High Guna Milan score detected! Excellent long-term emotional alignment.</p></div>"""
     paywall = "" if is_admin else get_paywall_html("Complete Kundali Matching Report", 49, f"{b} & {g}")
@@ -1868,7 +1862,7 @@ async def api_gemstone(request: Request):
     data = await request.json()
     z = data.get("zodiac", "Aries")
     is_admin = data.get("is_admin", False)
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Gemstone Remedy", "details": f"Zodiac: {z}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹51)"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>💎 Gemstone Guidance for {z}</h4><p>Emerald (Panna) or Yellow Sapphire recommended for career success.</p></div>"""
     paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 51, "User")
@@ -1882,9 +1876,9 @@ async def api_vastu(request: Request):
     facing = data.get("facing", "North Facing")
     city = data.get("city", "Kolkata")
     is_admin = data.get("is_admin", False)
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
-    
+
     filename = f"Vastu_Report_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
         filename,
@@ -1897,10 +1891,10 @@ async def api_vastu(request: Request):
             "Recommended Remedies: Place Vastu Pyramids in affected corners and ensure water elements are placed in the North-East Ishan corner."
         ]
     )
-    
+
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Vastu PDF Report</a></div>"""
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🏛️ Vastu Analysis Preview for {name} ({p_type})</h4><p><b>Facing:</b> {facing} | <b>Location:</b> {city}</p></div>"""
-    
+
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
         <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🏛️ COMPREHENSIVE VASTU SHASTRA & PROPERTY ASSESSMENT REPORT FOR {name.upper()}</h4>
@@ -1912,7 +1906,7 @@ async def api_vastu(request: Request):
 
     paywall = "" if is_admin else get_paywall_html("Complete Vastu Dosha & Remedial PDF Report", 149, name)
     download_btn = pdf_btn_html if is_admin else ""
-    
+
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/kundali-pdf")
@@ -1923,9 +1917,9 @@ async def api_kundali_pdf(request: Request):
     tob = data.get("tob", "10:00")
     pob = data.get("pob", "Kolkata")
     is_admin = data.get("is_admin", False)
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
-    
+
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
         filename,
@@ -1937,14 +1931,14 @@ async def api_kundali_pdf(request: Request):
             "Lagna Horoscope: Strong ascendant house indicating resilience, leadership, and long-term financial growth."
         ]
     )
-    
+
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name}</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
     chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active (DOB: {dob}, POB: {pob})</b></div>"""
-    
+
     paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 59, name)
     download_btn = pdf_btn_html if is_admin else ""
-    
+
     return JSONResponse({"teaser": teaser, "chart": chart, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/numerology")
@@ -1953,7 +1947,7 @@ async def api_numerology(request: Request):
     name = data.get("name", "User")
     dob = data.get("dob", "2000-01-01")
     is_admin = data.get("is_admin", False)
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹69)"})
     profile = calculate_astrological_profile(name, dob)
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
@@ -1967,7 +1961,7 @@ async def api_panchang(request: Request):
     date = data.get("date", "Today")
     mode = data.get("mode", "free")
     is_admin = data.get("is_admin", False)
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Panchang", "details": f"City: {city}, Mode: {mode}", "payment_status": "Free/Admin Bypassed" if is_admin else "Free/Pending"})
     teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📅 Vedic Panchang for {city} ({date})</h4><p><b>Tithi:</b> Shukla Paksha Navami<br><b>Nakshatra:</b> Rohini<br><b>Rahu Kalam:</b> 10:30 AM - 12:00 PM</p></div>"""
     paywall = ""
@@ -1980,9 +1974,9 @@ async def api_ai(request: Request):
     data = await request.json()
     query = data.get("query", "").strip().lower()
     name = data.get("name", "User")
-    
+
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
-    
+
     # Priority 1: Haunted / Graveyard / Vastu / Land / Shifting Query (High-Priority Matching)
     if any(k in query for k in ["haunted", "graveyard", "vastu", "house", "flat", "location", "shifting", "property", "land", "building", "bardhaman"]):
         ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment (such as plots near southern zones or old lands) is crucial before shifting location. Regarding concerns about past history or unusual sounds, proper Vastu Purusha analysis and spatial energy cleansing are essential. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra</b> or <b>Life Prediction</b> tabs."

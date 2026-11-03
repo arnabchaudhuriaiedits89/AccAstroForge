@@ -729,7 +729,7 @@ HTML_TEMPLATE = """
                 <p>Use credits for instant unlocking of reports.</p>
                 <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(49)">⚡ ₹49</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(51)">⚡ ₹51</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(59)">⚡ ₹59</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(79)">⚡ ₹79</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(149)">⚡ ₹149</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(199)">⚡ ₹199</button>
@@ -872,7 +872,7 @@ HTML_TEMPLATE = """
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- GEMSTONES (UPDATED NAME & PRICE) -->
+        <!-- GEMSTONES (FULLY DYNAMIC & UPDATED) -->
         <div id="tab-gemstones" class="tab-content">
             <h3>💎 LUCKY GEMSTONES & COSMIC REMEDIES PDF</h3>
             <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Enter your birth details or select your zodiac sign to calculate your precise primary life gemstone (Lagna Stone) and fortune crystal with complete wearing rituals.</p>
@@ -890,7 +890,7 @@ HTML_TEMPLATE = """
             <div id="gem-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- VASTU SHASTRA (UPDATED NAME & FULLY FUNCTIONAL) -->
+        <!-- VASTU SHASTRA -->
         <div id="tab-vastu" class="tab-content">
             <h3>🏛️ VASTU SHASTRA & COMMERCIAL/HOME PROPERTY ANALYSIS PDF</h3>
             <div class="row">
@@ -2031,22 +2031,35 @@ async def api_gemstone(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
     
-    gem_map = {
-        "Aries (Mesha)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper / Gold", "finger": "Ring Finger", "planet": "Mars (Mangal)", "day": "Tuesday (Morning)"},
-        "Taurus (Vrishabha)": {"life": "Diamond (Heera) / White Sapphire", "luck": "Emerald (Panna)", "metal": "Silver / White Gold", "finger": "Middle / Small Finger", "planet": "Venus (Shukra)", "day": "Friday (Morning)"},
-        "Gemini (Mithuna)": {"life": "Emerald (Panna)", "luck": "Blue Sapphire (Neelam)", "metal": "Bronze / Gold", "finger": "Little Finger", "planet": "Mercury (Budha)", "day": "Wednesday (Morning)"},
-        "Cancer (Karka)": {"life": "Natural Pearl (Moti)", "luck": "Red Coral (Moonga)", "metal": "Pure Silver", "finger": "Little Finger", "planet": "Moon (Chandra)", "day": "Monday (Evening)"},
-        "Leo (Simha)": {"life": "Ruby (Manik)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Gold / Copper", "finger": "Ring Finger", "planet": "Sun (Surya)", "day": "Sunday (Morning)"},
-        "Virgo (Kanya)": {"life": "Emerald (Panna)", "luck": "Diamond / White Zircon", "metal": "Gold / Panchdhatu", "finger": "Little Finger", "planet": "Mercury (Budha)", "day": "Wednesday (Morning)"},
-        "Libra (Tula)": {"life": "Diamond (Heera) / Opal", "luck": "Blue Sapphire (Neelam)", "metal": "Silver / Platinum", "finger": "Middle Finger", "planet": "Venus (Shukra)", "day": "Friday (Morning)"},
-        "Scorpio (Vrischika)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper", "finger": "Ring Finger", "planet": "Mars (Mangal)", "day": "Tuesday (Morning)"},
-        "Sagittarius (Dhanu)": {"life": "Yellow Sapphire (Pukhraj)", "luck": "Ruby (Manik)", "metal": "Yellow Gold", "finger": "Index Finger", "planet": "Jupiter (Guru)", "day": "Thursday (Morning)"},
-        "Capricorn (Makara)": {"life": "Blue Sapphire (Neelam)", "luck": "Emerald (Panna)", "metal": "Steel / Silver", "finger": "Middle Finger", "planet": "Saturn (Shani)", "day": "Saturday (Evening)"},
-        "Aquarius (Kumbha)": {"life": "Blue Sapphire (Neelam)", "luck": "Diamond / Opal", "metal": "Silver / Iron", "finger": "Middle Finger", "planet": "Saturn (Shani)", "day": "Saturday (Evening)"},
-        "Pisces (Meena)": {"life": "Yellow Sapphire (Pukhraj)", "luck": "Red Coral (Moonga)", "metal": "Yellow Gold", "finger": "Index Finger", "planet": "Jupiter (Guru)", "day": "Thursday (Morning)"}
-    }
+    # FULLY DYNAMIC GEMSTONE ENGINE BASED ON NAME & DOB SEED
+    seed = sum(ord(c) for c in (name + dob + raw_zodiac).lower()) if (name or dob or raw_zodiac) else 108
     
-    info = gem_map.get(raw_zodiac, gem_map["Aries (Mesha)"])
+    primary_gems = [
+        ("Red Coral (Moonga)", "Mars (Mangal)", "Tuesday (Morning)", "Copper / Gold", "Ring Finger"),
+        ("Diamond (Heera) / White Sapphire", "Venus (Shukra)", "Friday (Morning)", "Silver / White Gold", "Middle / Small Finger"),
+        ("Emerald (Panna)", "Mercury (Budha)", "Wednesday (Morning)", "Bronze / Gold", "Little Finger"),
+        ("Natural Pearl (Moti)", "Moon (Chandra)", "Monday (Evening)", "Pure Silver", "Little Finger"),
+        ("Ruby (Manik)", "Sun (Surya)", "Sunday (Morning)", "Gold / Copper", "Ring Finger"),
+        ("Yellow Sapphire (Pukhraj)", "Jupiter (Guru)", "Thursday (Morning)", "Yellow Gold", "Index Finger"),
+        ("Blue Sapphire (Neelam)", "Saturn (Shani)", "Saturday (Evening)", "Steel / Silver", "Middle Finger"),
+        ("Hessonite (Gomed)", "Rahu", "Saturday (Night)", "Silver / Ashtdhatu", "Middle Finger"),
+        ("Cat's Eye (Lehsunia)", "Ketu", "Thursday (Evening)", "Gold / Silver", "Ring Finger")
+    ]
+    
+    fortune_gems = [
+        ("Yellow Sapphire (Pukhraj)", "Jupiter (Guru)"),
+        ("Emerald (Panna)", "Mercury (Budha)"),
+        ("Blue Sapphire (Neelam)", "Saturn (Shani)"),
+        ("Red Coral (Moonga)", "Mars (Mangal)"),
+        ("Ruby (Manik)", "Sun (Surya)"),
+        ("Diamond (Heera)", "Venus (Shukra)")
+    ]
+    
+    p_gem_idx = seed % len(primary_gems)
+    f_gem_idx = (seed + 3) % len(fortune_gems)
+    
+    p_gem = primary_gems[p_gem_idx]
+    f_gem = fortune_gems[f_gem_idx]
     
     filename = f"Gemstone_Report_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -2055,11 +2068,11 @@ async def api_gemstone(request: Request):
         [
             f"Client Name: {name} | DOB: {dob} | POB: {pob}",
             f"Zodiac / Ascendant: {raw_zodiac}",
-            f"Primary Life Stone (Lagna Ratna): {info['life']}",
-            f"Fortune & Wealth Stone (Bhagya Ratna): {info['luck']}",
-            f"Ruling Planetary Lord: {info['planet']}",
-            f"Recommended Metal: {info['metal']} | Wearing Finger: {info['finger']}",
-            f"Auspicious Wearing Day: {info['day']}",
+            f"Primary Life Stone (Lagna Ratna): {p_gem[0]}",
+            f"Fortune & Wealth Stone (Bhagya Ratna): {f_gem[0]}",
+            f"Ruling Planetary Lord: {p_gem[1]}",
+            f"Recommended Metal: {p_gem[3]} | Wearing Finger: {p_gem[4]}",
+            f"Auspicious Wearing Day: {p_gem[2]}",
             "Ritual Instructions: Cleanse the gemstone in Gangajal and raw cow milk, energize with planetary mantras during Shukla Paksha, and wear with devotion."
         ]
     )
@@ -2072,14 +2085,14 @@ async def api_gemstone(request: Request):
         <div style='display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:12px;'>
             <div style='background:rgba(124,58,237,0.25); padding:12px; border-radius:10px; border:1px solid rgba(244,114,182,0.3);'>
                 <span style='color:#f3e8ff; font-size:0.8rem; display:block;'>Primary Life Stone (Lagna Ratna)</span>
-                <b style='color:#4ade80; font-size:1.15rem;'>{info['life']}</b>
+                <b style='color:#4ade80; font-size:1.15rem;'>{p_gem[0]}</b>
             </div>
             <div style='background:rgba(124,58,237,0.25); padding:12px; border-radius:10px; border:1px solid rgba(244,114,182,0.3);'>
                 <span style='color:#f3e8ff; font-size:0.8rem; display:block;'>Fortune & Wealth Stone (Bhagya Ratna)</span>
-                <b style='color:#fde047; font-size:1.15rem;'>{info['luck']}</b>
+                <b style='color:#fde047; font-size:1.15rem;'>{f_gem[0]}</b>
             </div>
         </div>
-        <p style='color:#f3e8ff; margin-top:12px;'><b>Ruling Planet:</b> {info['planet']} | <b>Auspicious Day:</b> {info['day']}</p>
+        <p style='color:#f3e8ff; margin-top:12px;'><b>Ruling Planet:</b> {p_gem[1]} | <b>Auspicious Day:</b> {p_gem[2]}</p>
     </div>
     """
     
@@ -2087,10 +2100,10 @@ async def api_gemstone(request: Request):
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
         <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🧿 COMPLETE GEMSTONES, METALS & CONSECRATION RITUALS FOR {name.upper()}</h4>
         <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem; margin-top:10px;'>
-            <li><b>Recommended Metal:</b> {info['metal']}</li>
-            <li><b>Wearing Finger:</b> {info['finger']} of the right hand</li>
+            <li><b>Recommended Metal:</b> {p_gem[3]}</li>
+            <li><b>Wearing Finger:</b> {p_gem[4]} of the right hand</li>
             <li><b>Purification Protocol:</b> Submerge the gemstone ring or pendant in fresh Gangajal and raw unpasteurized cow milk for 15 minutes to cleanse all negative energies prior to wearing.</li>
-            <li><b>Consecration & Mantra:</b> Wear during {info['day']} while chanting the respective planetary Beeja mantra 108 times with complete focus and devotion.</li>
+            <li><b>Consecration & Mantra:</b> Wear during {p_gem[2]} while chanting the respective planetary Beeja mantra 108 times with complete focus and devotion.</li>
         </ul>
         <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Complete Gemstone Report & PDF Unlocked Successfully via Admin Access!</p>
     </div>
@@ -2112,7 +2125,6 @@ async def api_vastu(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
-    # Dynamic Vastu Remedial Logic based on property type and facing direction
     remedy_map = {
         "North Facing": "North is governed by Kubera (Wealth). Ensure the entrance is clean and unobstructed. Keep water fountains or underground water tanks in the North-East Ishan corner for maximum financial flow.",
         "East Facing": "East is governed by Surya (Health & Vitality). Avoid heavy structural blocking in the East. Large windows and open balconies here invite positive solar energy.",

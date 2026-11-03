@@ -574,6 +574,11 @@ HTML_TEMPLATE = """
             font-family: 'Poppins', sans-serif;
         }
 
+        select option {
+            background-color: #160a30 !important;
+            color: #fef08a !important;
+        }
+
         button.primary-btn {
             background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
             color: #ffffff !important;
@@ -1422,7 +1427,7 @@ HTML_TEMPLATE = """
             showMagicLoader(async () => {
                 let res = await fetch('/api/matching', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({boy_name, girl_name, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('matching-result').innerHTML = data.teaser + (data.paywall || '');
+                document.getElementById('matching-result').innerHTML = data.teaser + (data.full_report || '') + (data.pdf_download_btn || '') + (data.paywall || '');
             });
         }
 
@@ -1431,7 +1436,7 @@ HTML_TEMPLATE = """
             showMagicLoader(async () => {
                 let res = await fetch('/api/gemstone', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({zodiac, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('gem-result').innerHTML = data.teaser + (data.paywall || '');
+                document.getElementById('gem-result').innerHTML = data.teaser + (data.full_report || '') + (data.paywall || '');
             });
         }
 
@@ -1465,7 +1470,7 @@ HTML_TEMPLATE = """
             showMagicLoader(async () => {
                 let res = await fetch('/api/numerology', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, dob, is_admin: isAdminUnlocked}) });
                 let data = await res.json();
-                document.getElementById('num-result').innerHTML = data.teaser + (data.paywall || '');
+                document.getElementById('num-result').innerHTML = data.teaser + (data.full_report || '') + (data.paywall || '');
             });
         }
 
@@ -1865,33 +1870,247 @@ async def api_life(request: Request):
 @app.post("/api/horoscope")
 async def api_horoscope(request: Request):
     data = await request.json()
-    sign = data.get("sign", "Aries")
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Guest/Member", "service": "Horoscope", "details": f"Sign: {sign}", "payment_status": "Free"})
-    html = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔮 Daily Horoscope for {sign}</h4><p>Today brings high cosmic energy. Jupiter's aspect promises financial opportunities and peace.</p></div>"""
+    raw_sign = data.get("sign", "Aries (Mesha)").strip()
+    sign_name = raw_sign.split(" (")[0] if "(" in raw_sign else raw_sign
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "Guest/Member", "service": "Daily Horoscope", "details": f"Sign: {raw_sign}", "payment_status": "Free"})
+    
+    today_str = datetime.datetime.now().strftime("%B %d, %Y")
+    
+    # Deterministic dynamic generation based on date and sign
+    seed_val = sum(ord(c) for c in (raw_sign + today_str))
+    
+    lucky_numbers = [3, 7, 9, 11, 14, 21, 27, 33, 45, 88]
+    lucky_colors = ["Golden Yellow", "Deep Crimson", "Cosmic Violet", "Royal Blue", "Emerald Green", "Warm Orange", "Mystic Purple"]
+    lucky_times = ["09:30 AM - 11:00 AM", "02:15 PM - 04:00 PM", "05:30 PM - 07:00 PM", "08:00 AM - 10:00 AM"]
+    lucky_gems = ["Yellow Sapphire", "Red Coral", "Blue Sapphire", "Emerald", "Ruby", "Pearl", "Diamond"]
+    
+    l_num = lucky_numbers[seed_val % len(lucky_numbers)]
+    l_col = lucky_colors[(seed_val + 2) % len(lucky_colors)]
+    l_time = lucky_times[(seed_val + 4) % len(lucky_times)]
+    l_gem = lucky_gems[seed_val % len(lucky_gems)]
+    
+    career_predictions = [
+        "Jupiter's favorable trine brings unexpected momentum in ongoing projects and corporate discussions. Leadership qualities will shine brightly.",
+        "Saturn demands structured planning and attention to detail. Avoid hasty decisions in contractual agreements today.",
+        "Mercury elevates your analytical communication skills. Perfect day for client pitches, contract signings, or technical execution.",
+        "Venus aligns with your career sector, opening doors to creative collaboration and positive recognition from senior management."
+    ]
+    
+    love_predictions = [
+        "Warm emotional harmony prevails. Open-hearted discussions with your partner will deepen mutual trust and understanding.",
+        "Singles may feel a strong, spontaneous connection through mutual friends or workplace networking.",
+        "Patience is key today. Give space to your loved ones and avoid bringing work-related stress into domestic life.",
+        "A delightfully surprising romantic gesture or meaningful conversation will brighten your evening."
+    ]
+    
+    health_predictions = [
+        "High vitality levels today! Perfect time for outdoor physical exercises, yoga, and mindful meditation.",
+        "Watch your digestion and hydration levels. Focus on clean nutrition and light evening walks.",
+        "Mental relaxation is essential today. Take short micro-breaks during work hours to prevent fatigue.",
+        "Cosmic planetary alignments boost your immune resilience. Maintain a balanced sleep cycle tonight."
+    ]
+    
+    advice_tips = [
+        "Offer water to the rising Sun (Surya Arghya) and stay centered in gratitude.",
+        "Chant the Gayatri Mantra or Gayatri Meditation to clear mental clutter.",
+        "Keep a piece of yellow cloth or brass coin in your wallet for financial positivity.",
+        "Avoid unnecessary arguments in the afternoon; channel energy into productive execution."
+    ]
+    
+    c_pred = career_predictions[seed_val % len(career_predictions)]
+    l_pred = love_predictions[(seed_val + 1) % len(love_predictions)]
+    h_pred = health_predictions[(seed_val + 2) % len(health_predictions)]
+    tip = advice_tips[seed_val % len(advice_tips)]
+    
+    html = f"""
+    <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); backdrop-filter: blur(8px); margin-top: 15px;'>
+        <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 12px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;'>
+            <h3 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif; font-size: 1.3rem;'>🔮 Daily Zodiac Horoscope: {raw_sign}</h3>
+            <span style='background: rgba(124, 58, 237, 0.3); border: 1px solid #fde047; color: #fde047; padding: 4px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600;'>📅 {today_str}</span>
+        </div>
+        
+        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px;'>
+            <div style='background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(244, 114, 182, 0.3); padding: 12px; border-radius: 10px; text-align: center;'>
+                <span style='font-size: 0.78rem; color: #f3e8ff; display: block;'>🎲 Lucky Number</span>
+                <b style='font-size: 1.2rem; color: #fde047;'>{l_num}</b>
+            </div>
+            <div style='background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(244, 114, 182, 0.3); padding: 12px; border-radius: 10px; text-align: center;'>
+                <span style='font-size: 0.78rem; color: #f3e8ff; display: block;'>🎨 Lucky Color</span>
+                <b style='font-size: 1.1rem; color: #4ade80;'>{l_col}</b>
+            </div>
+            <div style='background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(244, 114, 182, 0.3); padding: 12px; border-radius: 10px; text-align: center;'>
+                <span style='font-size: 0.78rem; color: #f3e8ff; display: block;'>⏰ Shubh Muhurat / Lucky Hours</span>
+                <b style='font-size: 0.95rem; color: #fde047;'>{l_time}</b>
+            </div>
+            <div style='background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(244, 114, 182, 0.3); padding: 12px; border-radius: 10px; text-align: center;'>
+                <span style='font-size: 0.78rem; color: #f3e8ff; display: block;'>💎 Favorable Gemstone</span>
+                <b style='font-size: 1rem; color: #38bdf8;'>{l_gem}</b>
+            </div>
+        </div>
+        
+        <div style='line-height: 1.8; color: #f3e8ff;'>
+            <div style='margin-bottom: 14px;'>
+                <h4 style='color: #fde047 !important; margin: 0 0 4px 0; font-size: 1.05rem;'>💼 Career & Finances</h4>
+                <p style='margin: 0; font-size: 0.95rem;'>{c_pred}</p>
+            </div>
+            
+            <div style='margin-bottom: 14px;'>
+                <h4 style='color: #fde047 !important; margin: 0 0 4px 0; font-size: 1.05rem;'>❤️ Love & Relationships</h4>
+                <p style='margin: 0; font-size: 0.95rem;'>{l_pred}</p>
+            </div>
+            
+            <div style='margin-bottom: 14px;'>
+                <h4 style='color: #fde047 !important; margin: 0 0 4px 0; font-size: 1.05rem;'>🧘 Health & Wellness</h4>
+                <p style='margin: 0; font-size: 0.95rem;'>{h_pred}</p>
+            </div>
+            
+            <div style='background: rgba(74, 222, 128, 0.15); border-left: 4px solid #4ade80; padding: 10px 14px; border-radius: 6px; margin-top: 15px;'>
+                <b style='color: #4ade80;'>✨ Daily Astrological Tip:</b> <span style='font-size: 0.92rem;'>{tip}</span>
+            </div>
+        </div>
+    </div>
+    """
     return JSONResponse({"html": html})
 
 @app.post("/api/matching")
 async def api_matching(request: Request):
     data = await request.json()
-    b = data.get("boy_name", "Boy")
-    g = data.get("girl_name", "Girl")
+    b = data.get("boy_name", "Boy").strip() or "Boy"
+    g = data.get("girl_name", "Girl").strip() or "Girl"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Kundali Matching", "details": "Guna Milan Check", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹49)"})
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>❤️ Compatibility Teaser for {b} & {g}</h4><p>High Guna Milan score detected! Excellent long-term emotional alignment.</p></div>"""
-    paywall = "" if is_admin else get_paywall_html("Complete Kundali Matching Report", 49, f"{b} & {g}")
-    return JSONResponse({"teaser": teaser, "paywall": paywall})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Vedic Kundali Matching", "details": "Guna Milan Ashtakoota Analysis", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹49)"})
+    
+    seed = sum(ord(c) for c in (b + g).lower())
+    guna_score = 18 + (seed % 15)  # 18 to 32 out of 36
+    match_pct = int((guna_score / 36.0) * 100)
+    
+    varna = 1 if seed % 2 == 0 else 0.5
+    vashya = 2 if (seed + 1) % 3 != 0 else 1.5
+    tara = 3 if seed % 4 != 0 else 1.5
+    yoni = (seed % 4) + 1
+    graha_maitri = 4 if seed % 2 == 0 else 3.0
+    gana = 6 if seed % 3 != 0 else 4.0
+    bhakoot = 7 if seed % 5 != 0 else 0.0
+    nadi = 8 if seed % 7 != 0 else 0.0
+    
+    filename = f"Kundali_Matching_{b.replace(' ', '_')}_and_{g.replace(' ', '_')}.pdf"
+    generate_pdf_report(
+        filename,
+        f"Vedic Horoscope Match & Guna Milan Report - {b} & {g}",
+        [
+            f"Groom (Boy): {b} | Bride (Girl): {g}",
+            f"Total Guna Milan Score: {guna_score} / 36 ({match_pct}% Compatibility)",
+            f"1. Varna (Work/Ego Alignment): {varna} / 1",
+            f"2. Vashya (Mutual Attraction): {vashya} / 2",
+            f"3. Tara (Health & Longevity): {tara} / 3",
+            f"4. Yoni (Physical Compatibility): {yoni} / 4",
+            f"5. Graha Maitri (Psychological Blend): {graha_maitri} / 5",
+            f"6. Gana (Temperament Compatibility): {gana} / 6",
+            f"7. Bhakoot (Emotional & Financial Growth): {bhakoot} / 7",
+            f"8. Nadi (Genetic & Progeny Health): {nadi} / 8",
+            "Astrological Verdict: Strong compatibility with high longevity and emotional harmony."
+        ]
+    )
+    
+    pdf_btn_html = f"""<div style='margin-top:15px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:12px 24px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; box-shadow: 0 4px 15px rgba(16,185,129,0.4);'>📥 Download Matching PDF Report</a></div>"""
+    
+    teaser = f"""
+    <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 20px; border-radius: 14px; box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); margin-top: 15px;'>
+        <h4 style='color:#fde047; margin-top:0;'>❤️ Ashtakoota Guna Milan Preview for {b.upper()} & {g.upper()}</h4>
+        <div style='display: flex; align-items: center; gap: 20px; margin-top: 10px;'>
+            <div style='background: rgba(124, 58, 237, 0.3); border: 1.5px solid #4ade80; padding: 15px 25px; border-radius: 12px; text-align: center;'>
+                <span style='color: #f3e8ff; font-size: 0.85rem; display: block;'>Total Guna Score</span>
+                <b style='color: #4ade80; font-size: 1.8rem;'>{guna_score} <span style='font-size: 1rem; color: #fde047;'>/ 36</span></b>
+            </div>
+            <div>
+                <p style='color: #f3e8ff; margin: 0;'><b>Compatibility Index:</b> <span style='color: #4ade80; font-weight: 700;'>{match_pct}% (Auspicious Alignment)</span></p>
+                <p style='color: #f3e8ff; margin: 4px 0 0 0; font-size: 0.9rem;'><b>Nadi Status:</b> {'No Nadi Dosha Detected' if nadi > 0 else 'Mild Nadi Alignment'}</p>
+            </div>
+        </div>
+    </div>
+    """
+    
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>💍 COMPLETE VEDIC GUNA MILAN BREAKDOWN ({b.upper()} & {g.upper()})</h4>
+        <table style='width:100%; border-collapse:collapse; margin-top:12px; font-size:0.9rem;' border='1'>
+            <tr style='background:#5b21b6; color:#fde047;'><th>Koota Parameter</th><th>Obtained Points</th><th>Max Points</th><th>Vedic Influence</th></tr>
+            <tr><td>Varna (Work & Ego)</td><td>{varna}</td><td>1</td><td>Mental & Career Alignment</td></tr>
+            <tr><td>Vashya (Attraction)</td><td>{vashya}</td><td>2</td><td>Mutual Magnetism</td></tr>
+            <tr><td>Tara (Longevity)</td><td>{tara}</td><td>3</td><td>Health & Prosperity</td></tr>
+            <tr><td>Yoni (Physical Compatibility)</td><td>{yoni}</td><td>4</td><td>Intimacy & Vitality</td></tr>
+            <tr><td>Graha Maitri (Psychological)</td><td>{graha_maitri}</td><td>5</td><td>Intellectual Friendship</td></tr>
+            <tr><td>Gana (Temperament)</td><td>{gana}</td><td>6</td><td>Behavioral Synchronization</td></tr>
+            <tr><td>Bhakoot (Financial Growth)</td><td>{bhakoot}</td><td>7</td><td>Wealth & Family Welfare</td></tr>
+            <tr><td>Nadi (Genetics & Progeny)</td><td>{nadi}</td><td>8</td><td>Lineage & Biological Balance</td></tr>
+        </table>
+        <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Complete Kundali Matching Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+    
+    paywall = "" if is_admin else get_paywall_html("Complete Kundali Matching & Guna Report", 49, f"{b} & {g}")
+    download_btn = pdf_btn_html if is_admin else ""
+    
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
 
 @app.post("/api/gemstone")
 async def api_gemstone(request: Request):
     data = await request.json()
-    z = data.get("zodiac", "Aries")
+    z = data.get("zodiac", "Aries").strip() or "Aries"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Gemstone Remedy", "details": f"Zodiac: {z}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹51)"})
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>💎 Gemstone Guidance for {z}</h4><p>Emerald (Panna) or Yellow Sapphire recommended for career success.</p></div>"""
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Lucky Gemstone Guidance", "details": f"Zodiac: {z}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹51)"})
+    
+    gem_map = {
+        "Aries (Mesha)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper / Gold", "finger": "Ring Finger"},
+        "Taurus (Vrishabha)": {"life": "Diamond (Heera) / White Sapphire", "luck": "Emerald (Panna)", "metal": "Silver / White Gold", "finger": "Middle / Small Finger"},
+        "Gemini (Mithuna)": {"life": "Emerald (Panna)", "luck": "Blue Sapphire (Neelam)", "metal": "Bronze / Gold", "finger": "Little Finger"},
+        "Cancer (Karka)": {"life": "Natural Pearl (Moti)", "luck": "Red Coral (Moonga)", "metal": "Pure Silver", "finger": "Little Finger"},
+        "Leo (Simha)": {"life": "Ruby (Manik)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Gold / Copper", "finger": "Ring Finger"},
+        "Virgo (Kanya)": {"life": "Emerald (Panna)", "luck": "Diamond / White Zircon", "metal": "Gold / Panchdhatu", "finger": "Little Finger"},
+        "Libra (Tula)": {"life": "Diamond (Heera) / Opal", "luck": "Blue Sapphire (Neelam)", "metal": "Silver / Platinum", "finger": "Middle Finger"},
+        "Scorpio (Vrischika)": {"life": "Red Coral (Moonga)", "luck": "Yellow Sapphire (Pukhraj)", "metal": "Copper", "finger": "Ring Finger"},
+        "Sagittarius (Dhanu)": {"life": "Yellow Sapphire (Pukhraj)", "luck": "Ruby (Manik)", "metal": "Yellow Gold", "finger": "Index Finger"},
+        "Capricorn (Makara)": {"life": "Blue Sapphire (Neelam)", "luck": "Emerald (Panna)", "metal": "Steel / Silver", "finger": "Middle Finger"},
+        "Aquarius (Kumbha)": {"life": "Blue Sapphire (Neelam)", "luck": "Diamond / Opal", "metal": "Silver / Iron", "finger": "Middle Finger"},
+        "Pisces (Meena)": {"life": "Yellow Sapphire (Pukhraj)", "luck": "Red Coral (Moonga)", "metal": "Yellow Gold", "finger": "Index Finger"}
+    }
+    
+    info = gem_map.get(z, gem_map["Aries (Mesha)"])
+    
+    teaser = f"""
+    <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 20px; border-radius: 14px; box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); margin-top: 15px;'>
+        <h4 style='color:#fde047; margin-top:0;'>🧿 Lucky Gemstone & Remedial Guide for {z}</h4>
+        <div style='display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:10px;'>
+            <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px;'>
+                <span style='color:#f3e8ff; font-size:0.8rem; display:block;'>Primary Life Stone (Lagna Gem)</span>
+                <b style='color:#4ade80; font-size:1.1rem;'>{info['life']}</b>
+            </div>
+            <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px;'>
+                <span style='color:#f3e8ff; font-size:0.8rem; display:block;'>Fortune & Wealth Gem (Bhagya Gem)</span>
+                <b style='color:#fde047; font-size:1.1rem;'>{info['luck']}</b>
+            </div>
+        </div>
+    </div>
+    """
+    
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>💎 COMPLETE GEMSTONE WEARING RITUALS & METALS FOR {z.upper()}</h4>
+        <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem;'>
+            <li><b>Recommended Metal:</b> {info['metal']}</li>
+            <li><b>Wearing Finger:</b> {info['finger']} on the Right Hand</li>
+            <li><b>Purification Ritual:</b> Dip gemstone ring/pendant in raw unpasteurized milk and Gangajal for 15 minutes before wearing during Shukla Paksha morning hours.</li>
+            <li><b>Consecration Mantra:</b> Chant 108 times the corresponding planet Beeja Mantra prior to wearing.</li>
+        </ul>
+        <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Complete Gemstone Guide Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+    
     paywall = "" if is_admin else get_paywall_html("Lucky Gemstone & Vedic Remedies Report", 51, "User")
-    return JSONResponse({"teaser": teaser, "paywall": paywall})
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "paywall": paywall})
 
 @app.post("/api/vastu")
 async def api_vastu(request: Request):
@@ -1969,30 +2188,105 @@ async def api_kundali_pdf(request: Request):
 @app.post("/api/numerology")
 async def api_numerology(request: Request):
     data = await request.json()
-    name = data.get("name", "User")
-    dob = data.get("dob", "2000-01-01")
+    name = data.get("name", "User").strip() or "User"
+    dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Numerology", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹69)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vedic Numerology Analysis", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed" if is_admin else "Pending (₹69)"})
+    
     profile = calculate_astrological_profile(name, dob)
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>🔢 Numerology Preview for {name}</h4><p>Destiny Psychic Number: <b style='color:#fde047;'>{profile['psychic_num']}</b></p></div>"""
+    psychic_num = profile["psychic_num"]
+    
+    # Calculate destiny number from entire date
+    destiny_sum = sum(int(d) for d in dob if d.isdigit())
+    while destiny_sum > 9:
+        destiny_sum = sum(int(d) for d in str(destiny_sum))
+        
+    ruling_planets = ["Sun", "Moon", "Jupiter", "Rahu", "Mercury", "Venus", "Ketu", "Saturn", "Mars"]
+    ruling_p = ruling_planets[(psychic_num - 1) % 9]
+    
+    teaser = f"""
+    <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 20px; border-radius: 14px; box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); margin-top: 15px;'>
+        <h4 style='color:#fde047; margin-top:0;'>🔢 Numerology Analysis for {name.upper()} (DOB: {dob})</h4>
+        <div style='display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px;'>
+            <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px; text-align:center;'>
+                <span style='color:#f3e8ff; font-size:0.8rem;'>Psychic Number (Mulank)</span>
+                <b style='color:#4ade80; font-size:1.5rem; display:block;'>{psychic_num}</b>
+            </div>
+            <div style='background:rgba(124,58,237,0.2); padding:12px; border-radius:10px; text-align:center;'>
+                <span style='color:#f3e8ff; font-size:0.8rem;'>Destiny Number (Bhagyank)</span>
+                <b style='color:#fde047; font-size:1.5rem; display:block;'>{destiny_sum}</b>
+            </div>
+        </div>
+        <p style='color:#f3e8ff; margin-top:12px;'><b>Ruling Planetary Lord:</b> <span style='color:#fde047;'>{ruling_p}</span></p>
+    </div>
+    """
+    
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🔢 DETAILED NUMEROLOGY & NAME CORRECTION REPORT FOR {name.upper()}</h4>
+        <p style='color:#f3e8ff;'><b>Name Energy Balance:</b> Your full name correlates closely with Mulank {psychic_num}. Maintaining spelling harmony enhances career luck.</p>
+        <p style='color:#fde047;'><b>Compatible Numbers:</b> {(psychic_num*2)%9 + 1}, {(psychic_num*3)%9 + 1}, {(psychic_num*5)%9 + 1}</p>
+        <p style='color:#4ade80; font-weight: bold; margin-top: 10px;'>✅ Complete Numerology Report Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+    
     paywall = "" if is_admin else get_paywall_html("Detailed Numerology & Name Correction Report", 69, name)
-    return JSONResponse({"teaser": teaser, "paywall": paywall})
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "paywall": paywall})
 
 @app.post("/api/panchang")
 async def api_panchang(request: Request):
     data = await request.json()
-    city = data.get("city", "Kolkata")
-    date = data.get("date", "Today")
+    city = data.get("city", "Kolkata").strip() or "Kolkata"
+    date_str = data.get("date", "Today").strip() or "Today"
     mode = data.get("mode", "free")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Panchang", "details": f"City: {city}, Mode: {mode}", "payment_status": "Free/Admin Bypassed" if is_admin else "Free/Pending"})
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📅 Vedic Panchang for {city} ({date})</h4><p><b>Tithi:</b> Shukla Paksha Navami<br><b>Nakshatra:</b> Rohini<br><b>Rahu Kalam:</b> 10:30 AM - 12:00 PM</p></div>"""
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Vedic Panchang", "details": f"City: {city}, Date: {date_str}", "payment_status": "Free/Admin Bypassed" if is_admin else "Free/Pending"})
+    
+    today_formatted = datetime.datetime.now().strftime("%B %d, %Y") if date_str in ["Today", ""] else date_str
+    
+    html = f"""
+    <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>
+        <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>
+            <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>📅 Daily Vedic Panchang ({city})</h4>
+            <span style='color: #4ade80; font-weight: 600; font-size: 0.9rem;'>{today_formatted}</span>
+        </div>
+        
+        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;'>
+            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                <b style='color: #fde047; display: block;'>📜 Tithi:</b>
+                <span style='color: #f3e8ff;'>Shukla Paksha Navami (till 04:15 PM)</span>
+            </div>
+            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                <b style='color: #fde047; display: block;'>⭐ Nakshatra:</b>
+                <span style='color: #f3e8ff;'>Rohini Nakshatra (Auspicious)</span>
+            </div>
+            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                <b style='color: #fde047; display: block;'>🧘 Yoga & Karana:</b>
+                <span style='color: #f3e8ff;'>Shukla Yoga / Kaulava Karana</span>
+            </div>
+            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                <b style='color: #ef4444; display: block;'>⚠️ Rahu Kalam:</b>
+                <span style='color: #f3e8ff;'>10:30 AM - 12:00 PM (Inauspicious)</span>
+            </div>
+            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                <b style='color: #4ade80; display: block;'>✨ Abhijit Muhurat:</b>
+                <span style='color: #f3e8ff;'>11:45 AM - 12:32 PM (Highly Shubha)</span>
+            </div>
+            <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
+                <b style='color: #fde047; display: block;'>☀️ Sun & Moon:</b>
+                <span style='color: #f3e8ff;'>Sunrise: 05:58 AM | Sunset: 05:22 PM</span>
+            </div>
+        </div>
+    </div>
+    """
+    
     paywall = ""
     if mode == "detailed" and not is_admin:
         paywall = get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
-    return JSONResponse({"html": teaser, "paywall": paywall})
+        
+    return JSONResponse({"html": html, "paywall": paywall})
 
 @app.post("/api/ai")
 async def api_ai(request: Request):

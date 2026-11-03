@@ -187,7 +187,7 @@ logo_src = "data:image/png;base64," + logo_b64 if logo_b64 else ""
 def send_brevo_email(to_email, user_name, subject, html_content):
     url = "https://api.brevo.com/v3/smtp/email"
     headers = {"accept": "application/json", "api-key": BREVO_API_KEY, "content-type": "application/json"}
-    payload = {"sender": {"name": "AccAstroForge", "email": "arnabchaudhuriaiedits@gmail.com"}, "to": [{"email": to_email, "name": user_name}], "subject": subject, "htmlContent": html_content}
+    payload = {"sender": {"name": "AccAstroForge", "email": "support@accastroforge.in"}, "to": [{"email": to_email, "name": user_name}], "subject": subject, "htmlContent": html_content}
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
         return response.status_code in [200, 201, 202]

@@ -699,7 +699,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- TABS BAR WITH PROPER ORDER -->
+        <!-- TABS BAR WITH UPDATED NAMES FOR PDF TABS -->
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-hub')">🌟 MY COSMIC HUB</button>
@@ -707,9 +707,9 @@ HTML_TEMPLATE = """
             <button class="tab-btn" onclick="switchTab(event, 'tab-explorer')">🧭 KUNDALI EXPLORER</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-dasha')">⏳ DASHA TIMELINE</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-transit')">🪐 TRANSIT TRACKER</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIFE PREDICTION</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-life')">🌟 LIVE PREDICTION PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-horoscope')">☀️ HOROSCOPE</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-matching')">❤️ MATCHING</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-matching')">❤️ MATCHING PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-gemstones')">💎 GEMSTONES</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-vastu')">🏛️ VASTU SHASTRA</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-kundali')">📜 KUNDALI PDF</button>
@@ -881,9 +881,9 @@ HTML_TEMPLATE = """
             <div id="transit-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- LIFE PREDICTION -->
+        <!-- LIFE PREDICTION / LIVE PREDICTION PDF -->
         <div id="tab-life" class="tab-content">
-            <h3>🌌 Vedic Astrology & Deep Life Forecast</h3>
+            <h3>🌌 Vedic Astrology & Deep Life Forecast PDF</h3>
             <div class="row">
                 <input type="text" id="life-name" placeholder="Full Name">
                 <input type="date" id="life-dob">
@@ -892,7 +892,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="life-tob" placeholder="Time of Birth (HH:MM)" onfocus="this.type='time'" onblur="if(!this.value)this.type='text'">
                 <input type="text" id="life-pob" placeholder="Place of Birth">
             </div>
-            <button class="primary-btn" onclick="submitLifePrediction()">✨ Reveal Life Insights (₹149)</button>
+            <button class="primary-btn" onclick="submitLifePrediction()">✨ Reveal Life Insights & PDF (₹149)</button>
             <div id="life-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -906,9 +906,9 @@ HTML_TEMPLATE = """
             <div id="horo-result" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- MATCHING -->
+        <!-- MATCHING / MATCHING PDF -->
         <div id="tab-matching" class="tab-content">
-            <h3>💍 Vedic Compatibility & Guna Milan</h3>
+            <h3>💍 Vedic Compatibility & Guna Milan PDF</h3>
             <div class="row">
                 <input type="text" id="b-name" placeholder="Boy's Name">
                 <input type="date" id="b-dob">
@@ -917,7 +917,7 @@ HTML_TEMPLATE = """
                 <input type="text" id="g-name" placeholder="Girl's Name">
                 <input type="date" id="g-dob">
             </div>
-            <button class="primary-btn" onclick="submitMatching()">❤️ Match Kundalis Now (₹49)</button>
+            <button class="primary-btn" onclick="submitMatching()">❤️ Match Kundalis & PDF Now (₹49)</button>
             <div id="matching-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -1813,7 +1813,7 @@ async def api_life(request: Request):
     dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction PDF", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
     profile = calculate_astrological_profile(name, dob)
     
@@ -1842,7 +1842,7 @@ async def api_life(request: Request):
     
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:24px; border-radius:16px; border:2px solid #4ade80; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
-        <h3 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🌟 COMPREHENSIVE VEDIC LIFE FORECAST & DEEP REPORT FOR {name.upper()}</h3>
+        <h3 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🌟 VEDIC ASTROLOGY & DEEP LIFE FORECAST PDF REPORT FOR {name.upper()}</h3>
         <p style='color: #fde047; font-weight: 600;'>Birth Profile Verified | Lagna Ascendant & Planetary Coordinates Active</p>
         
         <div style='margin-top: 15px; line-height: 1.8; color: #f3e8ff;'>
@@ -1978,7 +1978,7 @@ async def api_matching(request: Request):
     g = data.get("girl_name", "Girl").strip() or "Girl"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Vedic Kundali Matching", "details": "Guna Milan Ashtakoota Analysis", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹49)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": f"{b} & {g}", "service": "Vedic Kundali Matching PDF", "details": "Guna Milan Ashtakoota Analysis", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹49)"})
     
     seed = sum(ord(c) for c in (b + g).lower())
     guna_score = 18 + (seed % 15)
@@ -2016,7 +2016,7 @@ async def api_matching(request: Request):
     
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 20px; border-radius: 14px; box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); margin-top: 15px;'>
-        <h4 style='color:#fde047; margin-top:0;'>❤️ Ashtakoota Guna Milan Preview for {b.upper()} & {g.upper()}</h4>
+        <h4 style='color:#fde047; margin-top:0;'>❤️ Vedic Compatibility & Guna Milan PDF Preview for {b.upper()} & {g.upper()}</h4>
         <div style='display: flex; align-items: center; gap: 20px; margin-top: 10px;'>
             <div style='background: rgba(124, 58, 237, 0.3); border: 1.5px solid #4ade80; padding: 15px 25px; border-radius: 12px; text-align: center;'>
                 <span style='color: #f3e8ff; font-size: 0.85rem; display: block;'>Total Guna Score</span>
@@ -2032,7 +2032,7 @@ async def api_matching(request: Request):
     
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
-        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>💍 COMPLETE VEDIC GUNA MILAN BREAKDOWN ({b.upper()} & {g.upper()})</h4>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>💍 VEDIC COMPATIBILITY & GUNA MILAN PDF REPORT ({b.upper()} & {g.upper()})</h4>
         <table style='width:100%; border-collapse:collapse; margin-top:12px; font-size:0.9rem;' border='1'>
             <tr style='background:#5b21b6; color:#fde047;'><th>Koota Parameter</th><th>Obtained Points</th><th>Max Points</th><th>Vedic Influence</th></tr>
             <tr><td>Varna (Work & Ego)</td><td>{varna}</td><td>1</td><td>Mental & Career Alignment</td></tr>

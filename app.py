@@ -2216,7 +2216,8 @@ async def api_gemstone(request: Request):
     pob = data.get("pob", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    email_key = f"{name.lower().replace(' ', '_')}_{dob}"
+    # Fix: Include zodiac in the email_key so changing zodiac correctly generates new results per zodiac
+    email_key = f"{name.lower().replace(' ', '_')}_{dob}_{raw_zodiac.lower().replace(' ', '_')}"
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
     

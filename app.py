@@ -2727,13 +2727,35 @@ async def api_panchang(request: Request):
         """
         return JSONResponse({"html": html, "paywall": ""})
     else:
+        # Paid mode now includes BOTH Free Basic Info & Detailed Shubh Muhurat info together!
         html = f"""
         <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #db2777; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5); margin-top: 15px;'>
             <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>
-                <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>🌟 Detailed Shubh Muhurat & Planetary Ephemeris Report ({city})</h4>
+                <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>🌟 All-in-One Complete Panchang & Detailed Shubh Muhurat Report ({city})</h4>
                 <span style='color: #fde047; font-weight: 600; font-size: 0.9rem;'>{today_formatted}</span>
             </div>
             
+            <h5 style='color: #4ade80; margin-top: 5px; margin-bottom: 10px;'>📌 Basic Daily Panchang Details</h5>
+            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;'>
+                <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px; border: 1px solid rgba(244, 114, 182, 0.3);'>
+                    <b style='color: #fde047; display: block;'>📜 Tithi:</b>
+                    <span style='color: #f3e8ff;'>{tithi_val}</span>
+                </div>
+                <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px; border: 1px solid rgba(244, 114, 182, 0.3);'>
+                    <b style='color: #fde047; display: block;'>⭐ Nakshatra:</b>
+                    <span style='color: #f3e8ff;'>{nak_val}</span>
+                </div>
+                <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px; border: 1px solid rgba(244, 114, 182, 0.3);'>
+                    <b style='color: #ef4444; display: block;'>⚠️ Rahu Kalam:</b>
+                    <span style='color: #f3e8ff;'>{rahu_val}</span>
+                </div>
+                <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px; border: 1px solid rgba(244, 114, 182, 0.3);'>
+                    <b style='color: #4ade80; display: block;'>☀️ Sun & Moon:</b>
+                    <span style='color: #f3e8ff;'>Sunrise: {rise_val} | Sunset: {set_val}</span>
+                </div>
+            </div>
+
+            <h5 style='color: #fde047; margin-top: 15px; margin-bottom: 10px;'>✨ Exclusive Shubh Muhurat & Ephemeris Details</h5>
             <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;'>
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #fde047; display: block;'>✨ Abhijit Muhurat (Best for Starting New Work):</b>
@@ -2752,7 +2774,7 @@ async def api_panchang(request: Request):
                     <span style='color: #f3e8ff;'>{hora_val}</span>
                 </div>
             </div>
-            <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Detailed Shubh Muhurat Report Unlocked Successfully via Paid Access (₹99)!</p>
+            <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Detailed All-in-One Panchang Report Unlocked Successfully via Paid Access (₹99)!</p>
         </div>
         """
         paywall = "" if is_admin else get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")

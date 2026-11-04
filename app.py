@@ -2207,7 +2207,20 @@ async def api_gemstone(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
     
-    seed = sum(ord(c) for c in (name + dob + raw_zodiac).lower()) if (name or dob or raw_zodiac) else 108
+    zodiac_mapping = {
+        "Aries (Mesha)": (5, 0),        # Primary: Yellow Sapphire, Fortune: Red Coral
+        "Taurus (Vrishabha)": (1, 2),    # Primary: Diamond, Fortune: Emerald
+        "Gemini (Mithuna)": (2, 5),      # Primary: Emerald, Fortune: Yellow Sapphire
+        "Cancer (Karka)": (3, 5),        # Primary: Natural Pearl, Fortune: Yellow Sapphire
+        "Leo (Simha)": (4, 0),           # Primary: Ruby, Fortune: Red Coral
+        "Virgo (Kanya)": (2, 1),         # Primary: Emerald, Fortune: Diamond
+        "Libra (Tula)": (1, 2),          # Primary: Diamond, Fortune: Emerald
+        "Scorpio (Vrischika)": (0, 6),   # Primary: Red Coral, Fortune: Blue Sapphire
+        "Sagittarius (Dhanu)": (5, 4),   # Primary: Yellow Sapphire, Fortune: Ruby
+        "Capricorn (Makara)": (6, 5),    # Primary: Blue Sapphire, Fortune: Yellow Sapphire
+        "Aquarius (Kumbha)": (6, 1),     # Primary: Blue Sapphire, Fortune: Diamond
+        "Pisces (Meena)": (5, 2)         # Primary: Yellow Sapphire, Fortune: Emerald
+    }
     
     primary_gems = [
         ("Red Coral (Moonga)", "Mars (Mangal)", "Tuesday (Morning)", "Copper / Gold", "Ring Finger"),
@@ -2216,24 +2229,27 @@ async def api_gemstone(request: Request):
         ("Natural Pearl (Moti)", "Moon (Chandra)", "Monday (Evening)", "Pure Silver", "Little Finger"),
         ("Ruby (Manik)", "Sun (Surya)", "Sunday (Morning)", "Gold / Copper", "Ring Finger"),
         ("Yellow Sapphire (Pukhraj)", "Jupiter (Guru)", "Thursday (Morning)", "Yellow Gold", "Index Finger"),
-        ("Blue Sapphire (Neelam)", "Saturn (Shani)", "Saturday (Evening)", "Steel / Silver", "Middle Finger"),
-        ("Hessonite (Gomed)", "Rahu", "Saturday (Night)", "Silver / Ashtdhatu", "Middle Finger"),
-        ("Cat's Eye (Lehsunia)", "Ketu", "Thursday (Evening)", "Gold / Silver", "Ring Finger")
+        ("Blue Sapphire (Neelam)", "Saturn (Shani)", "Saturday (Evening)", "Steel / Silver", "Middle Finger")
     ]
     
     fortune_gems = [
-        ("Yellow Sapphire (Pukhraj)", "Jupiter (Guru)"),
-        ("Emerald (Panna)", "Mercury (Budha)"),
-        ("Blue Sapphire (Neelam)", "Saturn (Shani)"),
         ("Red Coral (Moonga)", "Mars (Mangal)"),
+        ("Diamond (Heera)", "Venus (Shukra)"),
+        ("Emerald (Panna)", "Mercury (Budha)"),
+        ("Natural Pearl (Moti)", "Moon (Chandra)"),
         ("Ruby (Manik)", "Sun (Surya)"),
-        ("Diamond (Heera)", "Venus (Shukra)")
+        ("Yellow Sapphire (Pukhraj)", "Jupiter (Guru)"),
+        ("Blue Sapphire (Neelam)", "Saturn (Shani)")
     ]
     
-    zodiac_seed = sum(ord(c) for c in raw_zodiac.lower())
-    p_gem_idx = (seed + zodiac_seed) % len(primary_gems)
-    f_gem_idx = (seed + zodiac_seed + 3) % len(fortune_gems)
-    
+    indices = zodiac_mapping.get(raw_zodiac)
+    if indices:
+        p_gem_idx, f_gem_idx = indices
+    else:
+        seed = sum(ord(c) for c in (name + dob + raw_zodiac).lower())
+        p_gem_idx = seed % len(primary_gems)
+        f_gem_idx = (seed + 3) % len(fortune_gems)
+        
     p_gem = primary_gems[p_gem_idx]
     f_gem = fortune_gems[f_gem_idx]
     
@@ -2274,7 +2290,7 @@ async def api_gemstone(request: Request):
     
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
-        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🧿 COMPLETE GEMSTONES, METALS & CONSECRATION RITUALS FOR {name.upper()} ({raw_zodiac})</h4>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: 'Cinzel', serif;'>🧿 COMPLETE GEMSTONES, METALS & CONSECRATION RITUALS FOR {name.upper()} ({raw_zodiac})</h4>
         <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem; margin-top:10px;'>
             <li><b>Recommended Metal:</b> {p_gem[3]}</li>
             <li><b>Wearing Finger:</b> {p_gem[4]} of the right hand</li>

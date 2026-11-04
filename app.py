@@ -1039,7 +1039,7 @@ HTML_TEMPLATE = """
         <div id="tab-legal" class="tab-content">
             <h3>⚖️ Terms & Social Handles</h3>
             <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
-            <p><b>Support Email:</b> arnabchaudhuriaiedits@gmail.com</p>
+            <p><b>Support Email:</b> support@accastroforge.in</p>
             <ul style="list-style-type: none; padding-left: 0; line-height: 2.2;">
                 <li>🧳 <b style="color: #fde047;">Twitter (X):</b> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8;">https://x.com/AccAstroForge</a></li>
                 <li>📸 <b style="color: #fde047;">Instagram:</b> <a href="https://www.instagram.com/accastroforge/" target="_blank" style="color: #f472b6;">https://www.instagram.com/accastroforge/</a></li>

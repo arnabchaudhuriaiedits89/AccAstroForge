@@ -1893,115 +1893,44 @@ async def api_palm(request: Request):
         "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"
     })
     
-    # 1. Fully independent and decoupled hashing algorithm per line using unique salts and prime multipliers
-    def get_unique_variation(param_type, param_val, salt_prime):
-        raw_str = f"{user_name.lower()}_||_{param_type}_||_{param_val.lower()}_||_{salt_prime}"
-        h_val = sum(ord(c) * (i + salt_prime) for i, c in enumerate(raw_str))
-        return h_val
-
-    # 2. Fully distinct sentence variations for each line type
-    life_variations = {
-        "Deep and Unbroken": [
-            f"Deep and unbroken Life Line mapped for {user_name}, indicating robust physical vitality, exceptional immunity, and long-term stamina.",
-            f"A continuous and deeply etched Life Line for {user_name} showing phenomenal core endurance, steady energy flow, and exceptional longevity.",
-            f"Uninterrupted primary life arch observed in {user_name}'s palm profile, signifying remarkable physiological resilience and robust vitality."
-        ],
-        "Sweeping & Curved": [
-            f"Sweeping Life Line reaching deep towards the Mount of Venus for {user_name}, showing high enthusiasm, vibrant energy, and strong travel horizons.",
-            f"A wide, gracefully curved Life Line reflecting {user_name}'s adventurous spirit, vibrant familial warmth, and active life pursuits.",
-            f"Expansive arc formation along the lower palm for {user_name}, highlighting boundless dynamism, emotional warmth, and vibrant lifestyle."
-        ],
-        "Chained Initial": [
-            f"Chained initial Life Line segment for {user_name} transitioning into a clear path after early years, marking early adaptability evolving into great strength.",
-            f"Initial island formations on {user_name}'s Life Line resolving smoothly into a deep channel, symbolizing overcoming early hurdles with stellar resilience.",
-            f"Delicate early links on the primary life arch for {user_name} giving way to an unbreakable channel of mature vitality and sustained personal power."
-        ],
-        "Double Line (Mars)": [
-            f"Double Life Line (Martian Line) identified in {user_name}'s palm, offering an extraordinary protective aura, high accident resistance, and deep inner endurance.",
-            f"A powerful sister line running parallel to the Life Line of {user_name}, conferring robust martial energy, intense physical backup, and fierce protection.",
-            f"Marked Martian support structure accompanying {user_name}'s core vitality line, ensuring exceptional physical shielding and boundless inner reserves."
-        ]
-    }
+    # 1. Completely independent and strict mathematical separation for each line
+    name_bytes_sum = sum(ord(c) for c in user_name.lower())
     
-    head_variations = {
-        "Straight and Clear": [
-            f"Straight and deeply marked Head Line for {user_name}, showing incredible mental focus, practical intellect, and razor-sharp business acumen.",
-            f"A clean, horizontal mental line reflecting {user_name}'s realistic worldview, pragmatic problem-solving, and logical precision.",
-            f"Firm and steady Head Line formation tailored to {user_name}, highlighting disciplined concentration, efficiency, and sharp commercial insight."
-        ],
-        "Sloping to Luna": [
-            f"Head Line sloping gracefully toward the Mount of Luna for {user_name}, representing profound creative imagination fused with analytical depth.",
-            f"An imaginative downward curve in {user_name}'s intellectual axis, blending artistic vision, psychological insight, and conceptual flair.",
-            f"Luna-leaning mental arc for {user_name} indicating rich intuition, narrative depth, and visionary creative intelligence."
-        ],
-        "Forked (Writer's Fork)": [
-            f"Long Head Line terminating in a clear Writer's Fork for {user_name}, indicating high versatility, dual skillsets, and communicative brilliance.",
-            f"Bifurcated mental line structure in {user_name}'s palm showing both practical executive logic and artistic storytelling capability.",
-            f"Distinct fork at the extremity of {user_name}'s intellectual zone, conferring multi-faceted adaptability and expressive mastery."
-        ],
-        "High near Jupiter": [
-            f"Head Line originating high near the Mount of Jupiter for {user_name}, marking independent ambition, self-driven intellect, and executive leadership.",
-            f"Elevated mental anchor point under Jupiter for {user_name}, reflecting strong self-belief, authoritative intellect, and visionary goals.",
-            f"Proud, high-set intellectual line for {user_name} demonstrating uncompromising standards, focused ambition, and independent strategy."
-        ]
-    }
+    # Completely separate lists to guarantee zero overlapping sentences across the 4 lines
+    life_list = [
+        f"Life Line Analysis (Alpha Variant) for {user_name}: Unbroken physical vitality arch showing exceptional core endurance, long-term stamina, and robust immunity.",
+        f"Life Line Analysis (Beta Variant) for {user_name}: Deep primary life channel reflecting steady energy flow, high resilience, and sustained physical longevity.",
+        f"Life Line Analysis (Gamma Variant) for {user_name}: Expansive life curve highlighting remarkable physiological strength, vitality, and robust internal vigor."
+    ]
     
-    heart_variations = {
-        "Curved and Warm": [
-            f"Curved Heart Line ending smoothly between Jupiter and Saturn for {user_name}, showing balanced emotional expression, deep empathy, and relationship warmth.",
-            f"A harmoniously arched emotional line for {user_name} blending romantic depth with sensible boundaries and compassionate understanding.",
-            f"Warm, curving upper palm channel for {user_name} indicating natural affection, emotional intelligence, and enduring domestic harmony."
-        ],
-        "Under Jupiter": [
-            f"Heart Line terminating directly beneath the Jupiter mount for {user_name}, symbolizing deep emotional sincerity, high moral standards, and utter devotion.",
-            f"Noble emotional axis reaching high into Jupiter's realm for {user_name}, reflecting idealistic romance, absolute loyalty, and high-minded affection.",
-            f"Jupiter-anchored emotional line for {user_name} conferring dignified devotion, reverence in partnerships, and profound emotional integrity."
-        ],
-        "Upward Branches": [
-            f"Clear Heart Line featuring vibrant upward branches for {user_name}, predicting joyful personal relationships and strong emotional resilience.",
-            f"Upward radiating emotional offshoots in {user_name}'s palm denoting an optimistic heart, cheerful disposition, and uplifting social bonds.",
-            f"Dynamic upward-branching emotional channel for {user_name} signaling quick emotional recovery, joyful social connections, and enthusiastic love."
-        ],
-        "Trishul Marked": [
-            f"Trifurcated Heart Line ending in a clear Trishul mark for {user_name}, indicating immense compassion, wide popularity, and deep spiritual harmony.",
-            f"Triple-pronged terminal formation on {user_name}'s emotional line bestowing charismatic warmth, altruistic grace, and spiritual fulfillment.",
-            f"Sacred Trishul termination at the close of {user_name}'s Heart Line reflecting elevated empathy, universal goodwill, and emotional wisdom."
-        ]
-    }
+    head_list = [
+        f"Head Line Analysis (Alpha Variant) for {user_name}: Deep horizontal mental line demonstrating razor-sharp practical intellect, business acumen, and focused logic.",
+        f"Head Line Analysis (Beta Variant) for {user_name}: Structured intellectual axis revealing pragmatic problem-solving, realism, and structured decision-making.",
+        f"Head Line Analysis (Gamma Variant) for {user_name}: Clear mental formation highlighting disciplined concentration, commercial insight, and efficiency."
+    ]
+    
+    heart_list = [
+        f"Heart Line Analysis (Alpha Variant) for {user_name}: Smoothly curving emotional path ending between Jupiter and Saturn, showing balanced empathy and relationship warmth.",
+        f"Heart Line Analysis (Beta Variant) for {user_name}: Harmonious emotional line blending deep affection, sensible boundaries, and compassionate understanding.",
+        f"Heart Line Analysis (Gamma Variant) for {user_name}: Warm upper palm channel indicating high emotional intelligence, natural kindness, and domestic harmony."
+    ]
+    
+    focus_list = [
+        f"Focus Area Alignment ({focus} - Alpha): Strong planetary mount resonance in wealth and career zones, powerfully supporting professional expansion and capital accumulation.",
+        f"Focus Area Alignment ({focus} - Beta): Ascending destiny vectors and solar mount activations driving leadership milestones and major financial breakthroughs for {user_name}.",
+        f"Focus Area Alignment ({focus} - Gamma): Favorable planetary architecture cementing solid business growth, sustained authority, and long-term asset security."
+    ]
 
-    focus_variations = {
-        "Career & Wealth": [
-            f"Strong planetary mount resonance detected in Saturn and Jupiter zones for {user_name}, powerfully supporting professional expansion and wealth accumulation.",
-            f"Ascending destiny vectors and solar mount activations align for {user_name}, driving entrepreneurial leadership and major financial milestones.",
-            f"Favorable planetary architecture in wealth zones for {user_name}, cementing solid business growth, authority, and sustained capital generation."
-        ],
-        "Health & Vitality": [
-            f"Robust bio-energetic pulse observed across primary vitality arches for {user_name}, indicating strong immune resilience and long-term wellness.",
-            f"Clean, unobstructed physical energy grids supporting {user_name}, ensuring high stamina, rapid recovery, and balanced constitutional vigor.",
-            f"Harmonious elemental equilibrium across physical zones for {user_name}, fostering lasting vitality, physical stamina, and robust health."
-        ],
-        "Relationships & Marriage": [
-            f"Harmonious Venus and lunar nodal configurations detected for {user_name}, predicting deep emotional empathy, loyalty, and lasting domestic harmony.",
-            f"Supportive partnership lines and balanced emotional arches affirming deep mutual affection, marital peace, and lasting relationship trust for {user_name}.",
-            f"Serene relational geometry in {user_name}'s palm blueprint, pointing toward rewarding companionship, loyalty, and peaceful family bonds."
-        ],
-        "Spiritual Growth": [
-            f"High spiritual frequency and elevated mount alignments identified for {user_name}, encouraging inner awakening and profound self-realization.",
-            f"Deep mystic crosses and elevated nodal rings activated for {user_name}, unlocking advanced intuitive clarity and spiritual evolution.",
-            f"Profound metaphysical alignment visible in {user_name}'s hand markers, guiding a transformative journey toward inner wisdom and higher consciousness."
-        ]
-    }
+    # 2. Strict independent index calculation using unique prime offsets for each line
+    l_idx = (name_bytes_sum * 13 + len(life_type)) % len(life_list)
+    h_idx = (name_bytes_sum * 17 + len(head_type)) % len(head_list)
+    ht_idx = (name_bytes_sum * 23 + len(heart_type)) % len(heart_list)
+    f_idx = (name_bytes_sum * 29 + len(focus)) % len(focus_list)
 
-    # 3. Select unique indices using completely separate prime number salts (17, 31, 47, 73)
-    l_list = life_variations.get(life_type, life_variations["Deep and Unbroken"])
-    h_list = head_variations.get(head_type, head_variations["Straight and Clear"])
-    ht_list = heart_variations.get(heart_type, heart_variations["Curved and Warm"])
-    f_list = focus_variations.get(focus, focus_variations["Career & Wealth"])
-
-    l_desc = l_list[get_unique_variation("life", life_type, 17) % len(l_list)]
-    h_desc = h_list[get_unique_variation("head", head_type, 31) % len(h_list)]
-    ht_desc = ht_list[get_unique_variation("heart", heart_type, 47) % len(ht_list)]
-    f_align_desc = f_list[get_unique_variation("focus", focus, 73) % len(f_list)]
+    l_desc = life_list[l_idx]
+    h_desc = head_list[h_idx]
+    ht_desc = heart_list[ht_idx]
+    f_align_desc = focus_list[f_idx]
 
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>

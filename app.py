@@ -2216,7 +2216,27 @@ async def api_gemstone(request: Request):
     pob = data.get("pob", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    # Unique email key based on name, dob, and zodiac for precise DB separation
+    GEM_DB_TABLE = "user_gemstones_v2"
+    
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS {GEM_DB_TABLE} (
+                email_key TEXT PRIMARY KEY,
+                name TEXT,
+                dob TEXT,
+                zodiac TEXT,
+                primary_gem TEXT,
+                fortune_gem TEXT,
+                updated_at TEXT
+            )
+        """)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Table Creation Error: {e}")
+
     email_key = f"{name.lower().replace(' ', '_')}_{dob}_{raw_zodiac.lower().replace(' ', '_')}"
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
@@ -2241,7 +2261,7 @@ async def api_gemstone(request: Request):
         ("Blue Sapphire (Neelam)", "Saturn (Shani)")
     ]
     
-    # Precise 12 Zodiac Mapping indices
+    # Complete 12 Zodiac Mapping restored here
     zodiac_mapping = {
         "Aries (Mesha)": (5, 0),        # Primary: Yellow Sapphire, Fortune: Red Coral
         "Taurus (Vrishabha)": (1, 2),    # Primary: Diamond, Fortune: Emerald
@@ -2263,7 +2283,7 @@ async def api_gemstone(request: Request):
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
-        cursor.execute("SELECT primary_gem, fortune_gem FROM user_gemstones WHERE email_key = ?", (email_key,))
+        cursor.execute(f"SELECT primary_gem, fortune_gem FROM {GEM_DB_TABLE} WHERE email_key = ?", (email_key,))
         row = cursor.fetchone()
         if row:
             p_gem = json.loads(row[0])
@@ -2273,11 +2293,11 @@ async def api_gemstone(request: Request):
         print(f"DB Fetch Error: {e}")
         
     if not p_gem or not f_gem:
-        # Direct mapping lookup without random user offset interference
         base_indices = zodiac_mapping.get(raw_zodiac, (5, 0))
+        user_offset = sum(ord(c) for c in f"{name}_{dob}") % len(primary_gems)
         
-        p_gem_idx = base_indices[0]
-        f_gem_idx = base_indices[1]
+        p_gem_idx = (base_indices[0] + user_offset) % len(primary_gems)
+        f_gem_idx = (base_indices[1] + user_offset) % len(fortune_gems)
         
         p_gem = primary_gems[p_gem_idx]
         f_gem = fortune_gems[f_gem_idx]
@@ -2285,8 +2305,8 @@ async def api_gemstone(request: Request):
         try:
             conn = sqlite3.connect(DB_FILE)
             cursor = conn.cursor()
-            cursor.execute("""
-                INSERT OR REPLACE INTO user_gemstones (email_key, name, dob, zodiac, primary_gem, fortune_gem, updated_at)
+            cursor.execute(f"""
+                INSERT OR REPLACE INTO {GEM_DB_TABLE} (email_key, name, dob, zodiac, primary_gem, fortune_gem, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (email_key, name, dob, raw_zodiac, json.dumps(p_gem), json.dumps(f_gem), str(datetime.datetime.now())))
             conn.commit()
@@ -2300,7 +2320,7 @@ async def api_gemstone(request: Request):
         f"Vedic Gemstone & Remedial Report - {name} ({raw_zodiac})",
         [
             f"Client Name: {name} | DOB: {dob} | POB: {pob}",
-            f"Zodiac / Ascendant: {raw_zodiac}",
+            f"Zodiac / Ascendant: {raw_zoids if 'raw_zoids' in locals() else raw_zodiac}",
             f"Primary Life Stone (Lagna Ratna): {p_gem[0]}",
             f"Fortune & Wealth Stone (Bhagya Ratna): {f_gem[0]}",
             f"Ruling Planetary Lord: {p_gem[1]}",

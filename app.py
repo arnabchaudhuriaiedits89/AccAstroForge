@@ -702,7 +702,7 @@ HTML_TEMPLATE = """
         <div class="tab-list">
             <button class="tab-btn active" onclick="switchTab(event, 'tab-dashboard')">👤 DASHBOARD</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-hub')">🌟 MY COSMIC HUB</button>
-            <button class="tab-btn" onclick="switchTab(event, 'tab-jh')">☸️ JAGANNATH HORA</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-jh')">☸️ JAGANNATH HORA PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-explorer')">🧭 KUNDALI EXPLORER</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-dasha')">⏳ DASHA TIMELINE</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-transit')">🪐 TRANSIT TRACKER</button>
@@ -824,7 +824,7 @@ HTML_TEMPLATE = """
 
         <!-- JAGANNATH HORA -->
         <div id="tab-jh" class="tab-content">
-            <h3>☸️ Jagannath Hora Vedic Calculations (16 Shodashvarga & Advanced Dashas)</h3>
+            <h3>☸️ Jagannath Hora Vedic Calculations (16 Shodashvarga & Advanced Dashas) PDF</h3>
             <div class="row">
                 <input type="text" id="jh-name" placeholder="Full Name">
                 <input type="date" id="jh-dob">

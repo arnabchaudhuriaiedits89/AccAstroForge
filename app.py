@@ -2216,7 +2216,7 @@ async def api_gemstone(request: Request):
     pob = data.get("pob", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    # Fix: Include zodiac in the email_key so changing zodiac correctly generates new results per zodiac
+    # Unique email key based on name, dob, and zodiac for precise DB separation
     email_key = f"{name.lower().replace(' ', '_')}_{dob}_{raw_zodiac.lower().replace(' ', '_')}"
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
@@ -2241,6 +2241,7 @@ async def api_gemstone(request: Request):
         ("Blue Sapphire (Neelam)", "Saturn (Shani)")
     ]
     
+    # Precise 12 Zodiac Mapping indices
     zodiac_mapping = {
         "Aries (Mesha)": (5, 0),        # Primary: Yellow Sapphire, Fortune: Red Coral
         "Taurus (Vrishabha)": (1, 2),    # Primary: Diamond, Fortune: Emerald
@@ -2272,11 +2273,11 @@ async def api_gemstone(request: Request):
         print(f"DB Fetch Error: {e}")
         
     if not p_gem or not f_gem:
+        # Direct mapping lookup without random user offset interference
         base_indices = zodiac_mapping.get(raw_zodiac, (5, 0))
-        user_offset = sum(ord(c) for c in email_key) % len(primary_gems)
         
-        p_gem_idx = (base_indices[0] + user_offset) % len(primary_gems)
-        f_gem_idx = (base_indices[1] + user_offset) % len(fortune_gems)
+        p_gem_idx = base_indices[0]
+        f_gem_idx = base_indices[1]
         
         p_gem = primary_gems[p_gem_idx]
         f_gem = fortune_gems[f_gem_idx]
@@ -2345,7 +2346,7 @@ async def api_gemstone(request: Request):
     download_btn = pdf_btn_html if is_admin else ""
     
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
-
+    
 @app.post("/api/vastu")
 async def api_vastu(request: Request):
     data = await request.json()

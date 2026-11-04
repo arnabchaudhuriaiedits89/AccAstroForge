@@ -1880,8 +1880,8 @@ async def api_palm(request: Request):
     heart_type = data.get("heart_type", "Curved and Warm").strip() or "Curved and Warm"
     
     user_name = data.get("name", "").strip()
-    if not user_name or user_name == "User":
-        user_name = "Arnab Chaudhuri"
+    if not user_name:
+        user_name = "User"
         
     is_admin = data.get("is_admin", False)
     
@@ -1893,40 +1893,96 @@ async def api_palm(request: Request):
         "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"
     })
     
-    # Logical mapping based on user self-assessment selections
+    # 1. Unique User Seed based on Name (Fixes static/duplicate issue across different users)
+    name_seed = sum(ord(c) for c in user_name.lower()) if user_name else 42
+    
+    # Base Descriptions
     life_descriptions = {
-        "Deep and Unbroken": "Deep and unbroken Life Line indicating robust physical vitality, exceptional immunity, and long lifespan.",
-        "Sweeping & Curved": "Sweeping Life Line reaching towards the Mount of Venus, showing high energy, enthusiasm, and travel prospects.",
-        "Chained Initial": "Chained initial Life Line normalizing after age 24, signifying early life sensitivity evolving into remarkable strength.",
-        "Double Line (Mars)": "Double Life Line (Martian Line) offering extraordinary protective aura, accident resistance, and strong inner endurance."
+        "Deep and Unbroken": [
+            "Deep and unbroken Life Line indicating robust physical vitality, exceptional immunity, and long lifespan.",
+            "Strong, continuous Life Line denoting high physical resilience, steady energy flow, and longevity for " + user_name + "."
+        ],
+        "Sweeping & Curved": [
+            "Sweeping Life Line reaching towards the Mount of Venus, showing high energy, enthusiasm, and travel prospects.",
+            "Generously curved Life Line reflecting vibrant passion, family connection, and dynamic life experiences."
+        ],
+        "Chained Initial": [
+            "Chained initial Life Line normalizing after age 24, signifying early life sensitivity evolving into remarkable strength.",
+            "Delicate initial patterns transitioning into a firm line, marking early adaptability and mid-life grounding."
+        ],
+        "Double Line (Mars)": [
+            "Double Life Line (Martian Line) offering extraordinary protective aura, accident resistance, and strong inner endurance.",
+            "Parallel Martian line safeguards physical health, neutralizing obstacles and boosting protective vitality."
+        ]
     }
     
     head_descriptions = {
-        "Straight and Clear": "Straight and deep Head Line showing incredible focus, practical intellect, and business acumen.",
-        "Sloping to Luna": "Well-defined Head Line sloping slightly toward Luna, representing strong creative power combined with sharp logic.",
-        "Forked (Writer's Fork)": "Long clear Head Line with a fork at the end (Writer's Fork), indicating high adaptability, dual skillsets, and creative vision.",
-        "High near Jupiter": "High-anchored Head Line near Jupiter, indicating self-driven intellect, independent thinking, and analytical precision."
+        "Straight and Clear": [
+            "Straight and deep Head Line showing incredible focus, practical intellect, and business acumen.",
+            "Direct and well-anchored Head Line revealing sharp analytical thinking, realism, and structured decision-making."
+        ],
+        "Sloping to Luna": [
+            "Well-defined Head Line sloping slightly toward Luna, representing strong creative power combined with sharp logic.",
+            "Gently curving mental line pointing to Luna, blending high imagination, intuition, and intellectual depth."
+        ],
+        "Forked (Writer's Fork)": [
+            "Long clear Head Line with a fork at the end (Writer's Fork), indicating high adaptability, dual skillsets, and creative vision.",
+            "Bifurcated Head Line providing versatile mental agility, strategic problem-solving, and communicative flair."
+        ],
+        "High near Jupiter": [
+            "High-anchored Head Line near Jupiter, indicating self-driven intellect, independent thinking, and analytical precision.",
+            "Elevated starting point under Jupiter, marking early independence, ambition, and strong self-confidence."
+        ]
     }
     
     heart_descriptions = {
-        "Curved and Warm": "Curved Heart Line ending between Jupiter and Saturn, showing balanced emotional needs, empathy, and relationship warmth.",
-        "Under Jupiter": "Heart Line terminating beneath the Jupiter mount, symbolizing deep emotional sincerity, high morals, and devotion.",
-        "Upward Branches": "Clear Heart Line with upward branches, predicting joyful personal relationships and strong emotional resilience.",
-        "Trishul Marked": "Trifurcated Heart Line (Trishul marking at termination), indicating immense compassion, popularity, and spiritual harmony."
+        "Curved and Warm": [
+            "Curved Heart Line ending between Jupiter and Saturn, showing balanced emotional needs, empathy, and relationship warmth.",
+            "Warmly curved emotional line balancing passion with wisdom, fostering healthy relationship boundaries."
+        ],
+        "Under Jupiter": [
+            "Heart Line terminating beneath the Jupiter mount, symbolizing deep emotional sincerity, high morals, and devotion.",
+            "Elevated termination near Jupiter Mount reflecting noble ideals, loyalty, and deep emotional devotion."
+        ],
+        "Upward Branches": [
+            "Clear Heart Line with upward branches, predicting joyful personal relationships and strong emotional resilience.",
+            "Multiple upward offshoots along the Heart Line denoting social optimism, warmth, and uplifting romantic bonds."
+        ],
+        "Trishul Marked": [
+            "Trifurcated Heart Line (Trishul marking at termination), indicating immense compassion, popularity, and spiritual harmony.",
+            "Triple-pronged Trishul formation at emotional terminus, conferring charismatic empathy and spiritual peace."
+        ]
     }
 
-    # Dynamic Focus Area Alignment mapping to fix the previous dummy/static output bug
     focus_alignment_descriptions = {
-        "Career & Wealth": "Strong planetary mount resonance detected in Saturn and Jupiter zones, supporting professional expansion, wealth accumulation, and entrepreneurial leadership.",
-        "Health & Vitality": "Robust bio-energetic pulse observed across the primary vitality arches, indicating strong immune resilience, physical stamina, and long-term wellness.",
-        "Relationships & Marriage": "Harmonious Venus and lunar nodal configurations detected, predicting deep emotional empathy, loyalty, and lasting domestic harmony.",
-        "Spiritual Growth": "High spiritual frequency and elevated mount alignments identified, encouraging inner awakening, intuition, and profound self-realization."
+        "Career & Wealth": [
+            "Strong planetary mount resonance detected in Saturn and Jupiter zones, supporting professional expansion, wealth accumulation, and entrepreneurial leadership.",
+            "Prominent mount elevations align dynamically for " + user_name + ", indicating major financial stability and leadership milestones."
+        ],
+        "Health & Vitality": [
+            "Robust bio-energetic pulse observed across the primary vitality arches, indicating strong immune resilience, physical stamina, and long-term wellness.",
+            "Balanced palmar mounts sustain physical endurance and high energy levels tailored for " + user_name + "."
+        ],
+        "Relationships & Marriage": [
+            "Harmonious Venus and lunar nodal configurations detected, predicting deep emotional empathy, loyalty, and lasting domestic harmony.",
+            "Well-formed Venusian mounts support emotional stability, deep connection, and marital peace."
+        ],
+        "Spiritual Growth": [
+            "High spiritual frequency and elevated mount alignments identified, encouraging inner awakening, intuition, and profound self-realization.",
+            "Elevated Rahu-Ketu and Jupiter alignment fosters deep inner wisdom and spiritual growth for " + user_name + "."
+        ]
     }
 
-    l_desc = life_descriptions.get(life_type, life_descriptions["Deep and Unbroken"])
-    h_desc = head_descriptions.get(head_type, head_descriptions["Straight and Clear"])
-    ht_desc = heart_descriptions.get(heart_type, heart_descriptions["Curved and Warm"])
-    f_align_desc = focus_alignment_descriptions.get(focus, "Strong planetary mount resonance detected, supporting continuous growth and stability.")
+    # Dynamic selection combining option key + name seed
+    l_opts = life_descriptions.get(life_type, life_descriptions["Deep and Unbroken"])
+    h_opts = head_descriptions.get(head_type, head_descriptions["Straight and Clear"])
+    ht_opts = heart_descriptions.get(heart_type, heart_descriptions["Curved and Warm"])
+    f_opts = focus_alignment_descriptions.get(focus, focus_alignment_descriptions["Career & Wealth"])
+
+    l_desc = l_opts[name_seed % len(l_opts)]
+    h_desc = h_opts[(name_seed + 1) % len(h_opts)]
+    ht_desc = ht_opts[(name_seed + 2) % len(ht_opts)]
+    f_align_desc = f_opts[(name_seed + 3) % len(f_opts)]
 
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>

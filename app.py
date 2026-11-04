@@ -1915,9 +1915,18 @@ async def api_palm(request: Request):
         "Trishul Marked": "Trifurcated Heart Line (Trishul marking at termination), indicating immense compassion, popularity, and spiritual harmony."
     }
 
+    # Dynamic Focus Area Alignment mapping to fix the previous dummy/static output bug
+    focus_alignment_descriptions = {
+        "Career & Wealth": "Strong planetary mount resonance detected in Saturn and Jupiter zones, supporting professional expansion, wealth accumulation, and entrepreneurial leadership.",
+        "Health & Vitality": "Robust bio-energetic pulse observed across the primary vitality arches, indicating strong immune resilience, physical stamina, and long-term wellness.",
+        "Relationships & Marriage": "Harmonious Venus and lunar nodal configurations detected, predicting deep emotional empathy, loyalty, and lasting domestic harmony.",
+        "Spiritual Growth": "High spiritual frequency and elevated mount alignments identified, encouraging inner awakening, intuition, and profound self-realization."
+    }
+
     l_desc = life_descriptions.get(life_type, life_descriptions["Deep and Unbroken"])
     h_desc = head_descriptions.get(head_type, head_descriptions["Straight and Clear"])
     ht_desc = heart_descriptions.get(heart_type, heart_descriptions["Curved and Warm"])
+    f_align_desc = focus_alignment_descriptions.get(focus, "Strong planetary mount resonance detected, supporting continuous growth and stability.")
 
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>
@@ -1937,7 +1946,7 @@ async def api_palm(request: Request):
             <p><b>1. Life Line Analysis:</b> {l_desc}</p>
             <p><b>2. Head Line Analysis:</b> {h_desc}</p>
             <p><b>3. Heart Line Analysis:</b> {ht_desc}</p>
-            <p><b>4. Focus Area Alignment ({focus}):</b> Strong planetary mount resonance detected, supporting continuous growth and stability.</p>
+            <p><b>4. Focus Area Alignment ({focus}):</b> {f_align_desc}</p>
         </div>
         <p style='color: #4ade80; font-weight: bold; margin-top: 15px;'>✅ Full Palmistry PDF Report Unlocked Successfully via Admin Access (₹79)!</p>
     </div>
@@ -1952,7 +1961,7 @@ async def api_palm(request: Request):
             f"1. Life Line: {l_desc}",
             f"2. Head Line: {h_desc}",
             f"3. Heart Line: {ht_desc}",
-            f"4. Focus Area: {focus} optimization active.",
+            f"4. Focus Area Alignment ({focus}): {f_align_desc}",
             "Guidance Note: Hand markings reflect conscious actions and inner potential. Use these insights for personal empowerment."
         ]
     )

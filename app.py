@@ -1022,18 +1022,52 @@ HTML_TEMPLATE = """
 
         <!-- AI PALMISTRY -->
         <div id="tab-palm" class="tab-content">
-            <h3>🖐️ AI Palmistry & Hand Analysis PDF</h3>
+            <h3>🖐️ Interactive Palmistry & Hand Analysis PDF</h3>
+            <p style="color: #f3e8ff; font-size: 0.95rem; margin-bottom: 15px;">Select your primary palm characteristics below for a precise, logical astrological and hand-reading assessment:</p>
+            
             <div class="row">
                 <div>
-                    <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Upload Palm Photo:</label>
-                    <input type="file" id="palm-file-input" accept="image/*" style="padding: 9px;">
+                    <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Focus Area:</label>
+                    <select id="palm-focus">
+                        <option value="Career & Wealth">Career & Wealth</option>
+                        <option value="Health & Vitality">Health & Vitality</option>
+                        <option value="Relationships & Marriage">Relationships & Marriage</option>
+                        <option value="Spiritual Growth">Spiritual Growth</option>
+                    </select>
                 </div>
                 <div>
-                    <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Focus Area:</label>
-                    <input type="text" id="palm-focus" placeholder="e.g. Life Line / Career & Wealth">
+                    <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Life Line Type:</label>
+                    <select id="palm-life">
+                        <option value="Deep and Unbroken">Deep and Unbroken (Robust Vitality)</option>
+                        <option value="Sweeping & Curved">Sweeping & Curved (High Energy)</option>
+                        <option value="Chained Initial">Chained Initial (Evolving Strength)</option>
+                        <option value="Double Line (Mars)">Double Line / Martian Line (Protective)</option>
+                    </select>
                 </div>
             </div>
-            <button class="primary-btn" onclick="analyzePalm()">🖐️ Run AI Palm Analysis (₹79)</button>
+
+            <div class="row" style="margin-top: 10px;">
+                <div>
+                    <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Head Line (Mind) Type:</label>
+                    <select id="palm-head">
+                        <option value="Straight and Clear">Straight and Clear (Practical Intellect)</option>
+                        <option value="Sloping to Luna">Sloping to Luna (Creative Vision)</option>
+                        <option value="Forked (Writer's Fork)">Forked / Writer's Fork (Adaptable)</option>
+                        <option value="High near Jupiter">High near Jupiter (Independent Thinker)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; color: #fde047; display: block; margin-bottom: 5px;">Heart Line (Emotion) Type:</label>
+                    <select id="palm-heart">
+                        <option value="Curved and Warm">Curved and Warm (Balanced & Empathetic)</option>
+                        <option value="Under Jupiter">Under Jupiter Mount (Sincere & Devoted)</option>
+                        <option value="Upward Branches">Upward Branches (Joyful & Resilient)</option>
+                        <option value="Trishul Marked">Trishul / Trident Marked (Spiritual & Popular)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="primary-btn" onclick="analyzePalm()" style="margin-top: 20px;">🖐️ Generate Palmistry Report & PDF (₹79)</button>
             <div id="palm-result" style="margin-top: 15px;"></div>
         </div>
 
@@ -1406,30 +1440,25 @@ HTML_TEMPLATE = """
         }
 
         async function analyzePalm() {
-            let focus = document.getElementById('palm-focus').value || 'Life Line & Career';
-            let fileInput = document.getElementById('palm-file-input');
+            let focus = document.getElementById('palm-focus').value;
+            let life_type = document.getElementById('palm-life').value;
+            let head_type = document.getElementById('palm-head').value;
+            let heart_type = document.getElementById('palm-heart').value;
             let hName = localStorage.getItem('hub_name') || 'User';
-            
-            if(fileInput.files.length === 0) {
-                alert("⚠️ Please upload a photo of your palm first to run the AI scan!");
-                return;
-            }
-
-            let filename = fileInput.files[0].name;
 
             showMagicLoader(async () => {
                 try {
                     let res = await fetch('/api/palm', { 
                         method: 'POST', 
                         headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify({focus, filename, name: hName, is_admin: isAdminUnlocked}) 
+                        body: JSON.stringify({ focus, life_type, head_type, heart_type, name: hName, is_admin: isAdminUnlocked }) 
                     });
                     let data = await res.json();
                     let outputHtml = (data.teaser || '') + (data.full_report || '') + (data.pdf_download_btn || '') + (data.paywall || '');
                     document.getElementById('palm-result').innerHTML = outputHtml;
                 } catch(err) {
                     console.log("Palmistry Error:", err);
-                    document.getElementById('palm-result').innerHTML = "<p style='color:#ef4444;'>❌ Processing error. Please try uploading again.</p>";
+                    document.getElementById('palm-result').innerHTML = "<p style='color:#ef4444;'>❌ Processing error. Please try again.</p>";
                 }
             });
         }

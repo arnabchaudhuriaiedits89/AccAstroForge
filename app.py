@@ -2402,11 +2402,14 @@ async def api_vastu(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis PDF", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
-    # Advanced Multi-Seed Hashes for complete user variation
+    # Advanced Multi-Seed Hashes incorporating facing distinctly
     name_hash = sum(ord(c) * (i + 1) for i, c in enumerate(name.lower()))
     city_hash = sum(ord(c) * (i + 5) for i, c in enumerate(city.lower()))
-    facing_hash = sum(ord(c) * (i + 3) for i, c in enumerate(facing.lower()))
-    combined_seed = name_hash + city_hash + facing_hash
+    facing_hash = sum(ord(c) * (i + 7) for i, c in enumerate(facing.lower()))
+    
+    # Separate seed for property guideline so changing facing guarantees a different guideline index
+    prop_seed = name_hash + city_hash + (facing_hash * 3)
+    zonal_seed = name_hash + city_hash + facing_hash
     
     vastu_blueprints = {
         "Residential House / Flat": [
@@ -2497,12 +2500,12 @@ async def api_vastu(request: Request):
     ]
     
     blueprints_list = vastu_blueprints.get(p_type, vastu_blueprints["Residential House / Flat"])
-    base_prop_note = blueprints_list[combined_seed % len(blueprints_list)]
+    base_prop_note = blueprints_list[prop_seed % len(blueprints_list)]
     
     insights_list = directional_zonal_insights.get(facing, directional_zonal_insights["North Facing"])
-    specific_remedy = insights_list[(combined_seed + name_hash) % len(insights_list)]
+    specific_remedy = insights_list[zonal_seed % len(insights_list)]
     
-    chosen_remedy = remedial_blueprints[(combined_seed + city_hash) % len(remedial_blueprints)]
+    chosen_remedy = remedial_blueprints[(zonal_seed + city_hash) % len(remedial_blueprints)]
     
     filename = f"Vastu_Report_{name.replace(' ', '_')}_{p_type.split(' ')[0]}.pdf"
     generate_pdf_report(

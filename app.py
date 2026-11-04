@@ -1847,7 +1847,12 @@ async def api_palm(request: Request):
     data = await request.json()
     focus = data.get("focus", "Life Line & Career").strip() or "Life Line & Career"
     filename_input = data.get("filename", "palm_image.jpg").strip() or "palm_image.jpg"
-    user_name = data.get("name", "User").strip() or "User"
+    
+    # Get user name safely, fallback to default if missing or guest
+    user_name = data.get("name", "").strip()
+    if not user_name or user_name == "User":
+        user_name = "Arnab Chaudhuri"
+        
     is_admin = data.get("is_admin", False)
     
     save_log({
@@ -1858,10 +1863,7 @@ async def api_palm(request: Request):
         "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"
     })
     
-    # ---------------------------------------------------------------------
-    # DYNAMIC MULTI-VARIANT SEEDING ALGORITHM FOR PALMISTRY
-    # Calculates unique index values based on filename, user name and focus area
-    # ---------------------------------------------------------------------
+    # Dynamic seeding algorithm based on filename, user name and focus area
     raw_key = (filename_input + user_name + focus).lower()
     base_hash = sum(ord(c) * (i + 1) for i, c in enumerate(raw_key))
     name_hash = sum(ord(c) * (i + 7) for i, c in enumerate(user_name.lower()))

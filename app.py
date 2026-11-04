@@ -2376,7 +2376,7 @@ async def api_vastu(request: Request):
     city = data.get("city", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    VASTU_DB_TABLE = "user_vastu_reports_v4"
+    VASTU_DB_TABLE = "user_vastu_reports_v5"
     
     try:
         conn = sqlite3.connect(DB_FILE)
@@ -2402,15 +2402,16 @@ async def api_vastu(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis PDF", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
-    # Mathematical ASCII Seeds with explicit property weight distinction
+    # Stronger ASCII Weights giving distinct prominence to City and Facing
     n_seed = sum(ord(c) * (i + 1) for i, c in enumerate(name.lower()))
-    c_seed = sum(ord(c) * (i + 3) for i, c in enumerate(city.lower()))
-    f_seed = sum(ord(c) * (i + 5) for i, c in enumerate(facing.lower()))
-    p_seed = sum(ord(c) * (i + 9) for i, c in enumerate(p_type.lower()))
+    c_seed = sum(ord(c) * (i + 11) for i, c in enumerate(city.lower()))
+    f_seed = sum(ord(c) * (i + 7) for i, c in enumerate(facing.lower()))
+    p_seed = sum(ord(c) * (i + 13) for i, c in enumerate(p_type.lower()))
     
-    # Unique composite seeds for distinct sections
-    blueprint_seed = n_seed + c_seed + f_seed + (p_seed * 7)
-    zonal_seed = n_seed + c_seed + f_seed + (p_seed * 3)
+    # Highly decoupled composite seeds
+    blueprint_seed = n_seed + (c_seed * 5) + f_seed + (p_seed * 3)
+    zonal_seed = (n_seed * 2) + (c_seed * 7) + (f_seed * 3) + p_seed
+    remedy_seed = n_seed + c_seed + (f_seed * 5) + (p_seed * 11)
     
     zone_dict = {
         "North Facing": ("Kubera (Lord of Wealth)", "North-East Ishan corner", "Northern portal flow"),
@@ -2439,8 +2440,16 @@ async def api_vastu(request: Request):
         "reinforcing boundary wall perimeters"
     ]
     
+    city_modifiers = [
+        f"tailored to regional climatic topography of {city}",
+        f"synchronized with local geomagnetic vectors native to {city}",
+        f"calibrated for atmospheric pressure trends across {city}",
+        f"adjusted for urban micro-climate zoning prevalent in {city}"
+    ]
+    
     verb_chosen = element_verbs[blueprint_seed % len(element_verbs)]
     action_chosen = action_notes[blueprint_seed % len(action_notes)]
+    city_mod_chosen = city_modifiers[c_seed % len(city_modifiers)]
     
     prop_focus_terms = {
         "Residential House / Flat": "family living quarters and bedroom zones",
@@ -2454,17 +2463,34 @@ async def api_vastu(request: Request):
     
     base_prop_note = (
         f"For {name}'s {p_type} situated in {city} with a {facing} alignment, "
-        f"the internal zoning dedicated to {p_term}, governed by {z_tuple[0]}, {verb_chosen}. "
+        f"the internal zoning dedicated to {p_term}, {city_mod_chosen} and governed by {z_tuple[0]}, {verb_chosen}. "
         f"Special architectural focus must be directed toward the {z_tuple[1]} by {action_chosen}, "
         f"ensuring optimal energy distribution across all quadrants."
     )
     
+    zonal_actions = [
+        f"keeping the primary threshold illuminated and unobstructed, integrating elemental copper corrections in {city}",
+        f"balancing the {z_tuple[1]} with high-frequency brass crystals suited for {city}'s environment",
+        f"deploying protective geo-pathic neutralizing plates along the perimeter walls across {city}",
+        f"re-aligning subterranean water drainage channels to prevent stagnation within {city}'s jurisdiction"
+    ]
+    
+    z_act_chosen = zonal_actions[zonal_seed % len(zonal_actions)]
+    
     specific_remedy = (
-        f"Zonal assessment for {facing} ({z_tuple[2]}) indicates that {name}'s {p_type.lower()} "
-        f"benefits immensely from keeping the primary threshold illuminated and unobstructed. "
-        f"Integrating elemental copper corrections and balancing the {z_tuple[1]} "
-        f"will secure enduring prosperity and operational success for {name} in {city}."
+        f"Zonal assessment for {facing} ({z_tuple[2]}) indicates that {name}'s {p_type.lower()} in {city} "
+        f"benefits immensely from {z_act_chosen}. "
+        f"This precise geospatial adjustment will secure enduring prosperity and operational success for {name}."
     )
+    
+    remedial_options = [
+        f"Deploy Vastu copper pyramids in afflicted South-West and South-East corners, install crystal grids tailored for {city}, and maintain pristine entrance lighting.",
+        f"Fix brass helix correctors along cut boundaries, place sea salt bowls in restrooms across {city}, and keep the North-East zone strictly unburdened.",
+        f"Erect protective boundary shielding matching local {city} soil attributes, install Surya yantras at the main portal, and keep central Brahmasthan open.",
+        f"Incorporate color therapy remedies specific to {facing}, set up water fountains in northern sectors for {city} properties, and reinforce southern walls."
+    ]
+    
+    chosen_remedy = remedial_options[remedy_seed % len(remedial_options)]
     
     filename = f"Vastu_Report_{name.replace(' ', '_')}_{p_type.split(' ')[0]}.pdf"
     generate_pdf_report(
@@ -2475,7 +2501,7 @@ async def api_vastu(request: Request):
             f"Facing Direction: {facing} | Location: {city}",
             f"1. Algorithmic Vastu Blueprint: {base_prop_note}",
             f"2. Zonal Energy Breakdown: {specific_remedy}",
-            f"3. Remedial Enhancements: Deploy Vastu copper pyramids in afflicted zones, correct boundary slope inclinations, and maintain pristine cleanliness at the main entrance."
+            f"3. Remedial Enhancements: {chosen_remedy}"
         ]
     )
     
@@ -2496,7 +2522,7 @@ async def api_vastu(request: Request):
         <p style='color: #f3e8ff; line-height: 1.8;'><b>Property:</b> {p_type} | <b>Facing:</b> {facing} | <b>City:</b> {city}</p>
         <p style='color: #f3e8ff; line-height: 1.8; margin-top:8px;'><b>Algorithmic Property Analysis:</b> {base_prop_note}</p>
         <p style='color: #f3e8ff; line-height: 1.8; margin-top:8px;'><b>Detailed Zonal Breakdown:</b> {specific_remedy}</p>
-        <p style='color: #f3e8ff; line-height: 1.8; margin-top:10px;'><b>Remedial Blueprint:</b> Installing copper pyramids in negative quadrants and keeping the North-East zone illuminated will maximize financial prosperity and family harmony for {name}.</p>
+        <p style='color: #f3e8ff; line-height: 1.8; margin-top:10px;'><b>Remedial Blueprint:</b> {chosen_remedy}</p>
         <p style='color: #4ade80; font-weight: bold; margin-top: 10px;'>✅ Full Vastu Report Unlocked Successfully via Admin Access!</p>
     </div>
     """ if is_admin else ""

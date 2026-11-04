@@ -776,11 +776,11 @@ HTML_TEMPLATE = """
                 <h4>💳 Wallet Balance: ₹ 0.00</h4>
                 <p>Use credits for instant unlocking of reports.</p>
                 <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(49)">⚡ ₹49</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(59)">⚡ ₹59</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(79)">⚡ ₹79</button>
-                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(149)">⚡ ₹149</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(99)">⚡ ₹99</button>
                     <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(199)">⚡ ₹199</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(299)">⚡ ₹299</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(399)">⚡ ₹399</button>
+                    <button class="primary-btn" style="padding: 10px 4px; font-size: 0.85rem;" onclick="topupWallet(499)">⚡ ₹499</button>
                 </div>
                 <div id="wallet-result" style="margin-top:10px;"></div>
             </div>

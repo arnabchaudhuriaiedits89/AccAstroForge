@@ -2577,15 +2577,22 @@ async def api_numerology(request: Request):
     
     try:
         dt_parts = dob.split("-")
-        day = int(dt_parts[2])
+        # Handle YYYY-MM-DD format correctly where day is the last part or DD-MM-YYYY where day is first
+        if len(dt_parts[0]) == 4:
+            day = int(dt_parts[2])
+        else:
+            day = int(dt_parts[0])
     except Exception:
         day = 1
 
+    # Mulank (Psychic Number): Sum of digits of birth day reduced to single digit
     mulank = sum(int(d) for d in str(day))
     while mulank > 9:
         mulank = sum(int(d) for d in str(mulank))
         
-    bhagyank = sum(int(d) for d in dob if d.isdigit())
+    # Bhagyank (Destiny Number): Sum of ALL digits in DOB reduced to single digit
+    total_digits_sum = sum(int(d) for d in dob if d.isdigit())
+    bhagyank = total_digits_sum
     while bhagyank > 9:
         bhagyank = sum(int(d) for d in str(bhagyank))
         

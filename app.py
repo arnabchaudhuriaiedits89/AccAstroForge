@@ -2376,8 +2376,7 @@ async def api_vastu(request: Request):
     city = data.get("city", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    # Unique table & key for Vastu analysis per user and property configuration
-    VASTU_DB_TABLE = "user_vastu_reports"
+    VASTU_DB_TABLE = "user_vastu_reports_v2"
     
     try:
         conn = sqlite3.connect(DB_FILE)
@@ -2403,52 +2402,107 @@ async def api_vastu(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis PDF", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
-    # Dynamic unique variation offset based on user name and property attributes
-    user_offset = sum(ord(c) for c in f"{name}_{p_type}_{facing}_{city}")
+    # Advanced Multi-Seed Hashes for complete user variation
+    name_hash = sum(ord(c) * (i + 1) for i, c in enumerate(name.lower()))
+    city_hash = sum(ord(c) * (i + 5) for i, c in enumerate(city.lower()))
+    facing_hash = sum(ord(c) * (i + 3) for i, c in enumerate(facing.lower()))
+    combined_seed = name_hash + city_hash + facing_hash
     
-    prop_specific_notes = {
+    vastu_blueprints = {
         "Residential House / Flat": [
-            f"{p_type} facing {facing}: Focus on Master Bedroom in South-West, Kitchen in South-East (Agneya), and Living room in North/East for optimal family health and peace.",
-            f"{p_type} facing {facing}: Ensure children's study room is aligned towards North-East and main entrance has adequate brightness for positive energy flow.",
-            f"{p_type} facing {facing}: Keep the central Brahmasthan open and clutter-free, positioning heavy structural almirahs along southern and western walls."
+            f"Master Bedroom in South-West (Nairutya) for structural authority, Kitchen in South-East (Agneya) for health energy, and open Brahmasthan to foster family peace.",
+            f"Children's study alignment toward North-East (Ishan), main entrance illuminated with high-luminescence lighting, and heavy storage positioned along South and West walls.",
+            f"Living space layout in North/East sector for social harmony, avoiding water sumps in South-East, and positioning heavy wardrobes strictly in the South-West quadrant.",
+            f"Kitchen platform facing East for vitality, master bed headboard aligned to South or East, and keeping the central Brahmasthan completely unblocked and light.",
+            f"Balcony and window ventilation optimized along Eastern and Northern faces, overhead water tanks on the South-West roof corner, and clean North-East entry."
         ],
         "Commercial Office / Shop": [
-            f"{p_type} facing {facing}: Focus on Owner/Manager cabin in South-West facing North/East, cash locker in North zone (Kubera), and client seating in North-West.",
-            f"{p_type} facing {facing}: Position billing counter towards North or East, ensuring smooth customer inflow and steady cash liquidity.",
-            f"{p_type} facing {facing}: Place marketing and executive desks in the North-West sector to boost communication, client acquisition, and deal closures."
+            f"Executive/Owner cabin in South-West facing North, cash locker opening towards North (Kubera direction), and reception area in the North-East zone.",
+            f"Billing counter placed in North or East quadrant for positive cash flow, marketing team desks in North-West (Vayavya), and clean uncluttered threshold.",
+            f"Staff seating facing North/East, server room and electrical equipment setup in South-East (Agneya), and structural heavy safes along the Western perimeter.",
+            f"Conference room in North-West for smooth deal closures, owner desk backed by solid wall in South-West, and digital displays in East for brand exposure.",
+            f"Client waiting lounge in North/North-West, cash drawer secured in South-West opening North, and avoiding any structural beams directly above key desks."
         ],
         "Factory / Manufacturing Unit": [
-            f"{p_type} facing {facing}: Heavy machinery placement in South and West zones, raw materials in North-West, finished goods in North-West/North, and heavy electrical transformers in South-East.",
-            f"{p_type} facing {facing}: Position boiler and thermal equipment strictly in the Agneya (South-East) corner to prevent operational hazards.",
-            f"{p_type} facing {facing}: Administrative offices should be set up in the southern or western quadrants facing north/east for efficient factory oversight."
+            f"Heavy production machinery positioned in South and West zones, raw materials inventory in North-West, and high-voltage transformers in South-East (Agneya).",
+            f"Boilers and heating elements placed strictly in Agneya (South-East) corner, finished products stored near North-West dispatch bays, and offices in South-West.",
+            f"Effluent treatment or water handling plants in North-West/West sectors, heavy stamping equipment in South, and main administrative block facing East.",
+            f"Material flow operating in clockwise direction from North-West entry to South-West processing and East dispatch, keeping Brahmasthan free of heavy weight.",
+            f"Loading docks in North-West, power generator set in South-East corner, and administrative director setup in elevated South-West quadrant."
         ],
         "Warehouse / Storage Hub": [
-            f"{p_type} facing {facing}: Heavy pallet racking and long-term bulk storage stacked along South and West walls, dispatch bays towards North-West, and administrative desk in North/East.",
-            f"{p_type} facing {facing}: Keep light and fast-moving inventory near Northern loading docks to ensure rapid distribution and turnover.",
-            f"{p_type} facing {facing}: Maintain an elevated flooring level in the southern and western storage bays for structural stability and inventory longevity."
+            f"Heavy pallet storage racks positioned along South and West walls, fast-moving items placed near North-West shipping gates, and office desk in North-East.",
+            f"Elevated floor levels in southern/western storage bays, clear access aisles through central Brahmasthan, and security/gatehouse located in North-West.",
+            f"Long-term inventory stacked in South-West corner, loading bays in North-East/North, and ventilation exhausts installed along upper Western walls.",
+            f"Hazardous/combustible storage isolated in South-East, office control center in South-West facing East, and dispatch staging in North-West.",
+            f"Racking alignment running North-to-South to maximize cosmic airflow, keeping the North-East corner free from heavy static loads."
         ],
         "Plot / Land": [
-            f"{p_type} facing {facing}: Ensure regular shape (square or rectangular) with North-East extension (Ishan vriddhi), proper slope towards North-East, and compound wall higher in South-West.",
-            f"{p_type} facing {facing}: Borewell or underground water storage should be placed in the North-East quadrant before initiating construction.",
-            f"{p_type} facing {facing}: Boundary walls in South and West must be constructed thicker and higher than North and Eastern boundaries to trap positive cosmic energy."
+            f"Regular rectangular/square plot geometry, slope tilting gently towards North-East, and boundary wall built higher and thicker along South and West sides.",
+            f"Underground water tank or tube-well located in North-East (Ishan) sector, main gate positioned in positive Pada of North or East, and central area leveled.",
+            f"South-West corner elevated higher than North-East level, heavy boundary wall in Nairutya zone, and open spatial clearance along Eastern margin.",
+            f"North-East corner kept extended or perfectly square (avoiding cuts), main entry in 3rd or 4th Pada of North/East, and proper soil compaction in South-West.",
+            f"Drainage outlet directed toward North or East, avoiding heavy trees directly in front of the main entrance, and keeping Ishan corner pristine."
         ]
     }
     
-    notes_list = prop_specific_notes.get(p_type, prop_specific_notes["Residential House / Flat"])
-    base_prop_note = notes_list[user_offset % len(notes_list)]
-    
-    remedy_map = {
-        "North Facing": f"North is governed by Kubera (Wealth). Ensure the entrance is clean and unobstructed. Water fountain placement or underground sumps in the North-East corner for {name} will amplify financial influx.",
-        "East Facing": f"East is governed by Surya (Health & Vitality). Avoid heavy structural blocking in the East for {name}'s property. Large windows here invite vital solar prana.",
-        "South Facing": f"South is governed by Yama. Ensure bedrooms or heavy master structures are placed in the South/South-West. Avoid water bodies in the southern sector.",
-        "West Facing": f"West is governed by Varuna (Gains). Ideal for dining spaces and heavy storage. Keep the North-West Vayavya zone balanced with smooth ventilation.",
-        "North-East (Ishan)": f"Extremely auspicious spiritual and water zone. Must be kept clutter-free and illuminated. Perfect location for prayer rooms or meditation.",
-        "South-East (Agneya)": f"The Fire zone (Agni). Ideal for kitchens, electrical panels, and heavy machinery. Avoid septic tanks or water storage in this corner.",
-        "South-West (Nairutya)": f"The Earth zone of stability. The head of the family or owner should occupy the master bedroom here. Heavy wardrobes should face North.",
-        "North-West (Vayavya)": f"The Air zone supporting networking and travel success. Ideal for guest rooms, finished inventory dispatch, or ventilation ducts."
+    directional_zonal_insights = {
+        "North Facing": [
+            f"North zone (Kubera) for {name}: Entrance must be kept clear of obstacles. Placing a serene water element or green plants in North-East will expand financial growth.",
+            f"North zone for {name}: Avoid red or fiery colors at the entrance. Incorporate mirror placements or metallic copper accents in North-East to boost liquidity.",
+            f"North zone for {name}: Maintain optimal lighting at the front portal. Ensure no trash cans or heavy scrap are placed near the northern entry zone."
+        ],
+        "East Facing": [
+            f"East zone (Surya) for {name}: Maximize morning solar light intake with wide glass openings. Avoid blocking the East perimeter with high structural walls.",
+            f"East zone for {name}: Use light wooden finishes and green foliage near Eastern windows to amplify growth energy and social connections.",
+            f"East zone for {name}: Keep Eastern boundary clean and slightly lower than Western boundary to welcome auspicious solar prana."
+        ],
+        "South Facing": [
+            f"South zone (Yama) for {name}: Construct thicker boundary walls and heavy structures in South. Avoid underground water sumps in this sector.",
+            f"South zone for {name}: Position heavy master furniture along southern walls. Use warm red/coral accents or Mars pyramids to balance energy.",
+            f"South zone for {name}: Ensure main door has a solid wooden threshold. Avoid placement of main water outlets toward the South-West quadrant."
+        ],
+        "West Facing": [
+            f"West zone (Varuna) for {name}: Ideal for dining spaces, study rooms, and financial storage. Maintain strong structural stability along western walls.",
+            f"West zone for {name}: Place heavy metallic items or white/blue color themes here. Ensure North-West Vayavya zone has proper air circulation.",
+            f"West zone for {name}: Overhead water tanks on South-West roof support stability and gains. Keep western windows equipped with sturdy shades."
+        ],
+        "North-East (Ishan)": [
+            f"North-East (Ishan) zone for {name}: Sacred water and wisdom zone. Must be maintained spotless, well-lit, and ideal for prayer or meditation.",
+            f"North-East zone for {name}: Strictly avoid toilets, kitchens, or heavy storage in this corner to prevent financial and health blockages.",
+            f"North-East zone for {name}: Place clear crystal bowls or low water features here to ignite mental clarity and spiritual harmony."
+        ],
+        "South-East (Agneya)": [
+            f"South-East (Agneya) zone for {name}: Fire element sector. Ideal for kitchens, transformers, and electrical meters. Avoid water bodies here.",
+            f"South-East zone for {name}: Use red, orange, or pink accents. Ensure cooking stove or heating units are placed facing East.",
+            f"South-East zone for {name}: Fix electrical distribution panels in this corner. Keep septic tanks far away from this quadrant."
+        ],
+        "South-West (Nairutya)": [
+            f"South-West (Nairutya) zone for {name}: Earth element sector for stability. Master bedroom or principal desk must be positioned here.",
+            f"South-West zone for {name}: Keep this zone highest and heaviest in the entire property. Avoid cuts, glass openings, or main entry gates here.",
+            f"South-West zone for {name}: Place heavy wardrobes facing North. Earthy yellow/brown colors enhance personal authority and stability."
+        ],
+        "North-West (Vayavya)": [
+            f"North-West (Vayavya) zone for {name}: Air element sector for movement. Ideal for guest rooms, finished inventory storage, and sales desks.",
+            f"North-West zone for {name}: Ensure smooth ventilation. White, silver, or light grey shades foster business networking and helpful connections.",
+            f"North-West zone for {name}: Great location for vehicle parking or dispatch staging. Keep central air ducts balanced across this sector."
+        ]
     }
     
-    specific_remedy = remedy_map.get(facing, f"Ensure proper elemental balance (Panchamahabhuta) across all quadrants for {name}.")
+    remedial_blueprints = [
+        f"Install Vastu copper pyramids in South-West and South-East afflicted corners, place brass helix correctors for cut zones, and keep North-East illuminated for {name}.",
+        f"Place Swastik/Om auspicious brass emblems on the main portal, position camphor diffusers in North-East, and use heavy lead helix in South-West for {name}.",
+        f"Position sea salt bowls in restrooms to absorb negative energies, install Rahu/Ketu yantras in cut quadrants, and maintain bright entrance lighting for {name}.",
+        f"Set up Vastu crystal lotus in the central living area, place copper strips along toilet thresholds, and paint South-East walls with warm coral tones for {name}."
+    ]
+    
+    blueprints_list = vastu_blueprints.get(p_type, vastu_blueprints["Residential House / Flat"])
+    base_prop_note = blueprints_list[combined_seed % len(blueprints_list)]
+    
+    insights_list = directional_zonal_insights.get(facing, directional_zonal_insights["North Facing"])
+    specific_remedy = insights_list[(combined_seed + name_hash) % len(insights_list)]
+    
+    chosen_remedy = remedial_blueprints[(combined_seed + city_hash) % len(remedial_blueprints)]
     
     filename = f"Vastu_Report_{name.replace(' ', '_')}_{p_type.split(' ')[0]}.pdf"
     generate_pdf_report(
@@ -2459,7 +2513,7 @@ async def api_vastu(request: Request):
             f"Direction Facing: {facing} | Location: {city}",
             f"1. Property-Specific Vastu Blueprint: {base_prop_note}",
             f"2. Directional Zonal Insights: {specific_remedy}",
-            f"3. Corrective Remedies & Enhancements for {name}: Place Vastu copper pyramids in afflicted corners, install brass helix corrections for extension/cut zones, and maintain bright lighting at the main entrance."
+            f"3. Corrective Remedies & Enhancements for {name}: {chosen_remedy}"
         ]
     )
     
@@ -2480,7 +2534,7 @@ async def api_vastu(request: Request):
         <p style='color: #f3e8ff; line-height: 1.8;'><b>Property:</b> {p_type} | <b>Facing:</b> {facing} | <b>City:</b> {city}</p>
         <p style='color: #f3e8ff; line-height: 1.8; margin-top:8px;'><b>Property-Specific Analysis:</b> {base_prop_note}</p>
         <p style='color: #f3e8ff; line-height: 1.8; margin-top:8px;'><b>Detailed Zonal Breakdown:</b> {specific_remedy}</p>
-        <p style='color: #f3e8ff; line-height: 1.8; margin-top:10px;'><b>Remedial Blueprint:</b> Installing copper pyramids in negative quadrants and keeping the North-East zone illuminated will maximize financial prosperity, operational efficiency, and family harmony for {name}.</p>
+        <p style='color: #f3e8ff; line-height: 1.8; margin-top:10px;'><b>Remedial Blueprint:</b> {chosen_remedy}</p>
         <p style='color: #4ade80; font-weight: bold; margin-top: 10px;'>✅ Full Vastu Report Unlocked Successfully via Admin Access!</p>
     </div>
     """ if is_admin else ""

@@ -2376,7 +2376,7 @@ async def api_vastu(request: Request):
     city = data.get("city", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    VASTU_DB_TABLE = "user_vastu_reports_v3"
+    VASTU_DB_TABLE = "user_vastu_reports_v4"
     
     try:
         conn = sqlite3.connect(DB_FILE)
@@ -2402,15 +2402,16 @@ async def api_vastu(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Vastu Analysis PDF", "details": f"Property: {p_type}, Facing: {facing}, City: {city}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
-    # Mathematical ASCII Seeds for Procedural Generation
+    # Mathematical ASCII Seeds with explicit property weight distinction
     n_seed = sum(ord(c) * (i + 1) for i, c in enumerate(name.lower()))
     c_seed = sum(ord(c) * (i + 3) for i, c in enumerate(city.lower()))
     f_seed = sum(ord(c) * (i + 5) for i, c in enumerate(facing.lower()))
-    p_seed = sum(ord(c) * (i + 7) for i, c in enumerate(p_type.lower()))
+    p_seed = sum(ord(c) * (i + 9) for i, c in enumerate(p_type.lower()))
     
-    total_hash = n_seed + c_seed + f_seed + p_seed
+    # Unique composite seeds for distinct sections
+    blueprint_seed = n_seed + c_seed + f_seed + (p_seed * 7)
+    zonal_seed = n_seed + c_seed + f_seed + (p_seed * 3)
     
-    # Procedural Fragment Builders (No Dummies, Pure Algorithmic Combinations)
     zone_dict = {
         "North Facing": ("Kubera (Lord of Wealth)", "North-East Ishan corner", "Northern portal flow"),
         "East Facing": ("Surya (Solar Prana & Vitality)", "Eastern window facade", "Eastern boundary perimeter"),
@@ -2424,25 +2425,45 @@ async def api_vastu(request: Request):
     
     z_tuple = zone_dict.get(facing, ("Universal Panchamahabhuta Balance", "Central sector", "Boundary perimeter"))
     
-    # Algorithmic sentence synthesis based on combined hashes
-    element_verbs = ["amplifies financial liquidity", "fortifies positive cosmic prana", "sustains long-term structural harmony", "balances magnetic earth frequencies", "enhances operational efficiency"]
-    action_notes = ["maintaining clutter-free pathways", "optimizing natural daylight entry", "placing corrective brass/copper helices", "securing heavy structural weight along southern margins"]
+    element_verbs = [
+        "amplifies financial liquidity", "fortifies positive cosmic prana", 
+        "sustains long-term structural harmony", "balances magnetic earth frequencies", 
+        "enhances operational efficiency", "optimizes heavy inventory distribution", 
+        "secures structural load-bearing balance", "accelerates commercial turnover"
+    ]
     
-    verb_chosen = element_verbs[total_hash % len(element_verbs)]
-    action_chosen = action_notes[(total_hash // 3) % len(action_notes)]
+    action_notes = [
+        "maintaining clutter-free pathways", "optimizing natural daylight entry", 
+        "placing corrective brass/copper helices", "securing heavy structural weight along southern margins", 
+        "positioning ventilation shafts correctly", "balancing subterranean water levels", 
+        "reinforcing boundary wall perimeters"
+    ]
+    
+    verb_chosen = element_verbs[blueprint_seed % len(element_verbs)]
+    action_chosen = action_notes[blueprint_seed % len(action_notes)]
+    
+    prop_focus_terms = {
+        "Residential House / Flat": "family living quarters and bedroom zones",
+        "Commercial Office / Shop": "client reception and cash counter placement",
+        "Factory / Manufacturing Unit": "heavy machinery grid and power transformer bays",
+        "Warehouse / Storage Hub": "pallet racking alignment and dispatch loading docks",
+        "Plot / Land": "boundary slope inclination and foundational earth grading"
+    }
+    
+    p_term = prop_focus_terms.get(p_type, "architectural layout")
     
     base_prop_note = (
         f"For {name}'s {p_type} situated in {city} with a {facing} alignment, "
-        f"the architectural layout governed by {z_tuple[0]} {verb_chosen}. "
-        f"Special focus must be directed toward the {z_tuple[1]} by {action_chosen}, "
+        f"the internal zoning dedicated to {p_term}, governed by {z_tuple[0]}, {verb_chosen}. "
+        f"Special architectural focus must be directed toward the {z_tuple[1]} by {action_chosen}, "
         f"ensuring optimal energy distribution across all quadrants."
     )
     
     specific_remedy = (
-        f"Zonal assessment for {facing} ({z_tuple[2]}) indicates that {name}'s property "
+        f"Zonal assessment for {facing} ({z_tuple[2]}) indicates that {name}'s {p_type.lower()} "
         f"benefits immensely from keeping the primary threshold illuminated and unobstructed. "
         f"Integrating elemental copper corrections and balancing the {z_tuple[1]} "
-        f"will secure enduring prosperity and peace for {name} in {city}."
+        f"will secure enduring prosperity and operational success for {name} in {city}."
     )
     
     filename = f"Vastu_Report_{name.replace(' ', '_')}_{p_type.split(' ')[0]}.pdf"

@@ -2230,16 +2230,17 @@ async def api_gemstone(request: Request):
         ("Diamond (Heera)", "Venus (Shukra)")
     ]
     
-    p_gem_idx = seed % len(primary_gems)
-    f_gem_idx = (seed + 3) % len(fortune_gems)
+    zodiac_seed = sum(ord(c) for c in raw_zodiac.lower())
+    p_gem_idx = (seed + zodiac_seed) % len(primary_gems)
+    f_gem_idx = (seed + zodiac_seed + 3) % len(fortune_gems)
     
     p_gem = primary_gems[p_gem_idx]
     f_gem = fortune_gems[f_gem_idx]
     
-    filename = f"Gemstone_Report_{name.replace(' ', '_')}.pdf"
+    filename = f"Gemstone_Report_{name.replace(' ', '_')}_{raw_zodiac.split(' ')[0]}.pdf"
     generate_pdf_report(
         filename,
-        f"Vedic Gemstone & Remedial Report - {name}",
+        f"Vedic Gemstone & Remedial Report - {name} ({raw_zodiac})",
         [
             f"Client Name: {name} | DOB: {dob} | POB: {pob}",
             f"Zodiac / Ascendant: {raw_zodiac}",
@@ -2248,7 +2249,7 @@ async def api_gemstone(request: Request):
             f"Ruling Planetary Lord: {p_gem[1]}",
             f"Recommended Metal: {p_gem[3]} | Wearing Finger: {p_gem[4]}",
             f"Auspicious Wearing Day: {p_gem[2]}",
-            "Ritual Instructions: Cleanse the gemstone in Gangajal and raw cow milk, energize with planetary mantras during Shukla Paksha, and wear with devotion."
+            f"Ritual Instructions for {raw_zodiac}: Cleanse the gemstone in Gangajal and raw cow milk, energize with planetary mantras during Shukla Paksha, and wear with devotion."
         ]
     )
     
@@ -2273,7 +2274,7 @@ async def api_gemstone(request: Request):
     
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
-        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🧿 COMPLETE GEMSTONES, METALS & CONSECRATION RITUALS FOR {name.upper()}</h4>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🧿 COMPLETE GEMSTONES, METALS & CONSECRATION RITUALS FOR {name.upper()} ({raw_zodiac})</h4>
         <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem; margin-top:10px;'>
             <li><b>Recommended Metal:</b> {p_gem[3]}</li>
             <li><b>Wearing Finger:</b> {p_gem[4]} of the right hand</li>

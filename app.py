@@ -1893,10 +1893,10 @@ async def api_palm(request: Request):
         "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"
     })
     
-    # 1. Completely independent and robust cryptographic hashing per line using name + parameter
-    def get_unique_variation(param_type, param_val, salt_idx):
-        raw_str = f"{user_name}_{param_type}_{param_val}_{salt_idx}".lower()
-        h_val = sum(ord(c) * (i + 1) for i, c in enumerate(raw_str))
+    # 1. Fully independent and decoupled hashing algorithm per line using unique salts and prime multipliers
+    def get_unique_variation(param_type, param_val, salt_prime):
+        raw_str = f"{user_name.lower()}_||_{param_type}_||_{param_val.lower()}_||_{salt_prime}"
+        h_val = sum(ord(c) * (i + salt_prime) for i, c in enumerate(raw_str))
         return h_val
 
     # 2. Fully distinct sentence variations for each line type
@@ -1992,16 +1992,16 @@ async def api_palm(request: Request):
         ]
     }
 
-    # 3. Select unique index per line using independent hash salts
+    # 3. Select unique indices using completely separate prime number salts (17, 31, 47, 73)
     l_list = life_variations.get(life_type, life_variations["Deep and Unbroken"])
     h_list = head_variations.get(head_type, head_variations["Straight and Clear"])
     ht_list = heart_variations.get(heart_type, heart_variations["Curved and Warm"])
     f_list = focus_variations.get(focus, focus_variations["Career & Wealth"])
 
-    l_desc = l_list[get_unique_variation("life", life_type, 101) % len(l_list)]
-    h_desc = h_list[get_unique_variation("head", head_type, 202) % len(h_list)]
-    ht_desc = ht_list[get_unique_variation("heart", heart_type, 303) % len(ht_list)]
-    f_align_desc = f_list[get_unique_variation("focus", focus, 404) % len(f_list)]
+    l_desc = l_list[get_unique_variation("life", life_type, 17) % len(l_list)]
+    h_desc = h_list[get_unique_variation("head", head_type, 31) % len(h_list)]
+    ht_desc = ht_list[get_unique_variation("heart", heart_type, 47) % len(ht_list)]
+    f_align_desc = f_list[get_unique_variation("focus", focus, 73) % len(f_list)]
 
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>

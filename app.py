@@ -2290,7 +2290,7 @@ async def api_gemstone(request: Request):
     
     full_report = f"""
     <div style='background:rgba(22, 10, 48, 0.9); padding:22px; border-radius:16px; border:2px solid #4ade80; margin-top:15px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
-        <h4 style='color: #4ade80 !important; margin-top:0; font-family: 'Cinzel', serif;'>🧿 COMPLETE GEMSTONES, METALS & CONSECRATION RITUALS FOR {name.upper()} ({raw_zodiac})</h4>
+        <h4 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🧿 COMPLETE GEMSTONES, METALS & CONSECRATION RITUALS FOR {name.upper()} ({raw_zodiac})</h4>
         <ul style='line-height:1.8; color:#f3e8ff; font-size:0.95rem; margin-top:10px;'>
             <li><b>Recommended Metal:</b> {p_gem[3]}</li>
             <li><b>Wearing Finger:</b> {p_gem[4]} of the right hand</li>

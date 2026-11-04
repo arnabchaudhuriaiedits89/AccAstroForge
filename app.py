@@ -58,6 +58,17 @@ def init_db():
             payment_status TEXT
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_gemstones (
+            email_key TEXT PRIMARY KEY,
+            name TEXT,
+            dob TEXT,
+            zodiac TEXT,
+            primary_gem TEXT,
+            fortune_gem TEXT,
+            updated_at TEXT
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -2205,22 +2216,9 @@ async def api_gemstone(request: Request):
     pob = data.get("pob", "Kolkata").strip() or "Kolkata"
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
+    email_key = f"{name.lower().replace(' ', '_')}_{dob}"
     
-    zodiac_mapping = {
-        "Aries (Mesha)": (5, 0),        # Primary: Yellow Sapphire, Fortune: Red Coral
-        "Taurus (Vrishabha)": (1, 2),    # Primary: Diamond, Fortune: Emerald
-        "Gemini (Mithuna)": (2, 5),      # Primary: Emerald, Fortune: Yellow Sapphire
-        "Cancer (Karka)": (3, 5),        # Primary: Natural Pearl, Fortune: Yellow Sapphire
-        "Leo (Simha)": (4, 0),           # Primary: Ruby, Fortune: Red Coral
-        "Virgo (Kanya)": (2, 1),         # Primary: Emerald, Fortune: Diamond
-        "Libra (Tula)": (1, 2),          # Primary: Diamond, Fortune: Emerald
-        "Scorpio (Vrischika)": (0, 6),   # Primary: Red Coral, Fortune: Blue Sapphire
-        "Sagittarius (Dhanu)": (5, 4),   # Primary: Yellow Sapphire, Fortune: Ruby
-        "Capricorn (Makara)": (6, 5),    # Primary: Blue Sapphire, Fortune: Yellow Sapphire
-        "Aquarius (Kumbha)": (6, 1),     # Primary: Blue Sapphire, Fortune: Diamond
-        "Pisces (Meena)": (5, 2)         # Primary: Yellow Sapphire, Fortune: Emerald
-    }
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Lucky Gemstone Guidance", "details": f"DOB: {dob}, Zodiac: {raw_zodiac}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹59)"})
     
     primary_gems = [
         ("Red Coral (Moonga)", "Mars (Mangal)", "Tuesday (Morning)", "Copper / Gold", "Ring Finger"),
@@ -2242,16 +2240,57 @@ async def api_gemstone(request: Request):
         ("Blue Sapphire (Neelam)", "Saturn (Shani)")
     ]
     
-    indices = zodiac_mapping.get(raw_zodiac)
-    if indices:
-        p_gem_idx, f_gem_idx = indices
-    else:
-        seed = sum(ord(c) for c in (name + dob + raw_zodiac).lower())
-        p_gem_idx = seed % len(primary_gems)
-        f_gem_idx = (seed + 3) % len(fortune_gems)
+    zodiac_mapping = {
+        "Aries (Mesha)": (5, 0),        # Primary: Yellow Sapphire, Fortune: Red Coral
+        "Taurus (Vrishabha)": (1, 2),    # Primary: Diamond, Fortune: Emerald
+        "Gemini (Mithuna)": (2, 5),      # Primary: Emerald, Fortune: Yellow Sapphire
+        "Cancer (Karka)": (3, 5),        # Primary: Natural Pearl, Fortune: Yellow Sapphire
+        "Leo (Simha)": (4, 0),           # Primary: Ruby, Fortune: Red Coral
+        "Virgo (Kanya)": (2, 1),         # Primary: Emerald, Fortune: Diamond
+        "Libra (Tula)": (1, 2),          # Primary: Diamond, Fortune: Emerald
+        "Scorpio (Vrischika)": (0, 6),   # Primary: Red Coral, Fortune: Blue Sapphire
+        "Sagittarius (Dhanu)": (5, 4),   # Primary: Yellow Sapphire, Fortune: Ruby
+        "Capricorn (Makara)": (6, 5),    # Primary: Blue Sapphire, Fortune: Yellow Sapphire
+        "Aquarius (Kumbha)": (6, 1),     # Primary: Blue Sapphire, Fortune: Diamond
+        "Pisces (Meena)": (5, 2)         # Primary: Yellow Sapphire, Fortune: Emerald
+    }
+    
+    p_gem = None
+    f_gem = None
+    
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("SELECT primary_gem, fortune_gem FROM user_gemstones WHERE email_key = ?", (email_key,))
+        row = cursor.fetchone()
+        if row:
+            p_gem = json.loads(row[0])
+            f_gem = json.loads(row[1])
+        conn.close()
+    except Exception as e:
+        print(f"DB Fetch Error: {e}")
         
-    p_gem = primary_gems[p_gem_idx]
-    f_gem = fortune_gems[f_gem_idx]
+    if not p_gem or not f_gem:
+        base_indices = zodiac_mapping.get(raw_zodiac, (5, 0))
+        user_offset = sum(ord(c) for c in email_key) % len(primary_gems)
+        
+        p_gem_idx = (base_indices[0] + user_offset) % len(primary_gems)
+        f_gem_idx = (base_indices[1] + user_offset) % len(fortune_gems)
+        
+        p_gem = primary_gems[p_gem_idx]
+        f_gem = fortune_gems[f_gem_idx]
+        
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO user_gemstones (email_key, name, dob, zodiac, primary_gem, fortune_gem, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (email_key, name, dob, raw_zodiac, json.dumps(p_gem), json.dumps(f_gem), str(datetime.datetime.now())))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"DB Save Error: {e}")
     
     filename = f"Gemstone_Report_{name.replace(' ', '_')}_{raw_zodiac.split(' ')[0]}.pdf"
     generate_pdf_report(

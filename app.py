@@ -2658,17 +2658,20 @@ async def api_panchang(request: Request):
         "Shukra Hora active in morning; Chandra Hora supporting artistic partnerships."
     ]
     
-    # Bulletproof independent hash-based index derivation for each field
-    tithi_val = tithis[abs(hash(f"{city}_{date_str}_tithi")) % len(tithis)]
-    nak_val = nakshatras[abs(hash(f"{city}_{date_str}_nakshatra")) % len(nakshatras)]
-    rahu_val = rahu_kalams[abs(hash(f"{city}_{date_str}_rahu")) % len(rahu_kalams)]
-    rise_val = sun_rises[abs(hash(f"{city}_{date_str}_sunrise")) % len(sun_rises)]
-    set_val = sun_sets[abs(hash(f"{city}_{date_str}_sunset")) % len(sun_sets)]
+    # 100% Stable & Deterministic Index Derivation (Unaffected by server restarts)
+    def stable_idx(text, length):
+        return sum(ord(c) * (i + 1) for i, c in enumerate(text)) % length
+
+    tithi_val = tithis[stable_idx(f"{city}_{date_str}_tithi", len(tithis))]
+    nak_val = nakshatras[stable_idx(f"{city}_{date_str}_nakshatra", len(nakshatras))]
+    rahu_val = rahu_kalams[stable_idx(f"{city}_{date_str}_rahu", len(rahu_kalams))]
+    rise_val = sun_rises[stable_idx(f"{city}_{date_str}_sunrise", len(sun_rises))]
+    set_val = sun_sets[stable_idx(f"{city}_{date_str}_sunset", len(sun_sets))]
     
-    abhijit_val = abhijits[abs(hash(f"{city}_{date_str}_abhijit")) % len(abhijits)]
-    amrit_val = amrits[abs(hash(f"{city}_{date_str}_amrit")) % len(amrits)]
-    yamaganda_val = yamagandas[abs(hash(f"{city}_{date_str}_yamaganda")) % len(yamagandas)]
-    hora_val = horas[abs(hash(f"{city}_{date_str}_hora")) % len(horas)]
+    abhijit_val = abhijits[stable_idx(f"{city}_{date_str}_abhijit", len(abhijits))]
+    amrit_val = amrits[stable_idx(f"{city}_{date_str}_amrit", len(amrits))]
+    yamaganda_val = yamagandas[stable_idx(f"{city}_{date_str}_yamaganda", len(yamagandas))]
+    hora_val = horas[stable_idx(f"{city}_{date_str}_hora", len(horas))]
 
     if mode == "free":
         html = f"""

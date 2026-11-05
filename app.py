@@ -2511,8 +2511,8 @@ async def api_kundali_pdf(request: Request):
         [
             f"Date of Birth: {dob} | Time: {tob} | Place: {pob}",
             f"Ascendant (Lagna) Sign: {profile['zodiac']} | Birth Nakshatra: {profile['nakshatra']}",
-            f"Planetary Positions (Graha Sthiti): Active Rashi lord {profile['zodiac']} with favorable divisional positioning.",
-            f"Lagna Horoscope: Strong ascendant house under {profile['dasha']} indicating resilience, leadership, and long-term financial growth."
+            f"Planetary Positions (Graha Sthiti): Active Rashi lord {profile['zodiac']} with favorable divisional positioning under {profile['dasha']}.",
+            f"Lagna Horoscope: Strong ascendant house for {name} under active planetary configuration, indicating resilience, leadership, and long-term financial growth."
         ]
     )
     

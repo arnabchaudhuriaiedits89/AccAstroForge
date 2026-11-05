@@ -232,15 +232,20 @@ NAKSHATRAS = [
 
 def calculate_astrological_profile(name, dob_str):
     try:
-        dt = datetime.datetime.strptime(dob_str, "%Y-%m-%d")
-        name_seed = sum(ord(c) for c in name.lower()) if name else 42
+        raw_seed_str = f"{name.strip().lower()}_{dob_str.strip()}"
+        hash_digest = hashlib.md5(raw_seed_str.encode('utf-8')).hexdigest()
+        stable_num = int(hash_digest, 16)
+        
+        zodiac_index = stable_num % 12
+        nakshatra_index = (stable_num // 12) % 27
+        
+        planet_list = ['Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu']
+        dasha_active = planet_list[(stable_num // 27) % len(planet_list)]
+        
         day_sum = sum(int(digit) for digit in dob_str if digit.isdigit())
         while day_sum > 9:
             day_sum = sum(int(d) for d in str(day_sum))
-        zodiac_index = (dt.month + name_seed) % 12
-        nakshatra_index = (dt.day + dt.month * 2 + name_seed) % 27
-        planet_list = ['Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu']
-        dasha_active = planet_list[(name_seed + dt.day) % len(planet_list)]
+            
         return {
             "name": name if name else "User",
             "zodiac": ZODIAC_SIGNS[zodiac_index],
@@ -252,9 +257,9 @@ def calculate_astrological_profile(name, dob_str):
         return {
             "name": name if name else "User",
             "zodiac": "Aries (Mesha)",
-            "nakshatra": "Rohini",
-            "psychic_num": 7,
-            "dasha": "Favorable Planetary Dasha Cycle active."
+            "nakshatra": "Ashwini",
+            "psychic_num": 1,
+            "dasha": "Mahadasha of Jupiter is active."
         }
 
 def calculate_jagannath_hora_engine(name, dob, tob, pob):
@@ -2502,35 +2507,25 @@ async def api_kundali_pdf(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
     
-    # Unique Dynamic Seed from Name & DOB
-    name_seed = sum(ord(c) for c in (name + dob + pob).lower())
+    profile = calculate_astrological_profile(name, dob)
+    rashi = profile['zodiac']
+    nakshatra = profile['nakshatra']
+    dasha = profile['dasha']
     
-    rashi_list = [
-        "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
-        "Leo (Simha)", "Virgo (Kanya)", "Libra (Tula)", "Scorpio (Vrischika)",
-        "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"
-    ]
-    rashi = rashi_list[name_seed % len(rashi_list)]
-    
-    nak_list = [
-        "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha",
-        "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
-        "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
-    ]
-    nakshatra = nak_list[(name_seed * 3) % len(nak_list)]
+    hash_seed = int(hashlib.md5(f"{name.strip().lower()}_{dob}_{pob.lower()}".encode('utf-8')).hexdigest(), 16)
     
     ending_options = [
-        f"Strong ascendant house under favorable planetary alignment, indicating fierce resilience, executive leadership, and rapid financial expansion for {name}.",
-        f"Grounded earthy ascendant configuration, reflecting steady patience, immovable determination, and secure long-term wealth accumulation for {name}.",
-        f"Dynamic dual planetary placement, highlighting intellectual agility, sharp communication prowess, and diverse professional milestones for {name}.",
-        f"Intuitive water ascendant alignment, pointing toward profound emotional depth, creative leadership, and protective asset stewardship for {name}.",
-        f"Solar regal ascendant influence, signifying majestic confidence, authoritative presence, and magnificent career renown for {name}.",
-        f"Analytical planetary placement, emphasizing meticulous precision, methodical problem-solving, and steady economic growth for {name}.",
-        f"Harmonious cosmic alignment, marking diplomatic grace, prosperous partnerships, and balanced social standing for {name}.",
-        f"Transformative watery configuration, driving deep investigative grit, strategic intuition, and high-impact financial breakthroughs for {name}."
+        f"Strong ascendant house under {dasha}, indicating fierce resilience, executive leadership, and rapid financial expansion for {name}.",
+        f"Grounded earthy ascendant configuration under {dasha}, reflecting steady patience, immovable determination, and secure long-term wealth accumulation for {name}.",
+        f"Dynamic dual planetary placement governed by {dasha}, highlighting intellectual agility, sharp communication prowess, and diverse professional milestones for {name}.",
+        f"Intuitive water ascendant alignment under active {dasha}, pointing toward profound emotional depth, creative leadership, and protective asset stewardship for {name}.",
+        f"Solar regal ascendant influence with {dasha} resonance, signifying majestic confidence, authoritative presence, and magnificent career renown for {name}.",
+        f"Analytical planetary placement under {dasha}, emphasizing meticulous precision, methodical problem-solving, and steady economic growth for {name}.",
+        f"Harmonious cosmic alignment driven by {dasha}, marking diplomatic grace, prosperous partnerships, and balanced social standing for {name}.",
+        f"Transformative watery configuration under {dasha}, driving deep investigative grit, strategic intuition, and high-impact financial breakthroughs for {name}."
     ]
     
-    unique_prediction = ending_options[name_seed % len(ending_options)]
+    unique_prediction = ending_options[hash_seed % len(ending_options)]
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -2539,7 +2534,7 @@ async def api_kundali_pdf(request: Request):
         [
             f"Date of Birth: {dob} | Time: {tob} | Place: {pob}",
             f"Ascendant (Lagna) Sign: {rashi} | Birth Nakshatra: {nakshatra}",
-            f"Planetary Positions (Graha Sthiti): Active Rashi lord {rashi} with favorable divisional positioning and supportive planetary aspects.",
+            f"Planetary Positions (Graha Sthiti): Active Rashi lord {rashi} with favorable divisional positioning under {dasha}.",
             f"Lagna Horoscope: {unique_prediction}"
         ]
     )

@@ -2638,8 +2638,8 @@ async def api_panchang(request: Request):
         "12:00 PM - 01:30 PM", "01:30 PM - 03:00 PM", "03:00 PM - 04:30 PM", "04:30 PM - 06:00 PM",
         "08:00 AM - 09:30 AM", "01:00 PM - 02:30 PM", "03:30 PM - 05:00 PM"
     ]
-    sun_rises = ["05:42 AM", "05:58 AM", "06:12 AM", "05:30 AM", "06:05 AM", "05:50 AM", "06:15 AM"]
-    sun_sets = ["05:45 PM", "06:22 PM", "05:55 PM", "06:40 PM", "06:10 PM", "05:35 PM", "06:00 PM"]
+    sun_rises = ["05:42 AM", "05:58 AM", "06:12 AM", "05:30 AM", "06:05 AM", "05:50 AM", "06:15 AM", "05:45 AM", "06:02 AM", "05:38 AM"]
+    sun_sets = ["05:45 PM", "06:22 PM", "05:55 PM", "06:40 PM", "06:10 PM", "05:35 PM", "06:00 PM", "06:15 PM", "05:50 PM", "06:30 PM"]
     
     abhijits = [
         "11:35 AM - 12:20 PM", "11:45 AM - 12:32 PM", "11:50 AM - 12:40 PM", 
@@ -2651,7 +2651,8 @@ async def api_panchang(request: Request):
     ]
     yamagandas = [
         "03:15 PM - 04:45 PM", "09:00 AM - 10:30 AM", "01:15 PM - 02:45 PM", 
-        "10:45 AM - 12:15 PM", "08:15 AM - 09:45 AM", "02:00 PM - 03:30 PM"
+        "10:45 AM - 12:15 PM", "08:15 AM - 09:45 AM", "02:00 PM - 03:30 PM",
+        "11:00 AM - 12:30 PM", "04:00 PM - 05:30 PM", "07:30 AM - 09:00 AM"
     ]
     horas = [
         "Surya Hora active in morning; Guru Hora supporting financial decisions.",
@@ -2665,13 +2666,15 @@ async def api_panchang(request: Request):
     tithi_val = tithis[combined_seed % len(tithis)]
     nak_val = nakshatras[(city_seed + date_seed * 2) % len(nakshatras)]
     rahu_val = rahu_kalams[(city_seed * 3 + date_seed) % len(rahu_kalams)]
-    rise_val = sun_rises[city_seed % len(sun_rises)]
-    set_val = sun_sets[date_seed % len(sun_sets)]
+    
+    # Completely independent unique indices for Sunrise, Sunset, and Yamaganda
+    rise_val = sun_rises[(city_seed + date_seed * 3) % len(sun_rises)]
+    set_val = sun_sets[(date_seed * 4 + city_seed) % len(sun_sets)]
     
     abhijit_val = abhijits[(city_seed + date_seed) % len(abhijits)]
     amrit_val = amrits[(city_seed * 2 + date_seed) % len(amrits)]
-    yamaganda_val = yamagandas[(date_seed * 3 + city_seed) % len(yamagandas)]
-    hora_val = horas[(city_seed + date_seed * 5) % len(horas)]
+    yamaganda_val = yamagandas[(date_seed * 5 + city_seed * 2) % len(yamagandas)]
+    hora_val = horas[(city_seed * 4 + date_seed * 5) % len(horas)]
 
     if mode == "free":
         html = f"""

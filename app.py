@@ -1864,10 +1864,10 @@ async def api_life(request: Request):
         [
             f"Date of Birth: {dob} | Rashi: {profile['zodiac']} | Nakshatra: {profile['nakshatra']}",
             f"Active Dasha: {profile['dasha']} | Psychic Number: {profile['psychic_num']}",
-            "1. Core Personality & Karmic Blueprint: Under the profound influence of your ascendant and nakshatra, you possess an innate resilience and a distinct magnetic leadership aura.",
-            "2. Career Evolution, Wealth & Financial Accumulation: Stellar positioning in D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship and financial inflow.",
-            "3. Relationships, Marriage & Family Harmony: 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships, bringing peace and domestic stability.",
-            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels."
+            f"1. Core Personality & Karmic Blueprint: Under the profound influence of {profile['zodiac']} and born under the sacred constellation of {profile['nakshatra']}, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number {profile['psychic_num']} highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.",
+            "2. Career Evolution, Wealth & Financial Accumulation: Stellar positioning in your D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship, specialized technical consultancy, or leadership roles. Financial inflow will experience a notable upward surge during transit cycles involving Jupiter and Mercury. Long-term asset creation and real estate investments are highly favored during this phase.",
+            "3. Relationships, Marriage & Family Harmony: Your 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships. Mutual respect and open communication will fortify your familial bonds, bringing peace, domestic stability, and harmonious support from your life partner and close associates.",
+            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels. To neutralize minor planetary friction and amplify positive cosmic frequencies, wearing a certified natural gemstone aligned with your ascendant and engaging in meditative grounding practices is strongly recommended."
         ]
     )
     

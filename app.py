@@ -2615,7 +2615,10 @@ async def api_panchang(request: Request):
     
     today_formatted = datetime.datetime.now().strftime("%B %d, %Y") if date_str in ["Today", ""] else date_str
     
-    seed = sum(ord(c) for c in (city + str(date_str)).lower())
+    # Fully decoupled unique seed generation for city and date
+    city_seed = sum(ord(c) * (i + 1) for i, c in enumerate(city.lower()))
+    date_seed = sum(ord(c) * (i + 3) for i, c in enumerate(str(date_str)))
+    combined_seed = city_seed + (date_seed * 7)
     
     tithis = [
         "Shukla Paksha Pratipada", "Shukla Paksha Tritiya", "Shukla Paksha Panchami", 
@@ -2624,43 +2627,51 @@ async def api_panchang(request: Request):
         "Krishna Paksha Chaturthi", "Krishna Paksha Saptami", "Krishna Paksha Dashami", "Amavasya"
     ]
     nakshatras = [
-        "Ashwini Nakshatra", "Rohini Nakshatra", "Mrigashira Nakshatra", "Pushya Nakshatra", 
-        "Magha Nakshatra", "Hasta Nakshatra", "Chitra Nakshatra", "Anuradha Nakshatra", 
-        "Mula Nakshatra", "Shravana Nakshatra", "Revati Nakshatra", "Ardra Nakshatra"
+        "Ashwini Nakshatra", "Bharani Nakshatra", "Krittika Nakshatra", "Rohini Nakshatra", 
+        "Mrigashira Nakshatra", "Ardra Nakshatra", "Punarvasu Nakshatra", "Pushya Nakshatra", 
+        "Ashlesha Nakshatra", "Magha Nakshatra", "Purva Phalguni Nakshatra", "Uttara Phalguni Nakshatra", 
+        "Hasta Nakshatra", "Chitra Nakshatra", "Swati Nakshatra", "Vishakha Nakshatra", 
+        "Anuradha Nakshatra", "Jyeshtha Nakshatra", "Mula Nakshatra", "Shravana Nakshatra", "Revati Nakshatra"
     ]
     rahu_kalams = [
         "07:30 AM - 09:00 AM", "09:00 AM - 10:30 AM", "10:30 AM - 12:00 PM", 
-        "12:00 PM - 01:30 PM", "01:30 PM - 03:00 PM", "03:00 PM - 04:30 PM", "04:30 PM - 06:00 PM"
+        "12:00 PM - 01:30 PM", "01:30 PM - 03:00 PM", "03:00 PM - 04:30 PM", "04:30 PM - 06:00 PM",
+        "08:00 AM - 09:30 AM", "01:00 PM - 02:30 PM", "03:30 PM - 05:00 PM"
     ]
-    sun_rises = ["05:42 AM", "05:58 AM", "06:12 AM", "05:30 AM", "06:05 AM"]
-    sun_sets = ["05:45 PM", "06:22 PM", "05:55 PM", "06:40 PM", "06:10 PM"]
+    sun_rises = ["05:42 AM", "05:58 AM", "06:12 AM", "05:30 AM", "06:05 AM", "05:50 AM", "06:15 AM"]
+    sun_sets = ["05:45 PM", "06:22 PM", "05:55 PM", "06:40 PM", "06:10 PM", "05:35 PM", "06:00 PM"]
     
     abhijits = [
-        "11:35 AM - 12:20 PM", "11:45 AM - 12:32 PM", "11:50 AM - 12:40 PM", "11:25 AM - 12:15 PM"
+        "11:35 AM - 12:20 PM", "11:45 AM - 12:32 PM", "11:50 AM - 12:40 PM", 
+        "11:25 AM - 12:15 PM", "11:40 AM - 12:28 PM", "11:55 AM - 12:45 PM"
     ]
     amrits = [
-        "04:20 AM - 05:08 AM", "05:10 AM - 05:58 AM", "03:50 AM - 04:40 AM", "04:45 AM - 05:35 AM"
+        "04:20 AM - 05:08 AM", "05:10 AM - 05:58 AM", "03:50 AM - 04:40 AM", 
+        "04:45 AM - 05:35 AM", "05:00 AM - 05:50 AM", "04:10 AM - 05:00 AM"
     ]
     yamagandas = [
-        "03:15 PM - 04:45 PM", "09:00 AM - 10:30 AM", "01:15 PM - 02:45 PM", "10:45 AM - 12:15 PM"
+        "03:15 PM - 04:45 PM", "09:00 AM - 10:30 AM", "01:15 PM - 02:45 PM", 
+        "10:45 AM - 12:15 PM", "08:15 AM - 09:45 AM", "02:00 PM - 03:30 PM"
     ]
     horas = [
         "Surya Hora active in morning; Guru Hora supporting financial decisions.",
         "Chandra Hora active in morning; Shukra Hora supporting creative ventures.",
         "Mangal Hora active in morning; Budha Hora supporting business communication.",
-        "Shani Hora active in morning; Guru Hora supporting long-term investments."
+        "Shani Hora active in morning; Guru Hora supporting long-term investments.",
+        "Budha Hora active in morning; Surya Hora supporting administrative authority.",
+        "Shukra Hora active in morning; Chandra Hora supporting artistic partnerships."
     ]
     
-    tithi_val = tithis[seed % len(tithis)]
-    nak_val = nakshatras[(seed + 1) % len(nakshatras)]
-    rahu_val = rahu_kalams[(seed + 2) % len(rahu_kalams)]
-    rise_val = sun_rises[seed % len(sun_rises)]
-    set_val = sun_sets[(seed + 1) % len(sun_sets)]
+    tithi_val = tithis[combined_seed % len(tithis)]
+    nak_val = nakshatras[(city_seed + date_seed * 2) % len(nakshatras)]
+    rahu_val = rahu_kalams[(city_seed * 3 + date_seed) % len(rahu_kalams)]
+    rise_val = sun_rises[city_seed % len(sun_rises)]
+    set_val = sun_sets[date_seed % len(sun_sets)]
     
-    abhijit_val = abhijits[seed % len(abhijits)]
-    amrit_val = amrits[(seed + 1) % len(amrits)]
-    yamaganda_val = yamagandas[(seed + 2) % len(yamagandas)]
-    hora_val = horas[seed % len(horas)]
+    abhijit_val = abhijits[(city_seed + date_seed) % len(abhijits)]
+    amrit_val = amrits[(city_seed * 2 + date_seed) % len(amrits)]
+    yamaganda_val = yamagandas[(date_seed * 3 + city_seed) % len(yamagandas)]
+    hora_val = horas[(city_seed + date_seed * 5) % len(horas)]
 
     if mode == "free":
         html = f"""
@@ -2673,7 +2684,7 @@ async def api_panchang(request: Request):
             <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;'>
                 <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
                     <b style='color: #fde047; display: block;'>📜 Tithi:</b>
-                    <span style='color: #f3e8ff;'>{tithi_val} (Dynamic Daily View)</span>
+                    <span style='color: #f3e8ff;'>{tithi_val}</span>
                 </div>
                 <div style='background: rgba(124, 58, 237, 0.2); padding: 12px; border-radius: 10px;'>
                     <b style='color: #fde047; display: block;'>⭐ Nakshatra:</b>
@@ -2695,8 +2706,8 @@ async def api_panchang(request: Request):
         html = f"""
         <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #db2777; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5); margin-top: 15px;'>
             <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>
-                <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>🌟 All-in-One Complete Panchang & Detailed Shubh Muhurat Report ({city})</h4>
-                <span style='color: #fde047; font-weight: 600; font-size: 0.9rem;'>{today_formatted}</span>
+                <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>🌟 All-in-One Complete Panchang & Detailed Shubh Muhurat Report ({city}, India)</h4>
+                <span style='color: #fde047; font-weight: 600; font-size: 0.9rem;'>{date_str}</span>
             </div>
             
             <h5 style='color: #4ade80; margin-top: 5px; margin-bottom: 10px;'>📌 Basic Daily Panchang Details</h5>

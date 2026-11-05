@@ -2507,11 +2507,13 @@ async def api_kundali_pdf(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
     
+    # সেন্ট্রাল ফাংশন থেকে ১০০% স্টেবল এবং ম্যাচিং প্রোফাইল ফেচ করা হচ্ছে
     profile = calculate_astrological_profile(name, dob)
     rashi = profile['zodiac']
     nakshatra = profile['nakshatra']
     dasha = profile['dasha']
     
+    # একই হ্যাশ সিড ব্যবহার করে ইউনিক প্রেডিকশন জেনারেট করা হচ্ছে
     hash_seed = int(hashlib.md5(f"{name.strip().lower()}_{dob}_{pob.lower()}".encode('utf-8')).hexdigest(), 16)
     
     ending_options = [

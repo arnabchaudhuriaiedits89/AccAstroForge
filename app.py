@@ -1,6 +1,6 @@
 import os
 import datetime
-imp@app.post("/api/life")
+@app.post("/api/life")
 async def api_life(request: Request):
     data = await request.json()
     name = data.get("name", "User").strip() or "User"

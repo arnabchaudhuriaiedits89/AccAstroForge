@@ -2506,21 +2506,22 @@ async def api_kundali_pdf(request: Request):
     rashi = profile['zodiac']
     nakshatra = profile['nakshatra']
     
-    # Fully independent unique ending variations based on name & dob seed
-    name_seed = sum(ord(c) for c in (name + dob).lower())
+    # Fully independent unique ending variations driven strictly by name & dob unique string hash
+    unique_string = f"{name.lower().strip()}_{dob.strip()}_{pob.lower().strip()}"
+    hash_val = int(hashlib.md5(unique_string.encode('utf-8')).hexdigest(), 16)
     
     ending_options = [
-        f"Strong ascendant house under favorable planetary alignment, indicating fierce resilience, executive leadership, and rapid financial expansion.",
-        f"Grounded earthy ascendant configuration, reflecting steady patience, immovable determination, and secure long-term wealth accumulation.",
-        f"Dynamic dual planetary placement, highlighting intellectual agility, sharp communication prowess, and diverse professional milestones.",
-        f"Intuitive water ascendant alignment, pointing toward profound emotional depth, creative leadership, and protective asset stewardship.",
-        f"Solar regal ascendant influence, signifying majestic confidence, authoritative presence, and magnificent career renown.",
-        f"Analytical planetary placement, emphasizing meticulous precision, methodical problem-solving, and steady economic growth.",
-        f"Harmonious cosmic alignment, marking diplomatic grace, prosperous partnerships, and balanced social standing.",
-        f"Transformative watery configuration, driving deep investigative grit, strategic intuition, and high-impact financial breakthroughs."
+        f"Strong ascendant house under favorable planetary alignment, indicating fierce resilience, executive leadership, and rapid financial expansion for {name}.",
+        f"Grounded earthy ascendant configuration, reflecting steady patience, immovable determination, and secure long-term wealth accumulation for {name}.",
+        f"Dynamic dual planetary placement, highlighting intellectual agility, sharp communication prowess, and diverse professional milestones for {name}.",
+        f"Intuitive water ascendant alignment, pointing toward profound emotional depth, creative leadership, and protective asset stewardship for {name}.",
+        f"Solar regal ascendant influence, signifying majestic confidence, authoritative presence, and magnificent career renown for {name}.",
+        f"Analytical planetary placement, emphasizing meticulous precision, methodical problem-solving, and steady economic growth for {name}.",
+        f"Harmonious cosmic alignment, marking diplomatic grace, prosperous partnerships, and balanced social standing for {name}.",
+        f"Transformative watery configuration, driving deep investigative grit, strategic intuition, and high-impact financial breakthroughs for {name}."
     ]
     
-    unique_prediction = ending_options[name_seed % len(ending_options)]
+    unique_prediction = ending_options[hash_val % len(ending_options)]
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(

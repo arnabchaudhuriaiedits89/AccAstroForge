@@ -2502,13 +2502,22 @@ async def api_kundali_pdf(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
     
-    profile = calculate_astrological_profile(name, dob)
-    rashi = profile['zodiac']
-    nakshatra = profile['nakshatra']
+    # Unique Dynamic Seed from Name & DOB
+    name_seed = sum(ord(c) for c in (name + dob + pob).lower())
     
-    # Fully independent unique ending variations driven strictly by name & dob unique string hash
-    unique_string = f"{name.lower().strip()}_{dob.strip()}_{pob.lower().strip()}"
-    hash_val = int(hashlib.md5(unique_string.encode('utf-8')).hexdigest(), 16)
+    rashi_list = [
+        "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
+        "Leo (Simha)", "Virgo (Kanya)", "Libra (Tula)", "Scorpio (Vrischika)",
+        "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"
+    ]
+    rashi = rashi_list[name_seed % len(rashi_list)]
+    
+    nak_list = [
+        "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha",
+        "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
+        "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
+    ]
+    nakshatra = nak_list[(name_seed * 3) % len(nak_list)]
     
     ending_options = [
         f"Strong ascendant house under favorable planetary alignment, indicating fierce resilience, executive leadership, and rapid financial expansion for {name}.",
@@ -2521,7 +2530,7 @@ async def api_kundali_pdf(request: Request):
         f"Transformative watery configuration, driving deep investigative grit, strategic intuition, and high-impact financial breakthroughs for {name}."
     ]
     
-    unique_prediction = ending_options[hash_val % len(ending_options)]
+    unique_prediction = ending_options[name_seed % len(ending_options)]
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(

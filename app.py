@@ -1855,7 +1855,7 @@ async def api_transit(request: Request):
                 <b style='color:#4ade80;'>Karmic Impact:</b> {chosen_impact}
             </div>
         </div>
-        <p style='color:#4ade80; margin-top:12px; font-size:0.85rem;'>✅ Unique dynamic transit calculations tailored specifically for {name} under {planet}.</p>
+        <p style='color:#4ade80; margin-top:12px; font-size:0.85rem;'>✅ Unique planetary transit calculations calculated deterministically and permanently fixed for {name}.</p>
     </div>
     """
     return JSONResponse({"html": html})

@@ -2505,25 +2505,22 @@ async def api_kundali_pdf(request: Request):
     profile = calculate_astrological_profile(name, dob)
     rashi = profile['zodiac']
     nakshatra = profile['nakshatra']
-    dasha = profile['dasha']
     
-    # Unique Dynamic Ending Sentences based on Rashi & Dasha
-    ending_variations = {
-        "Aries (Mesha)": f"Strong ascendant house under {dasha}, indicating fierce pioneering resilience, executive leadership, and rapid financial expansion.",
-        "Taurus (Vrishabha)": f"Grounded earthy ascendant under {dasha}, reflecting steady patience, immovable determination, and secure long-term wealth accumulation.",
-        "Gemini (Mithuna)": f"Dynamic dual ascendant under {dasha}, highlighting intellectual agility, sharp communication prowess, and diverse professional milestones.",
-        "Cancer (Karka)": f"Intuitive water ascendant under {dasha}, pointing toward profound emotional depth, creative leadership, and protective asset stewardship.",
-        "Leo (Simha)": f"Solar regal ascendant under {dasha}, signifying majestic confidence, authoritative presence, and magnificent career renown.",
-        "Virgo (Kanya)": f"Analytical earth ascendant under {dasha}, emphasizing meticulous precision, methodical problem-solving, and steady economic growth.",
-        "Libra (Tula)": f"Harmonious airy ascendant under {dasha}, marking diplomatic grace, prosperous partnerships, and balanced social standing.",
-        "Scorpio (Vrischika)": f"Transformative water ascendant under {dasha}, driving deep investigative grit, strategic intuition, and high-impact financial breakthroughs.",
-        "Sagittarius (Dhanu)": f"Expansive fiery ascendant under {dasha}, pointing toward philosophical vision, global opportunities, and prosperous leadership.",
-        "Capricorn (Makara)": f"Disciplined structural ascendant under {dasha}, highlighting unwavering perseverance, corporate authority, and enduring capital security.",
-        "Aquarius (Kumbha)": f"Innovative visionary ascendant under {dasha}, marking progressive technical concepts, humanitarian impact, and futuristic enterprise growth.",
-        "Pisces (Meena)": f"Imaginative spiritual ascendant under {dasha}, reflecting boundless creative empathy, intuitive wisdom, and profound inner prosperity."
-    }
+    # Fully independent unique ending variations based on name & dob seed
+    name_seed = sum(ord(c) for c in (name + dob).lower())
     
-    unique_prediction = ending_variations.get(rashi, f"Strong ascendant house under {dasha}, indicating resilience, leadership, and long-term financial growth.")
+    ending_options = [
+        f"Strong ascendant house under favorable planetary alignment, indicating fierce resilience, executive leadership, and rapid financial expansion.",
+        f"Grounded earthy ascendant configuration, reflecting steady patience, immovable determination, and secure long-term wealth accumulation.",
+        f"Dynamic dual planetary placement, highlighting intellectual agility, sharp communication prowess, and diverse professional milestones.",
+        f"Intuitive water ascendant alignment, pointing toward profound emotional depth, creative leadership, and protective asset stewardship.",
+        f"Solar regal ascendant influence, signifying majestic confidence, authoritative presence, and magnificent career renown.",
+        f"Analytical planetary placement, emphasizing meticulous precision, methodical problem-solving, and steady economic growth.",
+        f"Harmonious cosmic alignment, marking diplomatic grace, prosperous partnerships, and balanced social standing.",
+        f"Transformative watery configuration, driving deep investigative grit, strategic intuition, and high-impact financial breakthroughs."
+    ]
+    
+    unique_prediction = ending_options[name_seed % len(ending_options)]
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -2532,7 +2529,7 @@ async def api_kundali_pdf(request: Request):
         [
             f"Date of Birth: {dob} | Time: {tob} | Place: {pob}",
             f"Ascendant (Lagna) Sign: {rashi} | Birth Nakshatra: {nakshatra}",
-            f"Planetary Positions (Graha Sthiti): Active Rashi lord {rashi} with favorable divisional positioning under {dasha}.",
+            f"Planetary Positions (Graha Sthiti): Active Rashi lord {rashi} with favorable divisional positioning and supportive planetary aspects.",
             f"Lagna Horoscope: {unique_prediction}"
         ]
     )

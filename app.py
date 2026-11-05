@@ -1893,63 +1893,132 @@ async def api_palm(request: Request):
         "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"
     })
     
-    # Unique byte seed based on user and parameters
     name_bytes_sum = sum(ord(c) for c in user_name.lower())
     
-    # Fully expanded and distinct lists for each section
-    life_list = [
-        f"Life Line (Variant A): Unbroken physical vitality arch for {user_name}, showing exceptional core endurance, long-term stamina, and robust immunity.",
-        f"Life Line (Variant B): Deep primary life channel reflecting steady energy flow, high resilience, and sustained physical longevity for {user_name}.",
-        f"Life Line (Variant C): Expansive life curve highlighting remarkable physiological strength, cellular vitality, and robust internal vigor for {user_name}."
-    ]
+    # Exactly 4 distinct variants mapped to match all 4 dropdown options without overlapping
+    life_maps = {
+        "Deep and Unbroken": [
+            f"Life Line (Deep - A): Unbroken physical vitality arch for {user_name}, showing exceptional core endurance, long-term stamina, and robust immunity.",
+            f"Life Line (Deep - B): Deep primary life channel reflecting steady energy flow, high resilience, and sustained physical longevity for {user_name}.",
+            f"Life Line (Deep - C): Expansive life curve highlighting remarkable physiological strength, cellular vitality, and robust internal vigor for {user_name}.",
+            f"Life Line (Deep - D): Solid, unblemished vital force line for {user_name}, denoting immense physical tenacity, robust health reserves, and lifelong endurance."
+        ],
+        "Sweeping & Curved": [
+            f"Life Line (Sweeping - A): Wide graceful arc reaching deep into the lunar plain for {user_name}, marking high adventurous spirit and dynamic travel horizons.",
+            f"Life Line (Sweeping - B): Expansive curved vitality trace for {user_name}, signifying boundless enthusiasm, vibrant social energy, and robust lifestyle changes.",
+            f"Life Line (Sweeping - C): Sweeping lower palm boundary for {user_name}, denoting expressive emotional vigor, high physical mobility, and active pursuits.",
+            f"Life Line (Sweeping - D): Graceful outward-bending life curve for {user_name}, symbolizing a flexible constitution, high adaptability, and magnetic presence."
+        ],
+        "Chained Initial": [
+            f"Life Line (Chained - A): Chained initial segment for {user_name} transitioning into a clean channel, marking early hurdles evolving into great strength.",
+            f"Life Line (Chained - B): Early island linkages resolving smoothly for {user_name}, symbolizing early developmental challenges turning into mature personal power.",
+            f"Life Line (Chained - C): Delicate early chain formation on the life arch for {user_name} giving way to an unbreakable channel of sustained personal vitality.",
+            f"Life Line (Chained - D): Initial delicate loops on {user_name}'s vitality path clearing up remarkably, pointing toward a strong and empowered later life trajectory."
+        ],
+        "Double Line (Mars)": [
+            f"Life Line (Double - A): Powerful Martian sister line accompanying {user_name}'s core vitality line, ensuring exceptional physical shielding and inner reserves.",
+            f"Life Line (Double - B): Rare double life boundary identified in {user_name}'s palm, offering an extraordinary protective aura and high accident resistance.",
+            f"Life Line (Double - C): Dual support arches running parallel for {user_name}, conferring robust martial energy, intense physical backup, and fierce protection.",
+            f"Life Line (Double - D): Prominent secondary vital line backing up {user_name}, symbolizing exceptional constitutional backup and fearless recovery power."
+        ]
+    }
     
-    head_list = [
-        f"Head Line (Variant A): Deep horizontal mental line demonstrating razor-sharp practical intellect, business acumen, and focused logic for {user_name}.",
-        f"Head Line (Variant B): Structured intellectual axis revealing pragmatic problem-solving, realism, and structured decision-making for {user_name}.",
-        f"Head Line (Variant C): Clear mental formation highlighting disciplined concentration, commercial insight, and operational efficiency for {user_name}."
-    ]
+    head_maps = {
+        "Straight and Clear": [
+            f"Head Line (Straight - A): Deep horizontal mental line demonstrating razor-sharp practical intellect, business acumen, and focused logic for {user_name}.",
+            f"Head Line (Straight - B): Structured intellectual axis revealing pragmatic problem-solving, realism, and structured decision-making for {user_name}.",
+            f"Head Line (Straight - C): Clear mental formation highlighting disciplined concentration, commercial insight, and operational efficiency for {user_name}.",
+            f"Head Line (Straight - D): Firm horizontal intellectual trace for {user_name}, showing unwavering focus, methodical execution, and sharp logical deduction."
+        ],
+        "Sloping to Luna": [
+            f"Head Line (Sloping - A): Graceful downward mental curve toward Luna for {user_name}, blending creative imagination, intuition, and psychological insight.",
+            f"Head Line (Sloping - B): Artistic and visionary head line for {user_name}, signifying deep conceptual flair, narrative depth, and imaginative genius.",
+            f"Head Line (Sloping - C): Luna-leaning mental arc for {user_name} indicating rich emotional intelligence, creative storytelling, and inspired intellect.",
+            f"Head Line (Sloping - D): Creative downward inclination in {user_name}'s intellectual axis, fusing abstract thinking with deep aesthetic appreciation."
+        ],
+        "Forked (Writer's Fork)": [
+            f"Head Line (Forked - A): Writer's Fork termination in {user_name}'s palm, indicating multi-faceted versatility, dual skillsets, and communicative brilliance.",
+            f"Head Line (Forked - B): Bifurcated intellectual end-point for {user_name} showing both executive logic and creative expression capabilities.",
+            f"Head Line (Forked - C): Distinct terminal fork on {user_name}'s mental line, conferring adaptable intellect, eloquence, and multifaceted talent.",
+            f"Head Line (Forked - D): Expressive fork formation at the close of {user_name}'s head line, symbolizing sharp wit, versatility, and mastery in communication."
+        ],
+        "High near Jupiter": [
+            f"Head Line (High - A): High-set intellectual anchor under Jupiter for {user_name}, reflecting strong self-belief, authoritative intellect, and visionary goals.",
+            f"Head Line (High - B): Proud, high-origin mental line for {user_name} demonstrating uncompromising standards, ambitious strategy, and leadership drive.",
+            f"Head Line (High - C): Jupiter-anchored head line for {user_name}, marking independent executive ambition, self-driven intellect, and commanding authority.",
+            f"Head Line (High - D): Elevated intellectual start point for {user_name} indicating supreme self-confidence, intellectual pride, and administrative prowess."
+        ]
+    }
     
-    heart_list = [
-        f"Heart Line (Variant A): Smoothly curving emotional path ending between Jupiter and Saturn, showing balanced empathy and relationship warmth for {user_name}.",
-        f"Heart Line (Variant B): Harmonious emotional line blending deep affection, sensible boundaries, and compassionate understanding for {user_name}.",
-        f"Heart Line (Variant C): Warm upper palm channel indicating high emotional intelligence, natural kindness, and domestic harmony for {user_name}."
-    ]
+    heart_maps = {
+        "Curved and Warm": [
+            f"Heart Line (Curved - A): Smoothly curving emotional path ending between Jupiter and Saturn, showing balanced empathy and relationship warmth for {user_name}.",
+            f"Heart Line (Curved - B): Harmonious emotional line blending deep affection, sensible boundaries, and compassionate understanding for {user_name}.",
+            f"Heart Line (Curved - C): Warm upper palm channel indicating high emotional intelligence, natural kindness, and domestic harmony for {user_name}.",
+            f"Heart Line (Curved - D): Gracefully arched emotional trace for {user_name}, denoting balanced romance, genuine care, and steady emotional maturity."
+        ],
+        "Under Jupiter": [
+            f"Heart Line (Jupiter - A): Noble emotional axis reaching high into Jupiter's realm for {user_name}, reflecting idealistic romance and absolute loyalty.",
+            f"Heart Line (Jupiter - B): Jupiter-anchored emotional line for {user_name} conferring dignified devotion, reverence in partnerships, and profound integrity.",
+            f"Heart Line (Jupiter - C): High-terminating emotional line beneath Jupiter for {user_name}, symbolizing deep sincerity and high moral standards in love.",
+            f"Heart Line (Jupiter - D): Devoted emotional terminal under Jupiter's mount for {user_name}, highlighting sacred partnership bonds and noble affection."
+        ],
+        "Upward Branches": [
+            f"Heart Line (Branches - A): Upward radiating emotional offshoots in {user_name}'s palm denoting an optimistic heart, cheerful disposition, and uplifting bonds.",
+            f"Heart Line (Branches - B): Dynamic upward-branching emotional channel for {user_name} signaling quick emotional recovery and joyful social connections.",
+            f"Heart Line (Branches - C): Vibrant upward branches on {user_name}'s heart line, predicting joyful personal relationships and strong emotional resilience.",
+            f"Heart Line (Branches - D): Cheerful upward-radiating emotional streams for {user_name}, highlighting a resilient heart, positivity, and affectionate ties."
+        ],
+        "Trishul Marked": [
+            f"Heart Line (Trishul - A): Sacred Trishul termination at the close of {user_name}'s heart line reflecting elevated empathy, universal goodwill, and wisdom.",
+            f"Heart Line (Trishul - B): Triple-pronged terminal formation on {user_name}'s emotional line bestowing charismatic warmth and spiritual fulfillment.",
+            f"Heart Line (Trishul - C): Trifurcated emotional end-point marking immense compassion, widespread popularity, and deep emotional harmony for {user_name}.",
+            f"Heart Line (Trishul - D): Auspicious Trishul symbol on {user_name}'s heart line, conferring noble grace, profound emotional depth, and spiritual alignment."
+        ]
+    }
     
-    # Expanded focus lists mapped strictly to individual focus categories to prevent cross-matching
     focus_maps = {
         "Career & Wealth": [
             f"Focus Alignment (Career - A): Strong planetary mount resonance in Saturn and Jupiter zones for {user_name}, powerfully supporting professional expansion.",
             f"Focus Alignment (Career - B): Ascending destiny vectors and solar mount activations driving leadership milestones and major financial breakthroughs for {user_name}.",
-            f"Focus Alignment (Career - C): Favorable planetary architecture cementing solid business growth, sustained authority, and long-term asset security for {user_name}."
+            f"Focus Alignment (Career - C): Favorable planetary architecture cementing solid business growth, sustained authority, and long-term asset security for {user_name}.",
+            f"Focus Alignment (Career - D): Prime wealth configuration in {user_name}'s hand, unlocking high-tier commercial success, enterprise scaling, and profits."
         ],
         "Health & Vitality": [
             f"Focus Alignment (Health - A): Robust bio-energetic pulse observed across primary vitality arches for {user_name}, ensuring high stamina and rapid recovery.",
             f"Focus Alignment (Health - B): Clean, unobstructed physical energy grids supporting {user_name}, fostering lasting wellness and constitutional vigor.",
-            f"Focus Alignment (Health - C): Harmonious elemental equilibrium across physical zones for {user_name}, protecting against fatigue and enhancing vitality."
+            f"Focus Alignment (Health - C): Harmonious elemental equilibrium across physical zones for {user_name}, protecting against fatigue and enhancing vitality.",
+            f"Focus Alignment (Health - D): Radiant physiological alignment for {user_name}, guaranteeing sustained physical energy, cellular renewal, and longevity."
         ],
         "Relationships & Marriage": [
             f"Focus Alignment (Relationship - A): Harmonious Venus and lunar nodal configurations detected for {user_name}, predicting deep emotional empathy and loyalty.",
             f"Focus Alignment (Relationship - B): Supportive partnership lines and balanced emotional arches affirming deep mutual affection and lasting trust for {user_name}.",
-            f"Focus Alignment (Relationship - C): Serene relational geometry in {user_name}'s palm blueprint, pointing toward rewarding companionship and peaceful family bonds."
+            f"Focus Alignment (Relationship - C): Serene relational geometry in {user_name}'s palm blueprint, pointing toward rewarding companionship and peaceful family bonds.",
+            f"Focus Alignment (Relationship - D): Auspicious marital and partnership geometry for {user_name}, ensuring profound mutual understanding and domestic bliss."
         ],
         "Spiritual Growth": [
             f"Focus Alignment (Spiritual - A): High spiritual frequency and elevated mount alignments identified for {user_name}, encouraging profound self-realization.",
             f"Focus Alignment (Spiritual - B): Deep mystic crosses and elevated nodal rings activated for {user_name}, unlocking advanced intuitive clarity and inner evolution.",
-            f"Focus Alignment (Spiritual - C): Profound metaphysical alignment visible in {user_name}'s hand markers, guiding a transformative journey toward higher consciousness."
+            f"Focus Alignment (Spiritual - C): Profound metaphysical alignment visible in {user_name}'s hand markers, guiding a transformative journey toward higher consciousness.",
+            f"Focus Alignment (Spiritual - D): Evolved spiritual markers on {user_name}'s palm, unlocking deep inner wisdom, higher awareness, and meditative stability."
         ]
     }
 
-    # Isolated index formulas using unique prime coefficients
-    l_idx = (name_bytes_sum * 13 + len(life_type) * 7) % len(life_list)
-    h_idx = (name_bytes_sum * 17 + len(head_type) * 11) % len(head_list)
-    ht_idx = (name_bytes_sum * 23 + len(heart_type) * 13) % len(heart_list)
-    
+    # Strict independent index extraction for each specific dropdown option
+    l_list = life_maps.get(life_type, life_maps["Deep and Unbroken"])
+    h_list = head_maps.get(head_type, head_maps["Straight and Clear"])
+    ht_list = heart_maps.get(heart_type, heart_maps["Curved and Warm"])
     f_list = focus_maps.get(focus, focus_maps["Career & Wealth"])
-    f_idx = (name_bytes_sum * 29 + len(focus) * 17) % len(f_list)
 
-    l_desc = life_list[l_idx]
-    h_desc = head_list[h_idx]
-    ht_desc = heart_list[ht_idx]
+    # Unique hash formulas utilizing distinct multipliers for each category
+    l_idx = (name_bytes_sum * 13 + len(life_type) * 7 + hash(life_type)) % len(l_list)
+    h_idx = (name_bytes_sum * 17 + len(head_type) * 11 + hash(head_type)) % len(h_list)
+    ht_idx = (name_bytes_sum * 23 + len(heart_type) * 13 + hash(heart_type)) % len(ht_list)
+    f_idx = (name_bytes_sum * 29 + len(focus) * 17 + hash(focus)) % len(f_list)
+
+    l_desc = l_list[l_idx]
+    h_desc = h_list[h_idx]
+    ht_desc = ht_list[ht_idx]
     f_align_desc = f_list[f_idx]
 
     teaser = f"""
@@ -1995,7 +2064,7 @@ async def api_palm(request: Request):
     download_btn = pdf_btn_html if is_admin else ""
 
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
-
+    
 @app.post("/api/life")
 async def api_life(request: Request):
     data = await request.json()

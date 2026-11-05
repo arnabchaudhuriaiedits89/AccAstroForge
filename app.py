@@ -2615,11 +2615,6 @@ async def api_panchang(request: Request):
     
     today_formatted = datetime.datetime.now().strftime("%B %d, %Y") if date_str in ["Today", ""] else date_str
     
-    # Fully decoupled unique seed generation for city and date
-    city_seed = sum(ord(c) * (i + 1) for i, c in enumerate(city.lower()))
-    date_seed = sum(ord(c) * (i + 3) for i, c in enumerate(str(date_str)))
-    combined_seed = city_seed + (date_seed * 7)
-    
     tithis = [
         "Shukla Paksha Pratipada", "Shukla Paksha Tritiya", "Shukla Paksha Panchami", 
         "Shukla Paksha Ashtami", "Shukla Paksha Navami", "Shukla Paksha Ekadashi", 
@@ -2663,18 +2658,17 @@ async def api_panchang(request: Request):
         "Shukra Hora active in morning; Chandra Hora supporting artistic partnerships."
     ]
     
-    tithi_val = tithis[combined_seed % len(tithis)]
-    nak_val = nakshatras[(city_seed + date_seed * 2) % len(nakshatras)]
-    rahu_val = rahu_kalams[(city_seed * 3 + date_seed) % len(rahu_kalams)]
+    # Bulletproof independent hash-based index derivation for each field
+    tithi_val = tithis[abs(hash(f"{city}_{date_str}_tithi")) % len(tithis)]
+    nak_val = nakshatras[abs(hash(f"{city}_{date_str}_nakshatra")) % len(nakshatras)]
+    rahu_val = rahu_kalams[abs(hash(f"{city}_{date_str}_rahu")) % len(rahu_kalams)]
+    rise_val = sun_rises[abs(hash(f"{city}_{date_str}_sunrise")) % len(sun_rises)]
+    set_val = sun_sets[abs(hash(f"{city}_{date_str}_sunset")) % len(sun_sets)]
     
-    # Completely independent unique indices for Sunrise, Sunset, and Yamaganda
-    rise_val = sun_rises[(city_seed + date_seed * 3) % len(sun_rises)]
-    set_val = sun_sets[(date_seed * 4 + city_seed) % len(sun_sets)]
-    
-    abhijit_val = abhijits[(city_seed + date_seed) % len(abhijits)]
-    amrit_val = amrits[(city_seed * 3 + date_seed * 7 + 19) % len(amrits)]
-    yamaganda_val = yamagandas[(date_seed * 5 + city_seed * 2) % len(yamagandas)]
-    hora_val = horas[(city_seed * 11 + date_seed * 13 + 17) % len(horas)]
+    abhijit_val = abhijits[abs(hash(f"{city}_{date_str}_abhijit")) % len(abhijits)]
+    amrit_val = amrits[abs(hash(f"{city}_{date_str}_amrit")) % len(amrits)]
+    yamaganda_val = yamagandas[abs(hash(f"{city}_{date_str}_yamaganda")) % len(yamagandas)]
+    hora_val = horas[abs(hash(f"{city}_{date_str}_hora")) % len(horas)]
 
     if mode == "free":
         html = f"""
@@ -2738,7 +2732,7 @@ async def api_panchang(request: Request):
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #fde047; display: block;'>✨ Abhijit Muhurat (Best for Starting New Work):</b>
                     <span style='color: #f3e8ff;'>{abhijit_val} (Highly Auspicious Vedic Window)</span>
-                </div>
+                </div>!
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #fde047; display: block;'>🌙 Amrit Kalam & Brahma Muhurat:</b>
                     <span style='color: #f3e8ff;'>{amrit_val} (Divine Spiritual Energy)</span>

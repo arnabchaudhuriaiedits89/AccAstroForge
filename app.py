@@ -1893,44 +1893,64 @@ async def api_palm(request: Request):
         "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹79)"
     })
     
-    # 1. Completely independent and strict mathematical separation for each line
+    # Unique byte seed based on user and parameters
     name_bytes_sum = sum(ord(c) for c in user_name.lower())
     
-    # Completely separate lists to guarantee zero overlapping sentences across the 4 lines
+    # Fully expanded and distinct lists for each section
     life_list = [
-        f"Life Line Analysis (Alpha Variant) for {user_name}: Unbroken physical vitality arch showing exceptional core endurance, long-term stamina, and robust immunity.",
-        f"Life Line Analysis (Beta Variant) for {user_name}: Deep primary life channel reflecting steady energy flow, high resilience, and sustained physical longevity.",
-        f"Life Line Analysis (Gamma Variant) for {user_name}: Expansive life curve highlighting remarkable physiological strength, vitality, and robust internal vigor."
+        f"Life Line (Variant A): Unbroken physical vitality arch for {user_name}, showing exceptional core endurance, long-term stamina, and robust immunity.",
+        f"Life Line (Variant B): Deep primary life channel reflecting steady energy flow, high resilience, and sustained physical longevity for {user_name}.",
+        f"Life Line (Variant C): Expansive life curve highlighting remarkable physiological strength, cellular vitality, and robust internal vigor for {user_name}."
     ]
     
     head_list = [
-        f"Head Line Analysis (Alpha Variant) for {user_name}: Deep horizontal mental line demonstrating razor-sharp practical intellect, business acumen, and focused logic.",
-        f"Head Line Analysis (Beta Variant) for {user_name}: Structured intellectual axis revealing pragmatic problem-solving, realism, and structured decision-making.",
-        f"Head Line Analysis (Gamma Variant) for {user_name}: Clear mental formation highlighting disciplined concentration, commercial insight, and efficiency."
+        f"Head Line (Variant A): Deep horizontal mental line demonstrating razor-sharp practical intellect, business acumen, and focused logic for {user_name}.",
+        f"Head Line (Variant B): Structured intellectual axis revealing pragmatic problem-solving, realism, and structured decision-making for {user_name}.",
+        f"Head Line (Variant C): Clear mental formation highlighting disciplined concentration, commercial insight, and operational efficiency for {user_name}."
     ]
     
     heart_list = [
-        f"Heart Line Analysis (Alpha Variant) for {user_name}: Smoothly curving emotional path ending between Jupiter and Saturn, showing balanced empathy and relationship warmth.",
-        f"Heart Line Analysis (Beta Variant) for {user_name}: Harmonious emotional line blending deep affection, sensible boundaries, and compassionate understanding.",
-        f"Heart Line Analysis (Gamma Variant) for {user_name}: Warm upper palm channel indicating high emotional intelligence, natural kindness, and domestic harmony."
+        f"Heart Line (Variant A): Smoothly curving emotional path ending between Jupiter and Saturn, showing balanced empathy and relationship warmth for {user_name}.",
+        f"Heart Line (Variant B): Harmonious emotional line blending deep affection, sensible boundaries, and compassionate understanding for {user_name}.",
+        f"Heart Line (Variant C): Warm upper palm channel indicating high emotional intelligence, natural kindness, and domestic harmony for {user_name}."
     ]
     
-    focus_list = [
-        f"Focus Area Alignment ({focus} - Alpha): Strong planetary mount resonance in wealth and career zones, powerfully supporting professional expansion and capital accumulation.",
-        f"Focus Area Alignment ({focus} - Beta): Ascending destiny vectors and solar mount activations driving leadership milestones and major financial breakthroughs for {user_name}.",
-        f"Focus Area Alignment ({focus} - Gamma): Favorable planetary architecture cementing solid business growth, sustained authority, and long-term asset security."
-    ]
+    # Expanded focus lists mapped strictly to individual focus categories to prevent cross-matching
+    focus_maps = {
+        "Career & Wealth": [
+            f"Focus Alignment (Career - A): Strong planetary mount resonance in Saturn and Jupiter zones for {user_name}, powerfully supporting professional expansion.",
+            f"Focus Alignment (Career - B): Ascending destiny vectors and solar mount activations driving leadership milestones and major financial breakthroughs for {user_name}.",
+            f"Focus Alignment (Career - C): Favorable planetary architecture cementing solid business growth, sustained authority, and long-term asset security for {user_name}."
+        ],
+        "Health & Vitality": [
+            f"Focus Alignment (Health - A): Robust bio-energetic pulse observed across primary vitality arches for {user_name}, ensuring high stamina and rapid recovery.",
+            f"Focus Alignment (Health - B): Clean, unobstructed physical energy grids supporting {user_name}, fostering lasting wellness and constitutional vigor.",
+            f"Focus Alignment (Health - C): Harmonious elemental equilibrium across physical zones for {user_name}, protecting against fatigue and enhancing vitality."
+        ],
+        "Relationships & Marriage": [
+            f"Focus Alignment (Relationship - A): Harmonious Venus and lunar nodal configurations detected for {user_name}, predicting deep emotional empathy and loyalty.",
+            f"Focus Alignment (Relationship - B): Supportive partnership lines and balanced emotional arches affirming deep mutual affection and lasting trust for {user_name}.",
+            f"Focus Alignment (Relationship - C): Serene relational geometry in {user_name}'s palm blueprint, pointing toward rewarding companionship and peaceful family bonds."
+        ],
+        "Spiritual Growth": [
+            f"Focus Alignment (Spiritual - A): High spiritual frequency and elevated mount alignments identified for {user_name}, encouraging profound self-realization.",
+            f"Focus Alignment (Spiritual - B): Deep mystic crosses and elevated nodal rings activated for {user_name}, unlocking advanced intuitive clarity and inner evolution.",
+            f"Focus Alignment (Spiritual - C): Profound metaphysical alignment visible in {user_name}'s hand markers, guiding a transformative journey toward higher consciousness."
+        ]
+    }
 
-    # 2. Strict independent index calculation using unique prime offsets for each line
-    l_idx = (name_bytes_sum * 13 + len(life_type)) % len(life_list)
-    h_idx = (name_bytes_sum * 17 + len(head_type)) % len(head_list)
-    ht_idx = (name_bytes_sum * 23 + len(heart_type)) % len(heart_list)
-    f_idx = (name_bytes_sum * 29 + len(focus)) % len(focus_list)
+    # Isolated index formulas using unique prime coefficients
+    l_idx = (name_bytes_sum * 13 + len(life_type) * 7) % len(life_list)
+    h_idx = (name_bytes_sum * 17 + len(head_type) * 11) % len(head_list)
+    ht_idx = (name_bytes_sum * 23 + len(heart_type) * 13) % len(heart_list)
+    
+    f_list = focus_maps.get(focus, focus_maps["Career & Wealth"])
+    f_idx = (name_bytes_sum * 29 + len(focus) * 17) % len(f_list)
 
     l_desc = life_list[l_idx]
     h_desc = head_list[h_idx]
     ht_desc = heart_list[ht_idx]
-    f_align_desc = focus_list[f_idx]
+    f_align_desc = f_list[f_idx]
 
     teaser = f"""
     <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #7c3aed; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(124, 58, 237, 0.4); margin-top: 15px;'>

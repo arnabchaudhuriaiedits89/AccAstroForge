@@ -725,6 +725,7 @@ HTML_TEMPLATE = """
             <button class="tab-btn" onclick="switchTab(event, 'tab-kundali')">📜 KUNDALI PDF</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-numerology')">🔢 NUMEROLOGY</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-panchang')">📅 PANCHANG</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🤖 AI ASSISTANT</button>
             <button class="tab-btn" onclick="switchTab(event, 'tab-legal')">⚖️ LEGAL</button>
         </div>
 
@@ -1436,7 +1437,7 @@ HTML_TEMPLATE = """
                 document.getElementById('transit-result').innerHTML = data.html;
             });
         }
-        
+
         async function submitLifePrediction() {
             let name = document.getElementById('life-name').value || localStorage.getItem('hub_name') || 'User';
             let dob = document.getElementById('life-dob').value || localStorage.getItem('hub_dob') || '2000-01-01';

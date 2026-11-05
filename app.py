@@ -1860,23 +1860,74 @@ async def api_life(request: Request):
     nakshatra = profile['nakshatra']
     psychic = profile['psychic_num']
     
-    # Dynamic customized content per user based on Rashi & Psychic Number
-    career_insights = {
-        "Aries (Mesha)": f"Under the dynamic influence of Aries, {name} excels in pioneering technical architectures, backend script engineering, and high-stakes deployment modules. Leadership in software innovation and independent system design will bring extraordinary professional milestones.",
-        "Taurus (Vrishabha)": f"For {name}, Taurus stability fosters meticulous backend code structuring, database optimization, and secure financial transaction modules. Your steady persistence ensures long-term infrastructure reliability and asset growth.",
-        "Gemini (Mithuna)": f"Gemini's dual intellect empowers {name} with exceptional multi-tasking abilities across scripting languages, automated translation pipelines, and interactive UI debugging. Versatility is your supreme competitive edge.",
-        "Cancer (Karka)": f"Cancerian intuitive depth gives {name} a unique vision for user-centric application design, empathetic team coordination, and robust data security frameworks. Emotional intelligence drives your architectural breakthroughs.",
-        "Leo (Simha)": f"Leo's royal solar energy endows {name} with commanding authority in project management, flagship AI persona styling, and large-scale digital campaign directions.",
-        "Virgo (Kanya)": f"Analytical precision defines {name}'s approach under Virgo. Systematic debugging, flawless database management, and modular code isolation are your core masteries.",
-        "Libra (Tula)": f"Libra's balanced harmonic frequency guides {name} toward exquisite UI/UX layouts, seamless payment gateway integrations, and harmonious professional collaborations.",
-        "Scorpio (Vrischika)": f"Scorpio's intense transformative focus enables {name} to resolve complex architectural bottlenecks, deep backend logic flaws, and high-performance system deployments.",
-        "Sagittarius (Dhanu)": f"Sagittarius expands {name}'s horizons toward global software scaling, multi-lingual voice synthesis pipelines, and expansive digital promotional campaigns.",
-        "Capricorn (Makara)": f"Saturnian discipline anchors {name} in building robust, enterprise-grade cloud deployments, secure Chromium browser frameworks, and high-capacity storage engines.",
-        "Aquarius (Kumbha)": f"Aquarius visionary intellect inspires {name} to innovate futuristic AI workflows, automated translation tools, and cutting-edge software applications.",
-        "Pisces (Meena)": f"Piscean imagination fuels {name}'s creative asset design, 3D sci-fi mechanical modeling, and immersive digital storytelling engines."
+    # 1. Core Personality Blueprint
+    personality_insights = {
+        "Aries (Mesha)": f"Under the profound influence of Aries, {name} possesses an innate fiery resilience, independent drive, and a magnetic leadership aura. Your psychic number {psychic} highlights strong pioneering capabilities and fierce determination.",
+        "Taurus (Vrishabha)": f"Taurus endows {name} with steady patience, exceptional practical grounding, and an eye for enduring stability. Your psychic number {psychic} signifies deep loyalty, artistic appreciation, and quiet inner strength.",
+        "Gemini (Mithuna)": f"Gemini's dual energy grants {name} sparkling wit, exceptional adaptability across technical or creative domains, and sharp communicative prowess. Your psychic number {psychic} amplifies intellectual curiosity.",
+        "Cancer (Karka)": f"Cancerian intuitive depth gives {name} profound emotional intelligence, protective instincts, and creative vision. Your psychic number {psychic} drives your empathetic connections and inner resilience.",
+        "Leo (Simha)": f"Leo's solar radiance instills {name} with majestic confidence, generous warmth, and natural authority. Your psychic number {psychic} highlights a magnetic presence that naturally draws people toward your vision.",
+        "Virgo (Kanya)": f"Virgo's analytical precision equips {name} with methodical problem-solving skills, meticulous attention to detail, and a service-oriented mindset. Your psychic number {psychic} signifies continuous self-improvement.",
+        "Libra (Tula)": f"Libra brings a natural grace, diplomatic balance, and an innate appreciation for harmony and aesthetics to {name}. Your psychic number {psychic} reflects strong partnership ethics and fairness.",
+        "Scorpio (Vrischika)": f"Scorpio endows {name} with intense focus, transformative emotional depth, and unwavering investigative grit. Your psychic number {psychic} underscores a powerful secretive mystique and sharp intuition.",
+        "Sagittarius (Dhanu)": f"Sagittarius fuels {name} with an adventurous philosophical spirit, boundless optimism, and a relentless quest for higher wisdom. Your psychic number {psychic} points toward expansive horizons.",
+        "Capricorn (Makara)": f"Capricorn grants {name} disciplined ambition, structural mastery, and unyielding perseverance under pressure. Your psychic number {psychic} highlights long-term strategic vision and reliability.",
+        "Aquarius (Kumbha)": f"Aquarius inspires {name} with progressive humanitarian ideals, inventive technical concepts, and independent originality. Your psychic number {psychic} marks you as a future-focused visionary.",
+        "Pisces (Meena)": f"Pisces endows {name} with boundless imagination, spiritual sensitivity, and deep artistic empathy. Your psychic number {psychic} reflects mystical depth and compassionate understanding."
     }
     
-    career_text = career_insights.get(rashi, f"Stellar positioning for {name} indicates remarkable breakthroughs in technical consultancy and leadership roles.")
+    # 2. Career Evolution & Wealth
+    career_insights = {
+        "Aries (Mesha)": f"Stellar positions for {name} point toward extraordinary breakthroughs in software entrepreneurship, engineering consultancy, and executive leadership roles. Financial inflow surges through independent technical ventures.",
+        "Taurus (Vrishabha)": f"Financial accumulation for {name} is heavily favored through long-term asset creation, real estate investments, secure banking portfolios, and high-value corporate consulting.",
+        "Gemini (Mithuna)": f"Career growth for {name} accelerates through digital media campaigns, multi-lingual software platforms, publishing, and specialized technical communication roles.",
+        "Cancer (Karka)": f"Professional success for {name} shines in user-centric design, administrative leadership, hospitality management, and intuitive backend application structuring.",
+        "Leo (Simha)": f"Executive authority, brand building, large-scale media projects, and enterprise leadership bring remarkable financial rewards and public renown to {name}.",
+        "Virgo (Kanya)": f"Specialized technical mastery, financial auditing, database architecture, and precision-driven project management bring steady wealth creation and career elevation to {name}.",
+        "Libra (Tula)": f"Legal consultancy, creative design partnerships, public relations, and high-end client negotiations unlock lucrative financial streams and professional fame for {name}.",
+        "Scorpio (Vrischika)": f"Deep technical research, financial analysis, crisis management, and specialized backend security systems position {name} for massive wealth breakthroughs.",
+        "Sagittarius (Dhanu)": f"Global ventures, higher education consultancy, publishing, and expansive digital marketing initiatives bring international financial inflow and leadership status to {name}.",
+        "Capricorn (Makara)": f"Corporate administration, cloud system deployment, large-scale infrastructural investments, and high-level management bring solid wealth security and authority to {name}.",
+        "Aquarius (Kumbha)": f"Cutting-edge AI application design, scientific research, software development, and revolutionary tech startups favor extraordinary financial milestones for {name}.",
+        "Pisces (Meena)": f"Creative arts, spiritual guidance, healing modalities, and immersive digital media storytelling bring both financial prosperity and profound inner fulfillment to {name}."
+    }
+
+    # 3. Relationships & Family Harmony
+    relationship_insights = {
+        "Aries (Mesha)": f"For {name}, 7th house alignments demand mutual respect and shared adventures. Direct, honest communication clears minor friction, bringing passionate domestic stability.",
+        "Taurus (Vrishabha)": f"Deep emotional loyalty and sensual comfort characterize {name}'s partnerships. Unwavering support from your life partner creates a serene, peaceful family sanctuary.",
+        "Gemini (Mithuna)": f"Intellectual rapport and lively conversations keep {name}'s relationships vibrant. Mutual curiosity and shared social circles strengthen marital bonds.",
+        "Cancer (Karka)": f"Profound emotional nurturing and home-centric dedication anchor {name}'s family life. Deep empathy from your spouse brings ultimate domestic peace.",
+        "Leo (Simha)": f"Warmth, grand gestures, and protective loyalty define {name}'s partnerships. Mutual admiration and shared celebration deepen your marital harmony.",
+        "Virgo (Kanya)": f"Practical acts of service, shared organizational goals, and quiet mutual devotion fortify {name}'s domestic life, bringing structured peace.",
+        "Libra (Tula)": f"Romance, elegance, and deep compromise form the bedrock of {name}'s relationships. Your partner acts as an equal sounding board, ensuring total harmony.",
+        "Scorpio (Vrischika)": f"Intense emotional bonding and absolute faithfulness characterize {name}'s partnerships. Deep trust unlocks unbreakable domestic unity.",
+        "Sagittarius (Dhanu)": f"Freedom coupled with shared philosophical pursuits brings joy to {name}'s home life. Partner travels and optimistic discussions strengthen family ties.",
+        "Capricorn (Makara)": f"Reliability, shared responsibility, and long-term security anchor {name}'s marriage. Mutual respect for each other's career builds a steadfast home.",
+        "Aquarius (Kumbha)": f"Friendship-based partnership, mutual independence, and intellectual freedom ensure a modern, harmonious domestic environment for {name}.",
+        "Pisces (Meena)": f"Unconditional emotional compassion, spiritual connection, and gentle romantic devotion create a deeply healing family atmosphere for {name}."
+    }
+
+    # 4. Health & Vitality
+    health_insights = {
+        "Aries (Mesha)": f"High physical energy requires structured athletic outlets and cardio routines to channel {name}'s vitality. Regular grounding meditation prevents burnout.",
+        "Taurus (Vrishabha)": f"Focus on clean nutrition and consistent metabolic exercise routines to sustain {name}'s steady vitality. Neck and throat alignment practices are beneficial.",
+        "Gemini (Mithuna)": f"Nervous system relaxation and mindful breathing exercises are essential for {name} to maintain optimal mental clarity and physical stamina.",
+        "Cancer (Karka)": f"Digestive wellness and emotional tranquility through hydro-therapy or gentle evening walks sustain robust health and high immunity for {name}.",
+        "Leo (Simha)": f"Cardiovascular health and outdoor sun exposure invigorate {name}'s core vitality. Maintaining work-life balance prevents cardiac overexertion.",
+        "Virgo (Kanya)": f"Gut health, disciplined dietary regimens, and restorative yoga keep {name}'s physical machinery running at peak performance.",
+        "Libra (Tula)": f"Kidney health, proper hydration, and lumbar stretching exercises maintain elegant posture and boundless energy levels for {name}.",
+        "Scorpio (Vrischika)": f"Emotional purging, detoxification practices, and high-intensity stamina training keep {name}'s transformative energy balanced and strong.",
+        "Sagittarius (Dhanu)": f"Outdoor trekking, sports activities, and hip flexibility exercises preserve {name}'s natural athletic agility and high spirits.",
+        "Capricorn (Makara)": f"Joint care, bone density maintenance, and structured stretching routines safeguard {name}'s physical endurance against long work hours.",
+        "Aquarius (Kumbha)": f"Circulatory health, leg stretching, and tech-free digital detox hours revitalize {name}'s nervous system and overall wellness.",
+        "Pisces (Meena)": f"Foot reflexology, adequate sleep cycles, and immersive water proximity restore {name}'s sensitive energetic aura and physical vitality."
+    }
+
+    p_text = personality_insights.get(rashi, f"Under the influence of {rashi}, {name} possesses strong leadership and resilience.")
+    c_text = career_insights.get(rashi, f"Stellar positioning for {name} points toward remarkable career breakthroughs.")
+    r_text = relationship_insights.get(rashi, f"7th house alignments denote loyalty and emotional intelligence in partnerships for {name}.")
+    h_text = health_insights.get(rashi, f"Maintaining a balanced lifestyle and regular physical alignment sustains high energy levels for {name}.")
 
     filename = f"Life_Forecast_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -1885,10 +1936,10 @@ async def api_life(request: Request):
         [
             f"Date of Birth: {dob} | Rashi: {rashi} | Nakshatra: {nakshatra}",
             f"Active Dasha: {profile['dasha']} | Psychic Number: {psychic}",
-            f"1. Core Personality & Karmic Blueprint: Under the profound influence of {rashi} and born under the sacred constellation of {nakshatra}, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number {psychic} highlights strong intuitive capabilities and emotional depth.",
-            f"2. Career Evolution, Wealth & Financial Accumulation: {career_text}",
-            f"3. Relationships, Marriage & Family Harmony: Alignments for {name} denote profound emotional intelligence and deep loyalty in partnerships, bringing domestic stability and harmonious support.",
-            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels and amplify positive cosmic frequencies."
+            f"1. Core Personality & Karmic Blueprint: {p_text}",
+            f"2. Career Evolution, Wealth & Financial Accumulation: {c_text}",
+            f"3. Relationships, Marriage & Family Harmony: {r_text}",
+            f"4. Health, Vitality & Recommended Remedies: {h_text} To neutralize minor planetary friction, wearing a certified natural gemstone aligned with your ascendant is recommended."
         ]
     )
     
@@ -1908,16 +1959,16 @@ async def api_life(request: Request):
         
         <div style='margin-top: 15px; line-height: 1.8; color: #f3e8ff;'>
             <h4 style='color: #fde047;'>1. Core Personality & Karmic Blueprint ({rashi})</h4>
-            <p>Under the profound influence of <b>{rashi}</b> and born under the sacred constellation of <b>{nakshatra}</b>, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number <b>{psychic}</b> highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.</p>
+            <p>{p_text}</p>
             
             <h4 style='color: #fde047; margin-top: 15px;'>2. Career Evolution, Wealth & Financial Accumulation</h4>
-            <p>{career_text}</p>
+            <p>{c_text}</p>
             
             <h4 style='color: #fde047; margin-top: 15px;'>3. Relationships, Marriage & Family Harmony</h4>
-            <p>Your 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships. Mutual respect and open communication will fortify your familial bonds, bringing peace, domestic stability, and harmonious support from your life partner and close associates.</p>
+            <p>{r_text}</p>
             
             <h4 style='color: #fde047; margin-top: 15px;'>4. Health, Vitality & Recommended Remedies</h4>
-            <p>Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels. To neutralize minor planetary friction and amplify positive cosmic frequencies, wearing a certified natural gemstone aligned with your ascendant and engaging in meditative grounding practices is strongly recommended.</p>
+            <p>{h_text} To neutralize minor planetary friction and amplify positive cosmic frequencies, wearing a certified natural gemstone aligned with your ascendant and engaging in meditative grounding practices is strongly recommended.</p>
         </div>
         <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full 149/- Report Unlocked Successfully via Admin Access!</p>
     </div>

@@ -2732,7 +2732,7 @@ async def api_panchang(request: Request):
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #fde047; display: block;'>✨ Abhijit Muhurat (Best for Starting New Work):</b>
                     <span style='color: #f3e8ff;'>{abhijit_val} (Highly Auspicious Vedic Window)</span>
-                </div>!
+                </div>
                 <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #fde047; display: block;'>🌙 Amrit Kalam & Brahma Muhurat:</b>
                     <span style='color: #f3e8ff;'>{amrit_val} (Divine Spiritual Energy)</span>

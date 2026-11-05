@@ -2674,7 +2674,7 @@ async def api_panchang(request: Request):
     abhijit_val = abhijits[(city_seed + date_seed) % len(abhijits)]
     amrit_val = amrits[(city_seed * 2 + date_seed) % len(amrits)]
     yamaganda_val = yamagandas[(date_seed * 5 + city_seed * 2) % len(yamagandas)]
-    hora_val = horas[(city_seed * 4 + date_seed * 5) % len(horas)]
+    hora_val = horas[(city_seed * 7 + date_seed * 11 + 13) % len(horas)]
 
     if mode == "free":
         html = f"""

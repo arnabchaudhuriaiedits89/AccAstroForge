@@ -291,13 +291,13 @@ def calculate_jagannath_hora_engine(name, dob, tob, pob):
     maha_planets = ['Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu']
     yogini_list = ['Bhadrika (Mercury)', 'Mangala (Moon)', 'Pingala (Sun)', 'Dhanya (Jupiter)', 'Bhramari (Mars)', 'Bhadrika (Mercury)', 'Ulka (Saturn)', 'Siddha (Venus)', 'Sankata (Rahu)']
     chara_list = ['Aries (Mesha) Direct Rashi Dasha', 'Taurus (Vrishabha) Direct Rashi Dasha', 'Gemini (Mithuna) Direct Rashi Dasha', 'Cancer (Karka) Direct Rashi Dasha', 'Leo (Simha) Direct Rashi Dasha', 'Virgo (Kanya) Direct Rashi Dasha']
-    ashtottari_list = ['Rahu / Venus Protection Phase', 'Sun / Moon Harmony Cycle', 'Jupiter / Mars Expansion Phase', 'Mercury / Saturn Structural Phase']
+    ashtottari_list = ['Rahu / Venus Protection Phase', 'Sun / Moon Harmony Cycle', 'Jupiter / Mars Expansion Phase', 'Mercury / Saturn Structural Phase', 'Ketu / Sun Protection Phase', 'Venus / Moon Harmony Cycle']
 
     dashas = {
         "Vimshottari Mahadasha": f"{maha_planets[seed % len(maha_planets)]} / {maha_planets[(seed + 3) % len(maha_planets)]} Active Cycle",
-        "Yogini Dasha": f"{yogini_list[seed % len(yogini_list)]} Yoga active",
-        "Chara Dasha": chara_list[seed % len(chara_list)],
-        "Ashtottari Dasha": ashtottari_list[(seed + 3) % len(ashtottari_list)]
+        "Yogini Dasha": f"{yogini_list[(seed + 5) % len(yogini_list)]} Yoga active",
+        "Chara Dasha": chara_list[(seed + 7) % len(chara_list)],
+        "Ashtottari Dasha": ashtottari_list[(seed + 2) % len(ashtottari_list)]
     }
     
     ashtakavarga = {

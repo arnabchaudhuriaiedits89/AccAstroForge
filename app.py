@@ -1856,18 +1856,39 @@ async def api_life(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction PDF", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
     
     profile = calculate_astrological_profile(name, dob)
+    rashi = profile['zodiac']
+    nakshatra = profile['nakshatra']
+    psychic = profile['psychic_num']
     
+    # Dynamic customized content per user based on Rashi & Psychic Number
+    career_insights = {
+        "Aries (Mesha)": f"Under the dynamic influence of Aries, {name} excels in pioneering technical architectures, backend script engineering, and high-stakes deployment modules. Leadership in software innovation and independent system design will bring extraordinary professional milestones.",
+        "Taurus (Vrishabha)": f"For {name}, Taurus stability fosters meticulous backend code structuring, database optimization, and secure financial transaction modules. Your steady persistence ensures long-term infrastructure reliability and asset growth.",
+        "Gemini (Mithuna)": f"Gemini's dual intellect empowers {name} with exceptional multi-tasking abilities across scripting languages, automated translation pipelines, and interactive UI debugging. Versatility is your supreme competitive edge.",
+        "Cancer (Karka)": f"Cancerian intuitive depth gives {name} a unique vision for user-centric application design, empathetic team coordination, and robust data security frameworks. Emotional intelligence drives your architectural breakthroughs.",
+        "Leo (Simha)": f"Leo's royal solar energy endows {name} with commanding authority in project management, flagship AI persona styling, and large-scale digital campaign directions.",
+        "Virgo (Kanya)": f"Analytical precision defines {name}'s approach under Virgo. Systematic debugging, flawless database management, and modular code isolation are your core masteries.",
+        "Libra (Tula)": f"Libra's balanced harmonic frequency guides {name} toward exquisite UI/UX layouts, seamless payment gateway integrations, and harmonious professional collaborations.",
+        "Scorpio (Vrischika)": f"Scorpio's intense transformative focus enables {name} to resolve complex architectural bottlenecks, deep backend logic flaws, and high-performance system deployments.",
+        "Sagittarius (Dhanu)": f"Sagittarius expands {name}'s horizons toward global software scaling, multi-lingual voice synthesis pipelines, and expansive digital promotional campaigns.",
+        "Capricorn (Makara)": f"Saturnian discipline anchors {name} in building robust, enterprise-grade cloud deployments, secure Chromium browser frameworks, and high-capacity storage engines.",
+        "Aquarius (Kumbha)": f"Aquarius visionary intellect inspires {name} to innovate futuristic AI workflows, automated translation tools, and cutting-edge software applications.",
+        "Pisces (Meena)": f"Piscean imagination fuels {name}'s creative asset design, 3D sci-fi mechanical modeling, and immersive digital storytelling engines."
+    }
+    
+    career_text = career_insights.get(rashi, f"Stellar positioning for {name} indicates remarkable breakthroughs in technical consultancy and leadership roles.")
+
     filename = f"Life_Forecast_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
         filename,
         f"Vedic Astrology & Deep Life Forecast - {name}",
         [
-            f"Date of Birth: {dob} | Rashi: {profile['zodiac']} | Nakshatra: {profile['nakshatra']}",
-            f"Active Dasha: {profile['dasha']} | Psychic Number: {profile['psychic_num']}",
-            f"1. Core Personality & Karmic Blueprint: Under the profound influence of {profile['zodiac']} and born under the sacred constellation of {profile['nakshatra']}, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number {profile['psychic_num']} highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.",
-            "2. Career Evolution, Wealth & Financial Accumulation: Stellar positioning in your D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship, specialized technical consultancy, or leadership roles. Financial inflow will experience a notable upward surge during transit cycles involving Jupiter and Mercury. Long-term asset creation and real estate investments are highly favored during this phase.",
-            "3. Relationships, Marriage & Family Harmony: Your 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships. Mutual respect and open communication will fortify your familial bonds, bringing peace, domestic stability, and harmonious support from your life partner and close associates.",
-            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels. To neutralize minor planetary friction and amplify positive cosmic frequencies, wearing a certified natural gemstone aligned with your ascendant and engaging in meditative grounding practices is strongly recommended."
+            f"Date of Birth: {dob} | Rashi: {rashi} | Nakshatra: {nakshatra}",
+            f"Active Dasha: {profile['dasha']} | Psychic Number: {psychic}",
+            f"1. Core Personality & Karmic Blueprint: Under the profound influence of {rashi} and born under the sacred constellation of {nakshatra}, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number {psychic} highlights strong intuitive capabilities and emotional depth.",
+            f"2. Career Evolution, Wealth & Financial Accumulation: {career_text}",
+            f"3. Relationships, Marriage & Family Harmony: Alignments for {name} denote profound emotional intelligence and deep loyalty in partnerships, bringing domestic stability and harmonious support.",
+            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels and amplify positive cosmic frequencies."
         ]
     )
     
@@ -1876,7 +1897,7 @@ async def api_life(request: Request):
     teaser = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed; margin-bottom: 12px;'>
         <h4 style='color:#fde047; margin-top:0;'>✨ Astrological Teaser for {name.upper()}</h4>
-        <p style='font-size:1.05rem; color:#f3e8ff;'><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p>
+        <p style='font-size:1.05rem; color:#f3e8ff;'><b>Rashi:</b> {rashi} | <b>Nakshatra:</b> {nakshatra} | <b>Dasha:</b> {profile['dasha']}</p>
     </div>
     """
     
@@ -1886,11 +1907,11 @@ async def api_life(request: Request):
         <p style='color: #fde047; font-weight: 600;'>Birth Profile Verified | Lagna Ascendant & Planetary Coordinates Active</p>
         
         <div style='margin-top: 15px; line-height: 1.8; color: #f3e8ff;'>
-            <h4 style='color: #fde047;'>1. Core Personality & Karmic Blueprint ({profile['zodiac']})</h4>
-            <p>Under the profound influence of <b>{profile['zodiac']}</b> and born under the sacred constellation of <b>{profile['nakshatra']}</b>, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number <b>{profile['psychic_num']}</b> highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.</p>
+            <h4 style='color: #fde047;'>1. Core Personality & Karmic Blueprint ({rashi})</h4>
+            <p>Under the profound influence of <b>{rashi}</b> and born under the sacred constellation of <b>{nakshatra}</b>, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number <b>{psychic}</b> highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.</p>
             
             <h4 style='color: #fde047; margin-top: 15px;'>2. Career Evolution, Wealth & Financial Accumulation</h4>
-            <p>The stellar positioning in your D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship, specialized technical consultancy, or leadership roles. Financial inflow will experience a notable upward surge during transit cycles involving Jupiter and Mercury. Long-term asset creation and real estate investments are highly favored during this phase.</p>
+            <p>{career_text}</p>
             
             <h4 style='color: #fde047; margin-top: 15px;'>3. Relationships, Marriage & Family Harmony</h4>
             <p>Your 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships. Mutual respect and open communication will fortify your familial bonds, bringing peace, domestic stability, and harmonious support from your life partner and close associates.</p>

@@ -1,6 +1,65 @@
 import os
 import datetime
-import random
+imp@app.post("/api/life")
+async def api_life(request: Request):
+    data = await request.json()
+    name = data.get("name", "User").strip() or "User"
+    dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
+    is_admin = data.get("is_admin", False)
+    
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Life Prediction PDF", "details": f"DOB: {dob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Pending (₹149)"})
+    
+    profile = calculate_astrological_profile(name, dob)
+    
+    filename = f"Life_Forecast_{name.replace(' ', '_')}.pdf"
+    generate_pdf_report(
+        filename,
+        f"Vedic Astrology & Deep Life Forecast - {name}",
+        [
+            f"Date of Birth: {dob} | Rashi: {profile['zodiac']} | Nakshatra: {profile['nakshatra']}",
+            f"Active Dasha: {profile['dasha']} | Psychic Number: {profile['psychic_num']}",
+            f"1. Core Personality & Karmic Blueprint: Under the profound influence of {profile['zodiac']} and born under the sacred constellation of {profile['nakshatra']}, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number {profile['psychic_num']} highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.",
+            "2. Career Evolution, Wealth & Financial Accumulation: Stellar positioning in your D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship, specialized technical consultancy, or leadership roles. Financial inflow will experience a notable upward surge during transit cycles involving Jupiter and Mercury. Long-term asset creation and real estate investments are highly favored during this phase.",
+            "3. Relationships, Marriage & Family Harmony: Your 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships. Mutual respect and open communication will fortify your familial bonds, bringing peace, domestic stability, and harmonious support from your life partner and close associates.",
+            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels. To neutralize minor planetary friction and amplify positive cosmic frequencies, wearing a certified natural gemstone aligned with your ascendant and engaging in meditative grounding practices is strongly recommended."
+        ]
+    )
+    
+    pdf_btn_html = f"""<div style='margin-top:15px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:12px 24px; border-radius:10px; font-weight:bold; text-decoration:none; display:inline-block; box-shadow: 0 4px 15px rgba(16,185,129,0.4);'>📥 Download Deep Life Forecast PDF Report</a></div>"""
+    
+    teaser = f"""
+    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed; margin-bottom: 12px;'>
+        <h4 style='color:#fde047; margin-top:0;'>✨ Astrological Teaser for {name.upper()}</h4>
+        <p style='font-size:1.05rem; color:#f3e8ff;'><b>Rashi:</b> {profile['zodiac']} | <b>Nakshatra:</b> {profile['nakshatra']} | <b>Dasha:</b> {profile['dasha']}</p>
+    </div>
+    """
+    
+    full_report = f"""
+    <div style='background:rgba(22, 10, 48, 0.9); padding:24px; border-radius:16px; border:2px solid #4ade80; box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);'>
+        <h3 style='color: #4ade80 !important; margin-top:0; font-family: "Cinzel", serif;'>🌟 VEDIC ASTROLOGY & DEEP LIFE FORECAST PDF REPORT FOR {name.upper()}</h3>
+        <p style='color: #fde047; font-weight: 600;'>Birth Profile Verified | Lagna Ascendant & Planetary Coordinates Active</p>
+        
+        <div style='margin-top: 15px; line-height: 1.8; color: #f3e8ff;'>
+            <h4 style='color: #fde047;'>1. Core Personality & Karmic Blueprint ({profile['zodiac']})</h4>
+            <p>Under the profound influence of <b>{profile['zodiac']}</b> and born under the sacred constellation of <b>{profile['nakshatra']}</b>, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number <b>{profile['psychic_num']}</b> highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.</p>
+            
+            <h4 style='color: #fde047; margin-top: 15px;'>2. Career Evolution, Wealth & Financial Accumulation</h4>
+            <p>The stellar positioning in your D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship, specialized technical consultancy, or leadership roles. Financial inflow will experience a notable upward surge during transit cycles involving Jupiter and Mercury. Long-term asset creation and real estate investments are highly favored during this phase.</p>
+            
+            <h4 style='color: #fde047; margin-top: 15px;'>3. Relationships, Marriage & Family Harmony</h4>
+            <p>Your 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships. Mutual respect and open communication will fortify your familial bonds, bringing peace, domestic stability, and harmonious support from your life partner and close associates.</p>
+            
+            <h4 style='color: #fde047; margin-top: 15px;'>4. Health, Vitality & Recommended Remedies</h4>
+            <p>Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels. To neutralize minor planetary friction and amplify positive cosmic frequencies, wearing a certified natural gemstone aligned with your ascendant and engaging in meditative grounding practices is strongly recommended.</p>
+        </div>
+        <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full 149/- Report Unlocked Successfully via Admin Access!</p>
+    </div>
+    """ if is_admin else ""
+    
+    paywall = "" if is_admin else get_paywall_html("Complete Deep Life Forecast & PDF", 149, name)
+    download_btn = pdf_btn_html if is_admin else ""
+    
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})ort random
 import base64
 import json
 import requests
@@ -1864,10 +1923,10 @@ async def api_life(request: Request):
         [
             f"Date of Birth: {dob} | Rashi: {profile['zodiac']} | Nakshatra: {profile['nakshatra']}",
             f"Active Dasha: {profile['dasha']} | Psychic Number: {profile['psychic_num']}",
-            "1. Core Personality & Karmic Blueprint: Under the profound influence of your ascendant and nakshatra, you possess an innate resilience and a distinct magnetic leadership aura.",
-            "2. Career Evolution, Wealth & Financial Accumulation: Stellar positioning in D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship and financial inflow.",
-            "3. Relationships, Marriage & Family Harmony: 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships, bringing peace and domestic stability.",
-            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels."
+            f"1. Core Personality & Karmic Blueprint: Under the profound influence of {profile['zodiac']} and born under the sacred constellation of {profile['nakshatra']}, {name} possesses an innate resilience and a distinct magnetic leadership aura. Your psychic number {profile['psychic_num']} highlights strong intuitive capabilities, emotional depth, and a relentless drive toward professional excellence.",
+            "2. Career Evolution, Wealth & Financial Accumulation: Stellar positioning in your D1 and D10 charts points toward remarkable breakthroughs in entrepreneurship, specialized technical consultancy, or leadership roles. Financial inflow will experience a notable upward surge during transit cycles involving Jupiter and Mercury. Long-term asset creation and real estate investments are highly favored during this phase.",
+            "3. Relationships, Marriage & Family Harmony: Your 7th house alignments denote profound emotional intelligence and deep loyalty in partnerships. Mutual respect and open communication will fortify your familial bonds, bringing peace, domestic stability, and harmonious support from your life partner and close associates.",
+            "4. Health, Vitality & Recommended Remedies: Maintaining a balanced lifestyle and regular physical alignment will sustain your high energy levels. To neutralize minor planetary friction and amplify positive cosmic frequencies, wearing a certified natural gemstone aligned with your ascendant and engaging in meditative grounding practices is strongly recommended."
         ]
     )
     
@@ -1906,7 +1965,7 @@ async def api_life(request: Request):
     download_btn = pdf_btn_html if is_admin else ""
     
     return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
-
+    
 @app.post("/api/horoscope")
 async def api_horoscope(request: Request):
     data = await request.json()

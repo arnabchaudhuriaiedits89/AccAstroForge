@@ -2507,14 +2507,15 @@ async def api_kundali_pdf(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
     
-    # সেন্ট্রাল ফাংশন থেকে ১০০% স্টেবল এবং ম্যাচিং প্রোফাইল ফেচ করা হচ্ছে
+    # Force single source of truth using the stable hash profile engine
     profile = calculate_astrological_profile(name, dob)
     rashi = profile['zodiac']
     nakshatra = profile['nakshatra']
     dasha = profile['dasha']
     
-    # একই হ্যাশ সিড ব্যবহার করে ইউনিক প্রেডিকশন জেনারেট করা হচ্ছে
-    hash_seed = int(hashlib.md5(f"{name.strip().lower()}_{dob}_{pob.lower()}".encode('utf-8')).hexdigest(), 16)
+    # Strict cryptographic hash seed combining name, dob and pob for absolute stability
+    unique_string = f"{name.strip().lower()}_{dob.strip()}_{pob.strip().lower()}"
+    hash_seed = int(hashlib.md5(unique_string.encode('utf-8')).hexdigest(), 16)
     
     ending_options = [
         f"Strong ascendant house under {dasha}, indicating fierce resilience, executive leadership, and rapid financial expansion for {name}.",
@@ -2529,7 +2530,8 @@ async def api_kundali_pdf(request: Request):
     
     unique_prediction = ending_options[hash_seed % len(ending_options)]
     
-    filename = f"Kundali_{name.replace(' ', '_')}.pdf"
+    # Unique filename per user to prevent browser cache mismatch
+    filename = f"Kundali_{name.replace(' ', '_')}_{hash_seed % 10000}.pdf"
     generate_pdf_report(
         filename,
         f"Janam Kundali & Lagna Chart - {name}",

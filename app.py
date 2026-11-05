@@ -1779,7 +1779,7 @@ async def api_dasha(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Personal Dasha Timeline", "details": f"DOB: {dob}", "payment_status": "Free Timeline"})
     
-    # Cryptographic hash seed for 100% deterministic & stable Dasha timeline output
+    # Strict cryptographic hash seed for 100% deterministic & permanent Dasha timeline mapping
     unique_string = f"{name.strip().lower()}_{dob.strip()}"
     hash_digest = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
     seed = int(hash_digest, 16)
@@ -1796,7 +1796,8 @@ async def api_dasha(request: Request):
     except Exception:
         pass
     
-    maha_end_year = birth_year + 20 + (seed % 10)
+    # Unique deterministic year offsets based on hash and birth year
+    maha_end_year = birth_year + 18 + (seed % 12)
     transition_year = maha_end_year + 1
     
     html = f"""
@@ -1811,7 +1812,7 @@ async def api_dasha(request: Request):
     </div>
     """
     return JSONResponse({"html": html})
-
+    
 @app.post("/api/transit")
 async def api_transit(request: Request):
     data = await request.json()

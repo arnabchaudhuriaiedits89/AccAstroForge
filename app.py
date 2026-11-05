@@ -297,7 +297,7 @@ def calculate_jagannath_hora_engine(name, dob, tob, pob):
         "Vimshottari Mahadasha": f"{maha_planets[seed % len(maha_planets)]} / {maha_planets[(seed + 3) % len(maha_planets)]} Active Cycle",
         "Yogini Dasha": f"{yogini_list[seed % len(yogini_list)]} Yoga active",
         "Chara Dasha": chara_list[seed % len(chara_list)],
-        "Ashtottari Dasha": ashtottari_list[seed % len(ashtottari_list)]
+        "Ashtottari Dasha": ashtottari_list[(seed + 3) % len(ashtottari_list)]
     }
     
     ashtakavarga = {

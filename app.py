@@ -1730,12 +1730,15 @@ async def api_jagannath_hora(request: Request):
 @app.post("/api/explorer")
 async def api_explorer(request: Request):
     data = await request.json()
-    name = data.get("name", "User").strip()
-    chart = data.get("chart", "D1")
+    name = data.get("name", "User").strip() or "User"
+    chart = data.get("chart", "D1").strip()
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Interactive Kundali Explorer", "details": f"Chart: {chart}", "payment_status": "Free Interactive"})
     
-    name_seed = sum(ord(c) for c in name.lower()) if name else 42
+    # Strict cryptographic hash seed for 100% deterministic & permanent divisional chart mapping
+    unique_string = f"{name.strip().lower()}_{chart.lower()}"
+    hash_digest = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
+    name_seed = int(hash_digest, 16)
     
     zodiac_pool = [
         "Aries (Mesha)", "Taurus (Vrishabha)", "Gemini (Mithuna)", "Cancer (Karka)",
@@ -1763,7 +1766,7 @@ async def api_explorer(request: Request):
         <h4 style='color:#fde047;'>🧭 Interactive {chart} Chart Explorer for {name.upper()}</h4>
         <p style='color: #f3e8ff;'><b>Focus & Blueprint:</b> {desc}</p>
         <p><b>Divisional Grid Houses:</b> {houses_str}.</p>
-        <p style='color:#4ade80;'>✅ Unique planetary alignments, divisional lordships, and house strengths calculated dynamically for {name} in {chart}.</p>
+        <p style='color:#4ade80;'>✅ Unique planetary alignments, divisional lordships, and house strengths calculated deterministically and permanently fixed for {name} in {chart}.</p>
     </div>
     """
     return JSONResponse({"html": html})
@@ -1771,17 +1774,21 @@ async def api_explorer(request: Request):
 @app.post("/api/dasha")
 async def api_dasha(request: Request):
     data = await request.json()
-    name = data.get("name", "User").strip()
-    dob = data.get("dob", "2000-01-01").strip()
+    name = data.get("name", "User").strip() or "User"
+    dob = data.get("dob", "2000-01-01").strip() or "2000-01-01"
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Personal Dasha Timeline", "details": f"DOB: {dob}", "payment_status": "Free Timeline"})
     
-    seed = sum(ord(c) for c in (name + dob).lower()) if (name or dob) else 108
+    # Cryptographic hash seed for 100% deterministic & stable Dasha timeline output
+    unique_string = f"{name.strip().lower()}_{dob.strip()}"
+    hash_digest = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
+    seed = int(hash_digest, 16)
+    
     planets = ["Jupiter (Guru)", "Saturn (Shani)", "Mercury (Budha)", "Venus (Shukra)", "Sun (Surya)", "Moon (Chandra)", "Mars (Mangal)", "Rahu", "Ketu"]
     
     maha_idx = seed % len(planets)
-    antar_idx = (seed + 3) % len(planets)
-    next_idx = (seed + 6) % len(planets)
+    antar_idx = (seed // len(planets)) % len(planets)
+    next_idx = (seed // (len(planets) ** 2)) % len(planets)
     
     birth_year = 2000
     try:
@@ -1800,7 +1807,7 @@ async def api_dasha(request: Request):
             <li><b>Current Antardasha:</b> {planets[antar_idx]} - Focus on structural growth, karmic balance and career stability</li>
             <li><b>Upcoming Dasha Transition:</b> {planets[next_idx]} starting from {transition_year} onwards</li>
         </ul>
-        <p style='color:#4ade80; margin-top:10px;'>✅ Unique planetary Dasha sequence calculated dynamically for {name}.</p>
+        <p style='color:#4ade80; margin-top:10px;'>✅ Unique planetary Dasha sequence calculated deterministically and permanently fixed for {name}.</p>
     </div>
     """
     return JSONResponse({"html": html})

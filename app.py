@@ -2692,7 +2692,6 @@ async def api_panchang(request: Request):
         """
         return JSONResponse({"html": html, "paywall": ""})
     else:
-        # Paid mode now includes BOTH Free Basic Info & Detailed Shubh Muhurat info together!
         html = f"""
         <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #db2777; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5); margin-top: 15px;'>
             <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>

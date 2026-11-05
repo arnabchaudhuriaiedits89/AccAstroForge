@@ -270,7 +270,7 @@ def calculate_jagannath_hora_engine(name, dob, tob, pob):
     
     shodashvarga_charts = {
         "D1 (Lagna / Main Body)": ZODIAC_SIGNS[seed % 12],
-        "D2 (Hora / Wealth & Assets)": "Sun & Moon Hora Balanced",
+        "D2 (Hora / Wealth & Assets)": ZODIAC_SIGNS[(seed + 1) % 12],
         "D3 (Drekkana / Siblings & Courage)": ZODIAC_SIGNS[(seed + 2) % 12],
         "D4 (Chaturthamsa / Property & Fortune)": ZODIAC_SIGNS[(seed + 4) % 12],
         "D7 (Saptamsha / Progeny & Children)": ZODIAC_SIGNS[(seed + 6) % 12],

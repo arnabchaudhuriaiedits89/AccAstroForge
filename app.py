@@ -2503,6 +2503,27 @@ async def api_kundali_pdf(request: Request):
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "Janam Kundali PDF", "details": f"DOB: {dob}, POB: {pob}", "payment_status": "Admin Bypassed (PDF Active)" if is_admin else "Generated (₹59)"})
     
     profile = calculate_astrological_profile(name, dob)
+    rashi = profile['zodiac']
+    nakshatra = profile['nakshatra']
+    dasha = profile['dasha']
+    
+    # Unique Dynamic Ending Sentences based on Rashi & Dasha
+    ending_variations = {
+        "Aries (Mesha)": f"Strong ascendant house under {dasha}, indicating fierce pioneering resilience, executive leadership, and rapid financial expansion.",
+        "Taurus (Vrishabha)": f"Grounded earthy ascendant under {dasha}, reflecting steady patience, immovable determination, and secure long-term wealth accumulation.",
+        "Gemini (Mithuna)": f"Dynamic dual ascendant under {dasha}, highlighting intellectual agility, sharp communication prowess, and diverse professional milestones.",
+        "Cancer (Karka)": f"Intuitive water ascendant under {dasha}, pointing toward profound emotional depth, creative leadership, and protective asset stewardship.",
+        "Leo (Simha)": f"Solar regal ascendant under {dasha}, signifying majestic confidence, authoritative presence, and magnificent career renown.",
+        "Virgo (Kanya)": f"Analytical earth ascendant under {dasha}, emphasizing meticulous precision, methodical problem-solving, and steady economic growth.",
+        "Libra (Tula)": f"Harmonious airy ascendant under {dasha}, marking diplomatic grace, prosperous partnerships, and balanced social standing.",
+        "Scorpio (Vrischika)": f"Transformative water ascendant under {dasha}, driving deep investigative grit, strategic intuition, and high-impact financial breakthroughs.",
+        "Sagittarius (Dhanu)": f"Expansive fiery ascendant under {dasha}, pointing toward philosophical vision, global opportunities, and prosperous leadership.",
+        "Capricorn (Makara)": f"Disciplined structural ascendant under {dasha}, highlighting unwavering perseverance, corporate authority, and enduring capital security.",
+        "Aquarius (Kumbha)": f"Innovative visionary ascendant under {dasha}, marking progressive technical concepts, humanitarian impact, and futuristic enterprise growth.",
+        "Pisces (Meena)": f"Imaginative spiritual ascendant under {dasha}, reflecting boundless creative empathy, intuitive wisdom, and profound inner prosperity."
+    }
+    
+    unique_prediction = ending_variations.get(rashi, f"Strong ascendant house under {dasha}, indicating resilience, leadership, and long-term financial growth.")
     
     filename = f"Kundali_{name.replace(' ', '_')}.pdf"
     generate_pdf_report(
@@ -2510,15 +2531,15 @@ async def api_kundali_pdf(request: Request):
         f"Janam Kundali & Lagna Chart - {name}",
         [
             f"Date of Birth: {dob} | Time: {tob} | Place: {pob}",
-            f"Ascendant (Lagna) Sign: {profile['zodiac']} | Birth Nakshatra: {profile['nakshatra']}",
-            f"Planetary Positions (Graha Sthiti): Active Rashi lord {profile['zodiac']} with favorable divisional positioning under {profile['dasha']}.",
-            f"Lagna Horoscope: Strong ascendant house for {name} under active planetary configuration, indicating resilience, leadership, and long-term financial growth."
+            f"Ascendant (Lagna) Sign: {rashi} | Birth Nakshatra: {nakshatra}",
+            f"Planetary Positions (Graha Sthiti): Active Rashi lord {rashi} with favorable divisional positioning under {dasha}.",
+            f"Lagna Horoscope: {unique_prediction}"
         ]
     )
     
     pdf_btn_html = f"""<div style='margin-top:12px;'><a href='/download-pdf/{filename}' target='_blank' style='background:#10b981; color:white; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;'>📥 Download Janam Kundali PDF</a></div>"""
-    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name} ({profile['zodiac']})</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
-    chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active | Rashi: {profile['zodiac']} | Nakshatra: {profile['nakshatra']} (DOB: {dob}, POB: {pob})</b></div>"""
+    teaser = f"""<div style='background:#1e1b4b; padding:15px; border-radius:10px;'><h4 style='color:#fde047;'>📜 Janam Kundali Generated for {name} ({rashi})</h4><p style='color:#4ade80;'>✅ Janam Kundali PDF report is ready for download.</p></div>"""
+    chart = f"""<div style='background:#31104b; padding:15px; border-radius:10px; margin-top:10px; text-align:center;'><b style='color:#fde047;'>Lagna Chart Active | Rashi: {rashi} | Nakshatra: {nakshatra} (DOB: {dob}, POB: {pob})</b></div>"""
     
     paywall = "" if is_admin else get_paywall_html("Full Janam Kundali PDF Chart & Dasha Report", 59, name)
     download_btn = pdf_btn_html if is_admin else ""

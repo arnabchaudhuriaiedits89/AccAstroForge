@@ -59,7 +59,8 @@ async def api_life(request: Request):
     paywall = "" if is_admin else get_paywall_html("Complete Deep Life Forecast & PDF", 149, name)
     download_btn = pdf_btn_html if is_admin else ""
     
-    return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})ort random
+    return JSONResponse({"teaser": teaser, "full_report": full_report, "pdf_download_btn": download_btn, "paywall": paywall})
+    
 import base64
 import json
 import requests

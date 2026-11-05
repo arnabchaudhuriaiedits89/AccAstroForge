@@ -2658,9 +2658,11 @@ async def api_panchang(request: Request):
         "Shukra Hora active in morning; Chandra Hora supporting artistic partnerships."
     ]
     
-    # 100% Stable & Deterministic Index Derivation (Unaffected by server restarts)
+    # 100% Collision-Free & Deterministic Index Derivation (Unaffected by server restarts)
     def stable_idx(text, length):
-        return sum(ord(c) * (i + 1) for i, c in enumerate(text)) % length
+        hash_obj = hashlib.md5(text.encode('utf-8'))
+        numeric_hash = int(hash_obj.hexdigest(), 16)
+        return numeric_hash % length
 
     tithi_val = tithis[stable_idx(f"{city}_{date_str}_tithi", len(tithis))]
     nak_val = nakshatras[stable_idx(f"{city}_{date_str}_nakshatra", len(nakshatras))]
@@ -2740,7 +2742,7 @@ async def api_panchang(request: Request):
                     <b style='color: #fde047; display: block;'>🌙 Amrit Kalam & Brahma Muhurat:</b>
                     <span style='color: #f3e8ff;'>{amrit_val} (Divine Spiritual Energy)</span>
                 </div>
-                <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
+                <div style='background:jsdelivr rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #ef4444; display: block;'>⚠️ Yamaganda & Gulika Kalam:</b>
                     <span style='color: #f3e8ff;'>Yamaganda: {yamaganda_val} (Avoid New Ventures)</span>
                 </div>

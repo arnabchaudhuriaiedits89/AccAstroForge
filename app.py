@@ -84,7 +84,7 @@ async def favicon():
         return FileResponse("favicon.png")
     return JSONResponse({"error": "Not found"}, status_code=404)
 
-    def get_prokerala_data(endpoint, params):
+def get_prokerala_data(endpoint, params):
     token_url = "https://api.prokerala.com/token"
     auth_data = {
         "grant_type": "client_credentials",

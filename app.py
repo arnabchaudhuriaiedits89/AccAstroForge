@@ -25,6 +25,9 @@ RAZORPAY_ME_URL = "https://razorpay.me/@accastroforge"
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 
+PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID")
+PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET")
+
 GOOGLE_CLIENT_ID = "967117558722-40q6p107agttv35a47jlmq907j87bnpp.apps.googleusercontent.com"
 GOOGLE_REDIRECT_URI = "https://accastroforge.in/"
 FACEBOOK_APP_ID = "1487294163221538"
@@ -81,6 +84,25 @@ async def favicon():
         return FileResponse("favicon.png")
     return JSONResponse({"error": "Not found"}, status_code=404)
 
+    def get_prokerala_data(endpoint, params):
+    token_url = "https://api.prokerala.com/token"
+    auth_data = {
+        "grant_type": "client_credentials",
+        "client_id": PROKERALA_CLIENT_ID,
+        "client_secret": PROKERALA_CLIENT_SECRET
+    }
+    try:
+        token_res = requests.post(token_url, data=auth_data, timeout=8)
+        if token_res.status_code == 200:
+            access_token = token_res.json().get("access_token")
+            headers = {"Authorization": f"Bearer {access_token}"}
+            res = requests.get(f"https://api.prokerala.com/v2/{endpoint}", headers=headers, params=params, timeout=10)
+            if res.status_code == 200:
+                return res.json()
+    except Exception as e:
+        print(f"Prokerala API Error: {e}")
+    return None
+    
 def append_to_google_sheet_direct(worksheet_name, values_list):
     try:
         if worksheet_name == "Users":

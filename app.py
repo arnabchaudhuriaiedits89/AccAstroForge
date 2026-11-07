@@ -1049,7 +1049,7 @@ HTML_TEMPLATE = """
             </div>
             <select id="p-mode" style="margin-top: 10px;">
                 <option value="free">Free Daily Panchang</option>
-                <option value="detailed">Detailed Shubh Muhurat Report (₹99)</option>
+                <option value="detailed">Detailed Shubh Muhurat Report (₹69)</option>
             </select>
             <button class="primary-btn" onclick="submitPanchang()" style="margin-top: 10px;">📅 Check Panchang</button>
             <div id="panchang-result" style="margin-top: 15px;"></div>
@@ -2820,7 +2820,7 @@ async def api_panchang(request: Request):
             <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Detailed All-in-One Panchang Report Unlocked Successfully via Paid Access (₹99)!</p>
         </div>
         """
-        paywall = "" if is_admin else get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
+        paywall = "" if is_admin else get_paywall_html("Detailed Shubh Muhurat Report", 69, "User")
         return JSONResponse({"html": html, "paywall": paywall})
         
 @app.post("/api/ai")

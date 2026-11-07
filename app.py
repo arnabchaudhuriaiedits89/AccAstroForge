@@ -2677,7 +2677,7 @@ async def api_panchang(request: Request):
     mode = data.get("mode", "free")
     is_admin = data.get("is_admin", False)
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Vedic Panchang", "details": f"City: {city}, Date: {date_str}, Mode: {mode}", "payment_status": "Free/Admin Bypassed" if (mode == "free" or is_admin) else "Pending (₹99)"})
+    save_log({"timestamp": str(datetime.datetime.now()), "full_name": "User", "service": "Vedic Panchang", "details": f"City: {city}, Date: {date_str}, Mode: {mode}", "payment_status": "Free/Admin Bypassed" if (mode == "free" or is_admin) else "Pending (₹69)"})
     
     today_formatted = datetime.datetime.now().strftime("%B %d, %Y") if date_str in ["Today", ""] else date_str
     
@@ -2724,7 +2724,6 @@ async def api_panchang(request: Request):
         "Shukra Hora active in morning; Chandra Hora supporting artistic partnerships."
     ]
     
-    # 100% Collision-Free & Deterministic Index Derivation (Unaffected by server restarts)
     def stable_idx(text, length):
         hash_obj = hashlib.md5(text.encode('utf-8'))
         numeric_hash = int(hash_obj.hexdigest(), 16)
@@ -2771,6 +2770,21 @@ async def api_panchang(request: Request):
         """
         return JSONResponse({"html": html, "paywall": ""})
     else:
+        # If user is not admin, show teaser and hide full content behind paywall
+        if not is_admin:
+            teaser_html = f"""
+            <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #db2777; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5); margin-top: 15px;'>
+                <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>
+                    <h4 style='color: #fde047 !important; margin: 0; font-family: "Cinzel", serif;'>🌟 Detailed Shubh Muhurat & Ephemeris Preview ({city}, India)</h4>
+                    <span style='color: #fde047; font-weight: 600; font-size: 0.9rem;'>{date_str}</span>
+                </div>
+                <p style='color: #f3e8ff; font-size: 1rem;'>🔒 This is a premium report containing Abhijit Muhurat, Amrit Kalam, Yamaganda calculations, and planetary Horas. Please complete the secure payment below to unlock the full detailed report instantly.</p>
+            </div>
+            """
+            paywall_html = get_paywall_html("Detailed Shubh Muhurat Report", 69, "User")
+            return JSONResponse({"html": teaser_html, "paywall": paywall_html})
+
+        # If admin or payment bypassed, show full report
         html = f"""
         <div style='background: rgba(18, 8, 42, 0.9); border: 2px solid #db2777; padding: 22px; border-radius: 16px; box-shadow: 0 0 25px rgba(219, 39, 119, 0.5); margin-top: 15px;'>
             <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(244, 114, 182, 0.4); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap;'>
@@ -2808,7 +2822,7 @@ async def api_panchang(request: Request):
                     <b style='color: #fde047; display: block;'>🌙 Amrit Kalam & Brahma Muhurat:</b>
                     <span style='color: #f3e8ff;'>{amrit_val} (Divine Spiritual Energy)</span>
                 </div>
-                <div style='background:jsdelivr rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
+                <div style='background: rgba(219, 39, 119, 0.2); padding: 14px; border-radius: 10px; border: 1px solid #db2777;'>
                     <b style='color: #ef4444; display: block;'>⚠️ Yamaganda & Gulika Kalam:</b>
                     <span style='color: #f3e8ff;'>Yamaganda: {yamaganda_val} (Avoid New Ventures)</span>
                 </div>
@@ -2817,10 +2831,10 @@ async def api_panchang(request: Request):
                     <span style='color: #f3e8ff;'>{hora_val}</span>
                 </div>
             </div>
-            <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Detailed All-in-One Panchang Report Unlocked Successfully via Paid Access (₹99)!</p>
+            <p style='color: #4ade80; margin-top: 15px; font-weight: bold;'>✅ Full Detailed All-in-One Panchang Report Unlocked Successfully via Admin Access (₹69)!</p>
         </div>
         """
-        paywall = "" if is_admin else get_paywall_html("Detailed Shubh Muhurat Report", 69, "User")
+        paywall = ""
         return JSONResponse({"html": html, "paywall": paywall})
         
 @app.post("/api/ai")

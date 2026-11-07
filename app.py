@@ -2822,36 +2822,45 @@ async def api_panchang(request: Request):
         paywall = "" if is_admin else get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
         return JSONResponse({"html": html, "paywall": paywall})
         
-# ---------------------------------------------------------
-# AI ASSISTANT UNIVERSAL SMART HANDLER ROUTE
-# ---------------------------------------------------------
-
 @app.post("/api/ai")
 async def api_ai(request: Request):
     data = await request.json()
     query = data.get("query", "").strip().lower()
     name = data.get("name", "User")
     
-    save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
+    save_log({
+        "timestamp": str(datetime.datetime.now()), 
+        "full_name": name, 
+        "service": "AI Kundli Interpreter", 
+        "details": f"Query: {query[:30]}..."
+    })
     
-    # Universal Smart Tone & Context Analysis (No rigid keyword hardcoding)
-    is_crisis = any(w in query for w in ["suicide", "suicidal", "finish myself", "finish my life", "threat", "blackmail", "depressed", "depression", "harm", "hurt", "accident", "hospital", "police", "legal"])
-    is_career_sports = any(w in query for w in ["career", "job", "basketball", "cricket", "football", "tennis", "sports", "passion", "failed", "failing", "rank", "match", "playing", "aggressive"])
-    is_personal_life = any(w in query for w in ["marriage", "family", "wife", "husband", "relationship", "love", "health", "diet", "routine", "spirit", "vastu", "house", "car", "vehicle"])
-
-    if is_crisis and any(w in query for w in ["suicide", "suicidal", "finish myself", "finish my life", "depressed", "depression"]):
-        ai_reply = f"Hello {name}, dealing with severe emotional distress, overwhelming career or personal setbacks, and critical life burdens is an intense crisis. Professional and familial support is vital in such moments. Please immediately prioritize your safety, ensure continuous emotional support from loved ones, and reach out to professional mental health experts or crisis helplines. For spiritual grounding, emotional resilience, and inner balance, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones PDF</b> tabs."
-    elif is_crisis or is_career_sports:
-        ai_reply = f"Hello {name}, navigating complex life dilemmas, balancing intense athletic or professional passions with personal safety, and managing high-pressure situations require deep mental composure and strategic alignment. Whether handling physical setbacks, high-stakes career choices, or emotional stress, maintaining discipline and a clear perspective is essential. To explore deeper astrological guidance, planetary transits, and customized life alignment, please check our <b>Jagannath Hora</b>, <b>Lucky Gemstones PDF</b>, and <b>Life Prediction</b> tabs."
-    elif is_personal_life:
-        ai_reply = f"Hello {name}, evaluating important life decisions regarding your personal environment, relationships, daily routines, or domestic harmony involves understanding deeper planetary transits and environmental energy alignment. For a comprehensive analysis of your chart, favorable yogas, and personalized remedies, please explore our <b>Matching</b>, <b>Vastu Shastra PDF</b>, or <b>Life Prediction</b> tabs."
+    astrology_keywords = [
+        'kundli', 'horoscope', 'astrology', 'planet', 'transit', 
+        'hora', 'jagannath', 'gemstone', 'gem', 'prediction', 
+        'birth', 'chart', 'dosha', 'vastu'
+    ]
+    is_astrology_related = any(w in query for w in astrology_keywords)
+    
+    if not query:
+        ai_reply = f"Hello {name}, please enter your birth details or specific astrological query to proceed."
+    elif is_astrology_related:
+        ai_reply = (
+            f"Welcome to AccAstroForge, {name}. Based on your planetary positions and horoscope alignment, "
+            "exploring our core offerings will guide you effectively. Please check our Jagannath Hora, "
+            "Lucky Gemstones PDF, and Life Prediction tabs for complete astrological insights."
+        )
     else:
-        ai_reply = f"Hello {name}, I have carefully analyzed your detailed query regarding '{query}'. Cosmic alignments indicate a transformative period of growth and self-discovery. For a complete Janam Kundali chart, deep planetary forecasts, and tailored astrological guidance, please explore our dedicated <b>Kundali PDF</b>, <b>Kundali Explorer</b>, or <b>Life Prediction</b> tabs."
-
+        ai_reply = (
+            f"Hello {name}, this platform is strictly dedicated to astrological analysis, Kundli interpretation, "
+            "and related planetary guidance. For queries outside this domain, personal life dilemmas, or external "
+            "matters, please consult the respective professional authorities, counselors, or concerned persons."
+        )
+        
     html = f"""
-    <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>
-        <p style='color:#fde047; margin-bottom:6px;'><b>Query:</b> {query}</p>
-        <p style='color:#4ade80; line-height:1.7;'><b>AI Kundli Interpreter:</b> {ai_reply}</p>
+    <div style="background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;">
+        <p style="color:#fde047; margin-bottom:6px;"><b>Query:</b> {query}</p>
+        <p style="color:#4ade80; line-height:1.7;"><b>AI Kundli Interpreter:</b> {ai_reply}</p>
     </div>
     """
     return JSONResponse({"html": html})

@@ -375,14 +375,15 @@ def get_paywall_html(service_name, price, user_name="User"):
     return f"""
     <div style="background: rgba(18, 8, 42, 0.70); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.4); backdrop-filter: blur(8px);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, click below to open secure Razorpay checkout for instant payment via UPI, GPay, PhonePe, BHIM or Cards.</p>
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, enter your email below to save your report, then click to pay securely via Razorpay.</p>
+        <input type="email" id="paywall-user-email" placeholder="Enter your email (optional)" style="max-width: 320px; margin: 0 auto 15px auto; text-align: center; display: block;" autocomplete="off">
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{amt_val}</p>
         <a href="{pay_url}" target="_blank" onclick="triggerPaymentLoader(event, this.href)" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
             🚀 Proceed to Pay ₹{amt_val} (UPI, GPay, PhonePe & Cards)
         </a>
     </div>
     """
-
+    
 def draw_clean_pdf_decorations(canvas_obj, doc_obj):
     canvas_obj.saveState()
     canvas_obj.setFont("Helvetica-Bold", 9)

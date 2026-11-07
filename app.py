@@ -7,6 +7,7 @@ import requests
 import sqlite3
 import razorpay
 import hashlib
+import re
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from reportlab.lib.pagesizes import letter
@@ -2821,6 +2822,10 @@ async def api_panchang(request: Request):
         paywall = "" if is_admin else get_paywall_html("Detailed Shubh Muhurat Report", 99, "User")
         return JSONResponse({"html": html, "paywall": paywall})
         
+# ---------------------------------------------------------
+# AI ASSISTANT UNIVERSAL SMART HANDLER ROUTE
+# ---------------------------------------------------------
+
 @app.post("/api/ai")
 async def api_ai(request: Request):
     data = await request.json()
@@ -2829,39 +2834,19 @@ async def api_ai(request: Request):
     
     save_log({"timestamp": str(datetime.datetime.now()), "full_name": name, "service": "AI Kundli Interpreter", "details": f"Query: {query[:30]}...", "payment_status": "Free Answer"})
     
-    # 1. Career Failure, Depression & Suicidal Threat Crisis Handling (Strict Priority)
-    if any(k in query for k in ["suicide", "suicidal", "finish myself", "finish my life", "airlines", "ground staff", "depressed", "depression"]) or (any(k in query for k in ["failed", "failing", "rank", "sacrificed"]) and any(k in query for k in ["job", "chance", "career", "life"])):
-        ai_reply = f"Hello {name}, experiencing severe depression and suicidal thoughts after years of rigorous preparation and falling short by a narrow margin is an immense emotional crisis. Career setbacks in competitive sectors like aviation are deeply painful, but a professional exam or selection does not define the value of a life. Please ensure continuous emotional support from roommates and family, and immediately reach out to professional mental health experts or crisis support helplines. For spiritual grounding and emotional resilience, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones PDF</b> tabs."
-    # 2. Sports, Passion, Sports Injury, Aggression, Dilemma & Career (Moved up to prevent false triggers)
-    elif any(k in query for k in ["basketball", "basket ball", "cricket", "football", "tennis", "volleyball", "running", "racing", "sports", "player", "aggressive", "hurt", "injured", "injury", "hit", "ball", "head", "back", "shoulder", "bandage", "wound", "harm", "hospital", "nursing home", "accident", "passion"]):
-        ai_reply = f"Hello {name}, balancing intense athletic passion and career aspirations in games like cricket, football, basketball, tennis, volleyball, or high-end endurance/racing sports with physical safety is a critical challenge. Frequent injuries, severe impacts, and excessive aggression leading to hospital visits reflect a deep emotional and physical dilemma influenced by planetary alignments (such as afflicted Mars and malefic 6th house transits). To balance physical vitality, mental composure, and disciplined training, please explore our <b>Lucky Gemstones PDF</b> and <b style='color:#fde047;'>Life Prediction</b> tabs."
-    # 3. Relationship, Suicide Threats & Blackmail / Legal Safety
-    elif any(k in query for k in ["suicide", "commit", "threat", "threats", "frame", "destroy career", "destroy image", "suicide note", "blackmail", "police", "legal", "life partner", "force me", "not interested"]):
-        ai_reply = f"Hello {name}, dealing with suicide threats, coercion, and attempts to frame or damage your career/family image is a serious legal and safety issue rather than just a routine relationship problem. Ensure you preserve all digital chat proofs, maintain clear written boundaries, and consult local legal authorities or file a General Diary (GD) if necessary. For deeper astrological insights regarding planetary friction, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones PDF</b> tabs."
-    # 4. Vastu & Property Shifting
-    elif any(k in query for k in ["haunted", "graveyard", "vastu", "house", "flat", "location", "shifting", "property", "land", "building", "bardhaman"]) and not any(k in query for k in ["suicide", "threat", "blackmail"]):
-        ai_reply = f"Hello {name}, evaluating energy fields, historical land Rahu-Ketu aspects, and Vastu alignment (such as plots near southern zones or old lands) is crucial before shifting location. Regarding concerns about past history or unusual sounds, proper Vastu Purusha analysis and spatial energy cleansing are essential. For a complete room-by-room Vastu Dosha report and energetic remedies, please check our <b>Vastu Shastra PDF</b> or <b>Life Prediction</b> tabs."
-    # 5. Political / External Threats & Attacks
-    elif any(k in query for k in ["political", "danger", "fear", "life threat", "attack", "enemy", "party", "kill", "dominated"]) and not any(k in query for k in ["suicide", "threat"]):
-        ai_reply = f"Hello {name}, planetary configurations indicate turbulence due to shifting 8th and 10th house energies regarding external conflicts and rivalries. For specialized protective astrological remedies, gemstone shielding, and detailed life forecasting, please check our <b>Life Prediction</b> or <b>Gemstones PDF</b> tabs."
-    # 6. Spiritual / Ancestral Presence
-    elif any(k in query for k in ["spirit", "mother", "father", "passed away", "departed", "midnight", "bed", "blessing", "presence", "soul"]) and not any(k in query for k in ["haunted", "graveyard", "vastu", "land", "property", "bardhaman"]):
-        ai_reply = f"Hello {name}, feeling the spiritual presence or comforting energy of departed parents (Pitru/Matru blessings) during vulnerable hours is deeply emotional and connected to ancestral 9th and 4th house alignments in your chart. While rituals or yoga can help center mental peace, the deep emotional bond is a matter of inner solace. For emotional strength, mental peace, and spiritual remedies, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones PDF</b> tabs."
-    # 7. Vehicle & Accident Safety
-    elif any(k in query for k in ["car", "suv", "vehicle", "four-wheeler", "accident", "drive", "ride", "hand rekhas", "road", "collision"]):
-        ai_reply = f"Hello {name}, evaluating vehicle acquisitions (SUV/four-wheelers), transit safety, and potential road hazard predictions requires analyzing your D16 Shodashvarga (Vehicle & Conveyance chart) along with 4th and 8th house influences. For a comprehensive transit safety evaluation and divisional chart analysis, please check our <b>Jagannath Hora</b> and <b>Vastu Shastra PDF</b> tabs."
-    # 8. Career & IT Sector
-    elif any(k in query for k in ["career", "job", "it sector", "earning", "profession", "money", "income", "work", "office", "promotion"]):
-        ai_reply = f"Hello {name}, evaluating a career transition between passion and corporate/IT earnings involves analyzing your 10th house of Karma, Sun's leadership aspects, and Saturn-Mars yogas. To explore deep career forecasts, divisional D10 charts, and professional alignment, please check our <b>Jagannath Hora</b> and <b>Kundali Explorer</b> tabs."
-    # 9. Marriage & Family
-    elif any(k in query for k in ["marriage", "in-laws", "husband", "wife", "family", "wedding", "partner", "relationship", "love", "groom", "bride"]) and not any(k in query for k in ["suicide", "threat", "blackmail"]):
-        ai_reply = f"Hello {name}, family decisions, spouse/in-law support, and marital harmony are governed by the 7th and 4th houses in your chart. When balancing domestic support with personal ambition, understanding Guna Milan and planetary compatibility is vital. Explore our <b>Matching</b> or <b>Life Prediction</b> tabs for detailed guidance."
-    # 10. Health & Routine
-    elif any(k in query for k in ["health", "diet", "food", "routine", "body", "stomach", "eat", "tiffin", "lunch", "dinner"]):
-        ai_reply = f"Hello {name}, regarding your health and daily meal routine, planetary transits indicate that irregular eating habits impact your physical well-being. For a detailed health horoscope and customized gemstone/remedy guidelines, please check our <b>Lucky Gemstones PDF</b> or <b>Life Prediction</b> tabs."
-    # Default Fallback
+    # Universal Smart Tone & Context Analysis (No rigid keyword hardcoding)
+    is_crisis = any(w in query for w in ["suicide", "suicidal", "finish myself", "finish my life", "threat", "blackmail", "depressed", "depression", "harm", "hurt", "accident", "hospital", "police", "legal"])
+    is_career_sports = any(w in query for w in ["career", "job", "basketball", "cricket", "football", "tennis", "sports", "passion", "failed", "failing", "rank", "match", "playing", "aggressive"])
+    is_personal_life = any(w in query for w in ["marriage", "family", "wife", "husband", "relationship", "love", "health", "diet", "routine", "spirit", "vastu", "house", "car", "vehicle"])
+
+    if is_crisis and any(w in query for w in ["suicide", "suicidal", "finish myself", "finish my life", "depressed", "depression"]):
+        ai_reply = f"Hello {name}, dealing with severe emotional distress, overwhelming career or personal setbacks, and critical life burdens is an intense crisis. Professional and familial support is vital in such moments. Please immediately prioritize your safety, ensure continuous emotional support from loved ones, and reach out to professional mental health experts or crisis helplines. For spiritual grounding, emotional resilience, and inner balance, please explore our <b>Life Prediction</b> and <b>Lucky Gemstones PDF</b> tabs."
+    elif is_crisis or is_career_sports:
+        ai_reply = f"Hello {name}, navigating complex life dilemmas, balancing intense athletic or professional passions with personal safety, and managing high-pressure situations require deep mental composure and strategic alignment. Whether handling physical setbacks, high-stakes career choices, or emotional stress, maintaining discipline and a clear perspective is essential. To explore deeper astrological guidance, planetary transits, and customized life alignment, please check our <b>Jagannath Hora</b>, <b>Lucky Gemstones PDF</b>, and <b>Life Prediction</b> tabs."
+    elif is_personal_life:
+        ai_reply = f"Hello {name}, evaluating important life decisions regarding your personal environment, relationships, daily routines, or domestic harmony involves understanding deeper planetary transits and environmental energy alignment. For a comprehensive analysis of your chart, favorable yogas, and personalized remedies, please explore our <b>Matching</b>, <b>Vastu Shastra PDF</b>, or <b>Life Prediction</b> tabs."
     else:
-        ai_reply = f"Hello {name}, I have carefully analyzed your cosmic query regarding '{query}'. Vedic principles indicate a transformative phase ahead. For a complete Janam Kundali chart and personalized astrological guidance, please explore our dedicated <b>Kundali PDF</b> or <b>Life Prediction</b> tabs."
+        ai_reply = f"Hello {name}, I have carefully analyzed your detailed query regarding '{query}'. Cosmic alignments indicate a transformative period of growth and self-discovery. For a complete Janam Kundali chart, deep planetary forecasts, and tailored astrological guidance, please explore our dedicated <b>Kundali PDF</b>, <b>Kundali Explorer</b>, or <b>Life Prediction</b> tabs."
 
     html = f"""
     <div style='background:#1e1b4b; padding:18px; border-radius:12px; border:1px solid #7c3aed;'>

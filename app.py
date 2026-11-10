@@ -1589,7 +1589,7 @@ HTML_TEMPLATE = """
             });
         }
     </script>
-    <audio id="bg-music" src="/leberch-flute.mp3" loop preload="auto"></audio>
+    <audio id="bg-music" src="https://raw.githubusercontent.com/arnabchaudhuriaedits89/AccAstroForge/main/leberch-flute.mp3" loop preload="auto"></audio>
     <script>
         window.addEventListener('DOMContentLoaded', function() {
             var audio = document.getElementById('bg-music');

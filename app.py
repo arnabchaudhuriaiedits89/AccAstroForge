@@ -1595,14 +1595,18 @@ HTML_TEMPLATE = """
             var audio = document.getElementById('bg-music');
             if (audio) {
                 audio.play().catch(function(error) {
-                    console.log("Audio play error: ", error);
+                    console.log("Audio play waiting for interaction: ", error);
                     function playAudioOnce() {
-                        audio.play().catch(e => console.log("Click play failed: ", e));
+                        audio.play().then(function() {
+                            console.log("Audio started successfully");
+                        }).catch(e => console.log("Click play failed: ", e));
                         document.removeEventListener('click', playAudioOnce);
                         document.removeEventListener('keydown', playAudioOnce);
+                        document.removeEventListener('scroll', playAudioOnce);
                     }
                     document.addEventListener('click', playAudioOnce);
                     document.addEventListener('keydown', playAudioOnce);
+                    document.addEventListener('scroll', playAudioOnce);
                 });
             }
         });

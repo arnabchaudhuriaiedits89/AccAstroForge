@@ -16,6 +16,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 app = FastAPI()
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/", StaticFiles(directory="."), name="static")
 
 # ---------------------------------------------------------
 # 0. CONFIGURATIONS & SECRETS (AccAstroForge)

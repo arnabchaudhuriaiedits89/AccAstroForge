@@ -1584,17 +1584,19 @@ HTML_TEMPLATE = """
     </script>
     <audio id="bg-music" src="leberch-flute.mp3" loop preload="auto"></audio>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function() {
             var audio = document.getElementById('bg-music');
             if (audio) {
-                var playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(function(error) {
-                        document.addEventListener('click', function() {
-                            audio.play();
-                        }, { once: true });
-                    });
-                }
+                audio.play().catch(function() {
+                    // Browser blocked autoplay, play on first user interaction anywhere on page
+                    function playAudioOnce() {
+                        audio.play();
+                        document.removeEventListener('click', playAudioOnce);
+                        document.removeEventListener('keydown', playAudioOnce);
+                    }
+                    document.addEventListener('click', playAudioOnce);
+                    document.addEventListener('keydown', playAudioOnce);
+                });
             }
         });
     </script>

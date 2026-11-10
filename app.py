@@ -105,9 +105,10 @@ async def serve_walker_video():
 @app.get("/ruhani-pointing.png")
 async def serve_ruhani_pointing():
     for base_dir in [os.path.dirname(__file__), "."]:
-        img_path = os.path.join(base_dir, "ruhani-pointing.png")
-        if os.path.exists(img_path):
-            return FileResponse(img_path, media_type="image/png")
+        for filename in ["ruhani-pointing.png", "ruhani pointing.png", "Ruhani-Pointing.png"]:
+            img_path = os.path.join(base_dir, filename)
+            if os.path.exists(img_path):
+                return FileResponse(img_path, media_type="image/png")
     return JSONResponse({"error": "Image not found"}, status_code=404)
 
 @app.get("/favicon.ico")

@@ -1138,18 +1138,21 @@ HTML_TEMPLATE = """
         </div>
 
         <!-- LEGAL -->
-        <div id="tab-legal" class="tab-content">
-            <h3>⚖️ Terms & Social Handles</h3>
-            <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
-            <p><b>Support Email:</b> support@accastroforge.in</p>
-            <ul style="list-style-type: none; padding-left: 0; line-height: 2.2;">
-                <li>🧳 <b style="color: #fde047;">Twitter (X):</b> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8;">https://x.com/AccAstroForge</a></li>
-                <li>📸 <b style="color: #fde047;">Instagram:</b> <a href="https://www.instagram.com/accastroforge" target="_blank" style="color: #f472b6;">https://www.instagram.com/accastroforge</a></li>
-                <li>🌀 <b style="color: #fde047;">Threads:</b> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9;">https://www.threads.com/@accastroforge</a></li>
-                <li>📘 <b style="color: #fde047;">Facebook:</b> <a href="https://www.facebook.com/accastroforge" target="_blank" style="color: #60a5fa;">https://www.facebook.com/accastroforge</a></li>
-            </ul>
+        <div id="tab-legal" class="tab-content" style="position: relative; overflow: hidden;">
+            <div style="max-width: 65%;">
+                <h3>⚖️ Terms & Social Handles</h3>
+                <p>Welcome to AccAstroForge.in. All predictions are for guidance purposes.</p>
+                <p><b>Support Email:</b> support@accastroforge.in</p>
+                <ul style="list-style-type: none; padding-left: 0; line-height: 2.2;">
+                    <li>🧳 <b style="color: #fde047;">Twitter (X):</b> <a href="https://x.com/AccAstroForge" target="_blank" style="color: #38bdf8;">https://x.com/AccAstroForge</a></li>
+                    <li>📸 <b style="color: #fde047;">Instagram:</b> <a href="https://www.instagram.com/accastroforge" target="_blank" style="color: #f472b6;">https://www.instagram.com/accastroforge</a></li>
+                    <li>🌀 <b style="color: #fde047;">Threads:</b> <a href="https://www.threads.com/@accastroforge" target="_blank" style="color: #e879f9;">https://www.threads.com/@accastroforge</a></li>
+                    <li>📘 <b style="color: #fde047;">Facebook:</b> <a href="https://www.facebook.com/accastroforge" target="_blank" style="color: #60a5fa;">https://www.facebook.com/accastroforge</a></li>
+                </ul>
+            </div>
+            <!-- Ruhani Pointing Cutout Image -->
+            <img src="/ruhani-pointing.png" alt="Ruhani Pointing" style="position: absolute; right: 20px; bottom: 0; height: 92%; max-height: 380px; width: auto; object-fit: contain; pointer-events: none; filter: drop-shadow(0 0 15px rgba(124,58,237,0.5));">
         </div>
-    </div>
 
     <script>
         let generatedOtpStorage = "";

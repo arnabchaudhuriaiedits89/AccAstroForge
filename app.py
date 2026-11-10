@@ -1613,6 +1613,13 @@ HTML_TEMPLATE = """
     </div>
 </div>
 
+<!-- Footer Walking Character Animation -->
+<footer class="site-footer" id="footer">
+    <video class="walking-character" id="walker" loop muted playsinline>
+        <source src="AAF%20AI%20RUHANI%20WALKING%20ANIMATION.mp4" type="video/mp4">
+    </video>
+</footer>
+
 <script>
     window.addEventListener('DOMContentLoaded', function() {
         var audio = document.getElementById('bg-music');
@@ -1633,9 +1640,75 @@ HTML_TEMPLATE = """
             });
         }
     });
+
+    // Walking Character Script
+    const walker = document.getElementById('walker');
+    const footer = document.getElementById('footer');
+    let position = -150;
+    let direction = 1;
+    let speed = 1.2;
+    let animationRunning = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            if (walker) {
+                walker.play().catch(e => console.log("Auto-play blocked:", e));
+                animationRunning = true;
+                requestAnimationFrame(animateWalker);
+            }
+        }, 4500);
+    });
+
+    function animateWalker() {
+        if (!animationRunning || !footer || !walker) return;
+        const footerWidth = footer.clientWidth;
+        const characterWidth = walker.clientWidth || 120;
+        position += speed * direction;
+        if (position > footerWidth - characterWidth + 30) {
+            direction = -1;
+        } else if (position < -30) {
+            direction = 1;
+        }
+        if (direction === 1) {
+            walker.style.transform = `translateX(${position}px) scaleX(1)`;
+        } else {
+            walker.style.transform = `translateX(${position}px) scaleX(-1)`;
+        }
+        requestAnimationFrame(animateWalker);
+    }
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            animationRunning = false;
+        } else {
+            animationRunning = true;
+            requestAnimationFrame(animateWalker);
+        }
+    });
 </script>
 
 <style>
+    /* Footer & Walking Character Styling */
+    .site-footer {
+        position: relative;
+        width: 100%;
+        height: 160px;
+        background-color: #16181d;
+        overflow: hidden;
+        border-top: 2px solid #2a2d36;
+        margin-top: 30px;
+    }
+    .walking-character {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 140px;
+        width: auto;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        will-change: transform;
+    }
+
     /* Fullscreen Welcome Avatar Overlay Styling */
     #welcome-avatar-overlay {
         position: fixed;

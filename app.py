@@ -79,10 +79,14 @@ def init_db():
 
 init_db()
 
+@app.get("/leberch-flute.mp3")
+async def serve_audio():
+    return FileResponse("leberch-flute.mp3")
+
 @app.get("/favicon.ico")
 async def favicon():
-    if os.path.exists("favicon.png"):
-        return FileResponse("favicon.png")
+    if os.path.exists("favicon.ico"):
+        return FileResponse("favicon.ico")
     return JSONResponse({"error": "Not found"}, status_code=404)
 
 def get_prokerala_data(endpoint, params):

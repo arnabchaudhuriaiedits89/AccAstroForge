@@ -81,7 +81,10 @@ init_db()
 
 @app.get("/leberch-flute.mp3")
 async def serve_audio():
-    return FileResponse("leberch-flute.mp3")
+    audio_path = os.path.join(os.path.dirname(__file__), "leberch-flute.mp3")
+    if os.path.exists(audio_path):
+        return FileResponse(audio_path)
+    return JSONResponse({"error": "Audio not found"}, status_code=404)
 
 @app.get("/favicon.ico")
 async def favicon():

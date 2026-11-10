@@ -1624,7 +1624,7 @@ HTML_TEMPLATE = """
 <!-- Footer Walking Character Animation -->
 <footer class="site-footer" id="footer">
     <video class="walking-character" id="walker" loop muted playsinline>
-        <source src="AAF%20AI%20RUHANI%20WALKING%20ANIMATION.mp4" type="video/mp4">
+        <source src="/AAF%20AI%20RUHANI%20WALKING%20ANIMATION.mp4" type="video/mp4">
     </video>
 </footer>
 

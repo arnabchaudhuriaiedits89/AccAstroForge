@@ -1716,7 +1716,6 @@ HTML_TEMPLATE = """
         mix-blend-mode: screen;
         will-change: transform;
     }
-</style>
 
     /* Fullscreen Welcome Avatar Overlay Styling */
     #welcome-avatar-overlay {

@@ -83,7 +83,7 @@ init_db()
 async def serve_audio():
     audio_path = os.path.join(os.path.dirname(__file__), "leberch-flute.mp3")
     if os.path.exists(audio_path):
-        return FileResponse(audio_path)
+        return FileResponse(audio_path, media_type="audio/mpeg")
     return JSONResponse({"error": "Audio not found"}, status_code=404)
 
 @app.get("/favicon.ico")
@@ -1589,7 +1589,7 @@ HTML_TEMPLATE = """
             });
         }
     </script>
-    <audio id="bg-music" src="https://raw.githubusercontent.com/arnabchaudhuriaedits89/AccAstroForge/main/leberch-flute.mp3" loop preload="auto"></audio>
+    <audio id="bg-music" src="/leberch-flute.mp3" loop preload="auto"></audio>
     <script>
         window.addEventListener('DOMContentLoaded', function() {
             var audio = document.getElementById('bg-music');

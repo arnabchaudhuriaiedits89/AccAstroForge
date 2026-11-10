@@ -1131,8 +1131,7 @@ HTML_TEMPLATE = """
 
         <!-- AI ASSISTANT -->
         <div id="tab-ai" class="tab-content">
-            <h3>🤖 AI Kundli Interpreter & Personal Astrologer</h3>
-            <p style="color: #f3e8ff; font-size: 0.95rem;">Ask your question regarding career, marriage, health, vastu... AI answers in English based on your saved chart data.</p>
+            <h3>🤖 Ask Ruhani</h3>
             <textarea id="ai-query" placeholder="Ask your question..."></textarea>
             <button class="primary-btn" onclick="askAi()">Ask AI Assistant ✨</button>
             <div id="ai-result" style="margin-top: 15px;"></div>

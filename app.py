@@ -1662,7 +1662,7 @@ HTML_TEMPLATE = """
     }
 
     .avatar-front-img {
-        max-height: 90vh;
+        max-height: 85vh;
         width: auto;
         object-fit: contain;
         filter: drop-shadow(0px 15px 35px rgba(0, 0, 0, 0.8));

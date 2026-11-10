@@ -1608,7 +1608,7 @@ HTML_TEMPLATE = """
 <!-- Welcome Avatar Overlay with Namaste Animation -->
 <div id="welcome-avatar-overlay">
     <div class="avatar-box">
-        <img src="https://i.ibb.co/nss9HFGw/avatar-front.png" alt="Welcome Avatar Front" class="avatar-front-img">
+        <img src="/avatar-front.png" alt="Welcome Avatar Front" class="avatar-front-img">
         <div class="welcome-text">Welcome to AccAstroForge! 🙏</div>
     </div>
 </div>
@@ -1643,9 +1643,10 @@ HTML_TEMPLATE = """
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(6px);
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         z-index: 99999;
@@ -1659,14 +1660,16 @@ HTML_TEMPLATE = """
         display: flex;
         flex-direction: column;
         align-items: center;
-        max-width: 90vw;
-        max-height: 90vh;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding-top: 20px;
     }
 
     .avatar-front-img {
-        height: 75vh;
+        max-height: 70vh;
         width: auto;
-        max-width: 100%;
+        max-width: 90vw;
         object-fit: contain;
         display: block;
         filter: drop-shadow(0px 15px 35px rgba(0, 0, 0, 0.8));
@@ -1676,7 +1679,7 @@ HTML_TEMPLATE = """
         color: #ffffff;
         font-size: 1.5rem;
         font-weight: 600;
-        margin-top: 15px;
+        margin-top: 12px;
         background: rgba(15, 23, 42, 0.9);
         padding: 10px 24px;
         border-radius: 30px;

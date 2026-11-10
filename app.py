@@ -1580,37 +1580,120 @@ HTML_TEMPLATE = """
         }
 
         async function askAi() {
-            let query = document.getElementById('ai-query').value;
-            let hName = localStorage.getItem('hub_name') || 'User';
-            showMagicLoader(async () => {
-                let res = await fetch('/api/ai', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({query, name: hName}) });
-                let data = await res.json();
-                document.getElementById('ai-result').innerHTML = data.html;
+        let query = document.getElementById('ai-query').value;
+        let hName = localStorage.getItem('hub_name') || 'User';
+        showMagicLoader(async () => {
+            let res = await fetch('/api/ai', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({query, name: hName}) 
+            });
+            let data = await res.json();
+            document.getElementById('ai-result').innerHTML = data.html;
+        });
+    }
+</script>
+
+<!-- Background Music Audio Element -->
+<audio id="bg-music" src="/leberch-flute.mp3" loop preload="auto"></audio>
+
+<!-- Welcome Avatar Overlay with Namaste Animation -->
+<div id="welcome-avatar-overlay">
+    <div class="avatar-box">
+        <img src="/avatar-front.png" alt="Welcome Avatar" class="avatar-front-img">
+        <div class="welcome-text">Welcome to AccAstroForge! 🙏</div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        var audio = document.getElementById('bg-music');
+        if (audio) {
+            audio.play().catch(function(error) {
+                console.log("Audio play waiting for interaction: ", error);
+                function playAudioOnce() {
+                    audio.play().then(function() {
+                        console.log("Audio started successfully");
+                    }).catch(e => console.log("Click play failed: ", e));
+                    document.removeEventListener('click', playAudioOnce);
+                    document.removeEventListener('keydown', playAudioOnce);
+                    document.removeEventListener('scroll', playAudioOnce);
+                }
+                document.addEventListener('click', playAudioOnce);
+                document.addEventListener('keydown', playAudioOnce);
+                document.addEventListener('scroll', playAudioOnce);
             });
         }
-    </script>
-    <audio id="bg-music" src="/leberch-flute.mp3" loop preload="auto"></audio>
-    <script>
-        window.addEventListener('DOMContentLoaded', function() {
-            var audio = document.getElementById('bg-music');
-            if (audio) {
-                audio.play().catch(function(error) {
-                    console.log("Audio play waiting for interaction: ", error);
-                    function playAudioOnce() {
-                        audio.play().then(function() {
-                            console.log("Audio started successfully");
-                        }).catch(e => console.log("Click play failed: ", e));
-                        document.removeEventListener('click', playAudioOnce);
-                        document.removeEventListener('keydown', playAudioOnce);
-                        document.removeEventListener('scroll', playAudioOnce);
-                    }
-                    document.addEventListener('click', playAudioOnce);
-                    document.addEventListener('keydown', playAudioOnce);
-                    document.addEventListener('scroll', playAudioOnce);
-                });
-            }
-        });
-    </script>
+    });
+</script>
+
+<style>
+    /* Fullscreen Welcome Avatar Overlay Styling */
+    #welcome-avatar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(5px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+        pointer-events: none;
+        opacity: 0;
+        animation: avatarAppearFade 4.5s ease-in-out forwards;
+    }
+
+    .avatar-box {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .avatar-front-img {
+        max-height: 65vh;
+        object-fit: contain;
+        filter: drop-shadow(0px 12px 30px rgba(0, 0, 0, 0.7));
+    }
+
+    .welcome-text {
+        color: #ffffff;
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin-top: 15px;
+        background: rgba(15, 23, 42, 0.9);
+        padding: 10px 24px;
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.6);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        letter-spacing: 0.5px;
+    }
+
+    /* Spawn, Hold and Smooth Fade out animation */
+    @keyframes avatarAppearFade {
+        0% {
+            opacity: 0;
+            transform: scale(0.85) translateY(30px);
+        }
+        15% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        80% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: scale(1.05) translateY(-20px);
+            visibility: hidden;
+        }
+    }
+</style>
 </body>
 </html>
 """

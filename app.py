@@ -94,10 +94,10 @@ async def serve_avatar():
             return FileResponse(avatar_path, media_type="image/png")
     return JSONResponse({"error": "Avatar not found"}, status_code=404)
 
-@app.get("/AAF AI RUHANI WALKING ANIMATION.mp4")
+@app.get("/RUHANI WALKING.mp4")
 async def serve_walker_video():
     for base_dir in [os.path.dirname(__file__), "."]:
-        video_path = os.path.join(base_dir, "AAF AI RUHANI WALKING ANIMATION.mp4")
+        video_path = os.path.join(base_dir, "RUHANI WALKING.mp4")
         if os.path.exists(video_path):
             return FileResponse(video_path, media_type="video/mp4")
     return JSONResponse({"error": "Video not found"}, status_code=404)
@@ -1623,8 +1623,8 @@ HTML_TEMPLATE = """
 
 <!-- Footer Walking Character Animation -->
 <footer class="site-footer" id="footer">
-    <video class="walking-character" id="walker" loop muted playsinline>
-        <source src="/AAF%20AI%20RUHANI%20WALKING%20ANIMATION.mp4" type="video/mp4">
+    <video class="walking-character" id="walker" autoplay loop muted playsinline>
+        <source src="/RUHANI%20WALKING.mp4" type="video/mp4">
     </video>
 </footer>
 
@@ -1716,6 +1716,7 @@ HTML_TEMPLATE = """
         mix-blend-mode: screen;
         will-change: transform;
     }
+</style>
 
     /* Fullscreen Welcome Avatar Overlay Styling */
     #welcome-avatar-overlay {

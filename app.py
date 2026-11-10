@@ -1582,6 +1582,22 @@ HTML_TEMPLATE = """
             });
         }
     </script>
+    <audio id="bg-music" src="leberch-flute.mp3" loop preload="auto"></audio>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var audio = document.getElementById('bg-music');
+            if (audio) {
+                var playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(function(error) {
+                        document.addEventListener('click', function() {
+                            audio.play();
+                        }, { once: true });
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 </html>
 """

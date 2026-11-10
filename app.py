@@ -1626,7 +1626,7 @@ HTML_TEMPLATE = """
             });
         }
 
-        async function askAi() {
+        async def askAi() {
             let query = document.getElementById('ai-query').value;
             let hName = localStorage.getItem('hub_name') || 'User';
             showMagicLoader(async () => {
@@ -1636,10 +1636,18 @@ HTML_TEMPLATE = """
             });
         }
     </script>
+    <audio id="bg-music" src="leberch-flute.mp3" autoplay loop preload="auto"></audio>
+    <script>
+        document.addEventListener('click', function() {
+            var audio = document.getElementById('bg-music');
+            if (audio.paused) {
+                audio.play();
+            }
+        }, { once: true });
+    </script>
 </body>
 </html>
 """
-
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     logo_html = f'<img src="{logo_src}" alt="AccAstroForge Logo">' if logo_src else '<span style="font-size: 26px; font-weight: 800; color: #fbcfe8; font-family: sans-serif;">AccAstroForge</span>'

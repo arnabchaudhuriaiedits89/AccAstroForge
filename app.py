@@ -344,7 +344,7 @@ try:
 except Exception:
     razorpay_client = None
 
-def get_robust_razorpay_link(service_name, price, user_name, user_email=""):
+def get_robust_razorpay_link(service_name, price, user_name):
     try:
         if razorpay_client:
             data = {
@@ -352,11 +352,8 @@ def get_robust_razorpay_link(service_name, price, user_name, user_email=""):
                 "currency": "INR",
                 "accept_partial": False,
                 "description": f"Payment for {service_name}",
-                "customer": {
-                    "name": user_name if user_name else "User",
-                    "email": user_email if user_email else "user@accastroforge.in"
-                },
-                "notify": {"sms": False, "email": True},
+                "customer": {"name": user_name if user_name else "User"},
+                "notify": {"sms": False, "email": False},
                 "reminder_enable": False,
                 "callback_url": "https://accastroforge.in/",
                 "callback_method": "get"
@@ -374,69 +371,18 @@ def get_paywall_html(service_name, price, user_name="User"):
         amt_val = int(float(price))
     except Exception:
         amt_val = price
-        
+    pay_url = get_robust_razorpay_link(service_name, amt_val, display_name)
     return f"""
-    <div style="background: rgba(18, 8, 42, 0.75); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.4); backdrop-filter: blur(8px);">
+    <div style="background: rgba(18, 8, 42, 0.70); border: 2px solid #db2777; padding: 22px; border-radius: 16px; margin-top: 15px; text-align: center; box-shadow: 0 0 25px rgba(219, 39, 119, 0.4); backdrop-filter: blur(8px);">
         <h3 style="color: #fde047 !important; margin-bottom: 8px; font-size: 1.3rem; font-family: 'Cinzel', serif;">🔒 UNLOCK {service_name.upper()} (₹{amt_val} ONLY)</h3>
-        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, enter your email below to save your report profile, then click to pay securely.</p>
-        <input type="email" id="paywall-user-email" placeholder="Enter your email (e.g. user@gmail.com)" style="max-width: 320px; margin: 0 auto 15px auto; text-align: center; display: block;" autocomplete="off">
+        <p style="color: #f3e8ff !important; font-size: 0.95rem; margin-bottom: 12px;">Dear <span style="color: #fde047 !important; font-weight: 700;">{display_name}</span>, enter your email below to save your report, then click to pay securely via Razorpay.</p>
+        <input type="email" id="paywall-user-email" placeholder="Enter your email (optional)" style="max-width: 320px; margin: 0 auto 15px auto; text-align: center; display: block;" autocomplete="off">
         <p style="color: #4ade80 !important; font-size: 1.3rem; font-weight: bold; margin-bottom: 16px;">Total Payable: ₹{amt_val}</p>
-        <button onclick="proceedToSecurePayment('{service_name}', {amt_val}, '{display_name}')" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
-            🚀 Proceed to Pay ₹{amt_val} (UPI, GPay, Cards)
-        </button>
+        <a href="{pay_url}" target="_blank" onclick="triggerPaymentLoader(event, this.href)" style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 50%, #f59e0b 100%); color: white !important; padding: 14px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 1.15rem; box-shadow: 0 6px 20px rgba(219,39,119,0.8); display: inline-block;">
+            🚀 Proceed to Pay ₹{amt_val} (UPI, GPay, PhonePe & Cards)
+        </a>
     </div>
-    <script>
-        async function proceedToSecurePayment(servName, amt, uName) {{
-            let emailInput = document.getElementById('paywall-user-email').value.trim();
-            if(!emailInput) {{
-                alert("⚠️ Please enter your email address so we can save and link your report!");
-                return;
-            }}
-            localStorage.setItem('accastroforge_user', emailInput);
-            try {{
-                await fetch('/api/social-login', {{
-                    method: 'POST',
-                    headers: {{'Content-Type': 'application/json'}},
-                    body: JSON.stringify({{name: uName, email: emailInput}})
-                }});
-            }} catch(err) {{
-                console.log("Email sync error:", err);
-            }}
-            let res = await fetch('/api/create-payment-link', {{
-                method: 'POST',
-                headers: {{'Content-Type': 'application/json'}},
-                body: JSON.stringify({{service_name: servName, price: amt, user_name: uName, user_email: emailInput}})
-            }});
-            let data = await res.json();
-            if(data.url) {{
-                window.open(data.url, '_blank');
-            }} else {{
-                window.open("{RAZORPAY_ME_URL}", '_blank');
-            }}
-        }}
-    </script>
     """
-
-@app.post("/api/create-payment-link")
-async def api_create_payment_link(request: Request):
-    data = await request.json()
-    service_name = data.get("service_name", "Astrology Report")
-    price = data.get("price", 69)
-    user_name = data.get("user_name", "User")
-    user_email = data.get("user_email", "")
-    
-    if user_email:
-        save_user_db_single(user_name, user_email, "Paid Report Lead")
-        save_log({
-            "timestamp": str(datetime.datetime.now()),
-            "full_name": user_name,
-            "service": f"Payment Initiated: {service_name}",
-            "details": f"Email: {user_email}, Amount: ₹{price}",
-            "payment_status": "Pending Gateway"
-        })
-        
-    link = get_robust_razorpay_link(service_name, price, user_name, user_email)
-    return JSONResponse({"url": link})
     
 def draw_clean_pdf_decorations(canvas_obj, doc_obj):
     canvas_obj.saveState()
@@ -1626,7 +1572,7 @@ HTML_TEMPLATE = """
             });
         }
 
-        async def askAi() {
+        async function askAi() {
             let query = document.getElementById('ai-query').value;
             let hName = localStorage.getItem('hub_name') || 'User';
             showMagicLoader(async () => {
@@ -1636,23 +1582,10 @@ HTML_TEMPLATE = """
             });
         }
     </script>
-    <audio id="bg-music" src="leberch-flute.mp3" autoplay loop preload="auto"></audio>
-    <script>
-        window.addEventListener('DOMContentLoaded', function() {
-            var audio = document.getElementById('bg-music');
-            if (audio) {
-                audio.play().catch(function(error) {
-                    console.log("Autoplay prevented, will play on next interaction");
-                    document.body.addEventListener('click', function() {
-                        audio.play();
-                    }, { once: true });
-                });
-            }
-        });
-    </script>
 </body>
 </html>
 """
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     logo_html = f'<img src="{logo_src}" alt="AccAstroForge Logo">' if logo_src else '<span style="font-size: 26px; font-weight: 800; color: #fbcfe8; font-family: sans-serif;">AccAstroForge</span>'

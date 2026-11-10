@@ -96,8 +96,8 @@ async def serve_avatar():
 
 @app.get("/favicon.ico")
 async def favicon():
-    if os.path.exists("favicon.ico"):
-        return FileResponse("favicon.ico")
+    if os.path.exists("favicon.png"):
+        return FileResponse("favicon.png")
     return JSONResponse({"error": "Not found"}, status_code=404)
 
 def get_prokerala_data(endpoint, params):

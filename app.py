@@ -1638,12 +1638,17 @@ HTML_TEMPLATE = """
     </script>
     <audio id="bg-music" src="leberch-flute.mp3" autoplay loop preload="auto"></audio>
     <script>
-        document.addEventListener('click', function() {
+        window.addEventListener('DOMContentLoaded', function() {
             var audio = document.getElementById('bg-music');
-            if (audio.paused) {
-                audio.play();
+            if (audio) {
+                audio.play().catch(function(error) {
+                    console.log("Autoplay prevented, will play on next interaction");
+                    document.body.addEventListener('click', function() {
+                        audio.play();
+                    }, { once: true });
+                });
             }
-        }, { once: true });
+        });
     </script>
 </body>
 </html>

@@ -1701,9 +1701,9 @@ HTML_TEMPLATE = """
         position: relative;
         width: 100%;
         height: 160px;
-        background-color: #16181d;
+        background: transparent !important;
         overflow: hidden;
-        border-top: 2px solid #2a2d36;
+        border-top: none;
         margin-top: 30px;
     }
     .walking-character {

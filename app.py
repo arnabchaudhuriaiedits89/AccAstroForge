@@ -88,9 +88,10 @@ async def serve_audio():
 
 @app.get("/avatar-front.png")
 async def serve_avatar():
-    avatar_path = os.path.join(os.path.dirname(__file__), "avatar-front.png")
-    if os.path.exists(avatar_path):
-        return FileResponse(avatar_path, media_type="image/png")
+    for base_dir in [os.path.dirname(__file__), "."]:
+        avatar_path = os.path.join(base_dir, "avatar-front.png")
+        if os.path.exists(avatar_path):
+            return FileResponse(avatar_path, media_type="image/png")
     return JSONResponse({"error": "Avatar not found"}, status_code=404)
 
 @app.get("/favicon.ico")

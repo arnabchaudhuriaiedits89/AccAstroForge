@@ -1608,7 +1608,7 @@ HTML_TEMPLATE = """
 <!-- Welcome Avatar Overlay with Namaste Animation -->
 <div id="welcome-avatar-overlay">
     <div class="avatar-box">
-        <img src="/avatar-front.png" alt="Welcome Avatar Front" class="avatar-front-img">
+        <img src="https://i.ibb.co/nss9HFGw/avatar-front.png" alt="Welcome Avatar Front" class="avatar-front-img">
         <div class="welcome-text">Welcome to AccAstroForge! 🙏</div>
     </div>
 </div>

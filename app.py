@@ -1582,15 +1582,15 @@ HTML_TEMPLATE = """
             });
         }
     </script>
-    <audio id="bg-music" src="leberch-flute.mp3" loop preload="auto"></audio>
+    <audio id="bg-music" src="/leberch-flute.mp3" loop preload="auto"></audio>
     <script>
         window.addEventListener('DOMContentLoaded', function() {
             var audio = document.getElementById('bg-music');
             if (audio) {
-                audio.play().catch(function() {
-                    // Browser blocked autoplay, play on first user interaction anywhere on page
+                audio.play().catch(function(error) {
+                    console.log("Audio play error: ", error);
                     function playAudioOnce() {
-                        audio.play();
+                        audio.play().catch(e => console.log("Click play failed: ", e));
                         document.removeEventListener('click', playAudioOnce);
                         document.removeEventListener('keydown', playAudioOnce);
                     }

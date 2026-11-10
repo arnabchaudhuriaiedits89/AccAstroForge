@@ -1662,9 +1662,10 @@ HTML_TEMPLATE = """
     }
 
     .avatar-front-img {
-        max-height: 65vh;
+        max-height: 90vh;
+        width: auto;
         object-fit: contain;
-        filter: drop-shadow(0px 12px 30px rgba(0, 0, 0, 0.7));
+        filter: drop-shadow(0px 15px 35px rgba(0, 0, 0, 0.8));
     }
 
     .welcome-text {

@@ -1166,8 +1166,8 @@ HTML_TEMPLATE = """
                     <li>📘 <b style="color: #fde047;">Facebook:</b> <a href="https://www.facebook.com/accastroforge" target="_blank" style="color: #60a5fa;">https://www.facebook.com/accastroforge</a></li>
                 </ul>
             </div>
-            <!-- Ruhani Pointing Cutout Image -->
-            <img src="/ruhani-pointing.png" alt="Ruhani Pointing" style="position: absolute; right: 20px; bottom: 0; height: 92%; max-height: 380px; width: auto; object-fit: contain; pointer-events: none; filter: drop-shadow(0 0 15px rgba(124,58,237,0.5));">
+            <!-- Ruhani Pointing Cutout Image via GitHub Blob URL with raw=true -->
+            <img src="https://github.com/arnabchaudhuriaiedits89/AccAstroForge/blob/main/ruhani-pointing.png?raw=true" alt="Ruhani Pointing" style="position: absolute; right: 20px; bottom: 0; height: 92%; max-height: 380px; width: auto; object-fit: contain; pointer-events: none; filter: drop-shadow(0 0 15px rgba(124,58,237,0.5));">
         </div>
 
     <script>

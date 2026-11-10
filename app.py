@@ -94,6 +94,14 @@ async def serve_avatar():
             return FileResponse(avatar_path, media_type="image/png")
     return JSONResponse({"error": "Avatar not found"}, status_code=404)
 
+@app.get("/AAF AI RUHANI WALKING ANIMATION.mp4")
+async def serve_walker_video():
+    for base_dir in [os.path.dirname(__file__), "."]:
+        video_path = os.path.join(base_dir, "AAF AI RUHANI WALKING ANIMATION.mp4")
+        if os.path.exists(video_path):
+            return FileResponse(video_path, media_type="video/mp4")
+    return JSONResponse({"error": "Video not found"}, status_code=404)
+
 @app.get("/favicon.ico")
 async def favicon():
     if os.path.exists("favicon.png"):

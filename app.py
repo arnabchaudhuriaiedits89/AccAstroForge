@@ -1670,10 +1670,20 @@ HTML_TEMPLATE = """
 <!-- Welcome Avatar Overlay with Namaste Animation -->
 <div id="welcome-avatar-overlay">
     <div class="avatar-box">
-        <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/avatar-front.png" alt="Welcome Avatar Front" class="avatar-front-img">
+        <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/avatar-front.png" class="avatar-front-img" alt="Welcome Avatar">
         <div class="welcome-text">Welcome to AccAstroForge! 🙏</div>
     </div>
 </div>
+
+<script>
+    // Automatically hide overlay element after animation completes (4.5 seconds)
+    setTimeout(() => {
+        const overlay = document.getElementById('welcome-avatar-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }, 4500);
+</script>
 
 <script>
     window.addEventListener('DOMContentLoaded', function() {
@@ -1698,76 +1708,76 @@ HTML_TEMPLATE = """
 </script>
 
     /* Fullscreen Welcome Avatar Overlay Styling */
-    #welcome-avatar-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(6px);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 99999;
-        pointer-events: none;
+#welcome-avatar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    pointer-events: none;
+    opacity: 0;
+    animation: avatarAppearFade 4.5s ease-in-out forwards;
+}
+
+.avatar-box {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding-top: 20px;
+}
+
+.avatar-front-img {
+    max-height: 70vh;
+    width: auto;
+    max-width: 90vw;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0px 15px 35px rgba(0, 0, 0, 0.8));
+}
+
+.welcome-text {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 12px;
+    background: rgba(15, 23, 42, 0.9);
+    padding: 10px 24px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.6);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Spawn, Hold and Smooth Fade out animation */
+@keyframes avatarAppearFade {
+    0% {
         opacity: 0;
-        animation: avatarAppearFade 4.5s ease-in-out forwards;
+        transform: scale(0.85) translateY(30px);
     }
-
-    .avatar-box {
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-        padding-top: 20px;
+    15% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
     }
-
-    .avatar-front-img {
-        max-height: 70vh;
-        width: auto;
-        max-width: 90vw;
-        object-fit: contain;
-        display: block;
-        filter: drop-shadow(0px 15px 35px rgba(0, 0, 0, 0.8));
+    80% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
     }
-
-    .welcome-text {
-        color: #ffffff;
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-top: 12px;
-        background: rgba(15, 23, 42, 0.9);
-        padding: 10px 24px;
-        border-radius: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.6);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    100% {
+        opacity: 0;
+        transform: scale(1.05) translateY(-20px);
     }
-
-    /* Spawn, Hold and Smooth Fade out animation */
-    @keyframes avatarAppearFade {
-        0% {
-            opacity: 0;
-            transform: scale(0.85) translateY(30px);
-        }
-        15% {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-        80% {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-        100% {
-            opacity: 0;
-            transform: scale(1.05) translateY(-20px);
-        }
-    }
+}
 </style>
 </body>
 </html>

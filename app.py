@@ -514,7 +514,7 @@ HTML_TEMPLATE = """
 
     .logo-walking-character {
     position: absolute;
-    left: 96px;  /* The sweet spot right in the exact center of the 'T' of ASTRO */
+    left: 95px;  /* The sweet spot right in the exact center of the 'T' of ASTRO */
     top: -36px;  /* Height is absolute perfection, keeping it untouched */
     height: 75px; 
     width: auto;

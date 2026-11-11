@@ -1146,11 +1146,17 @@ HTML_TEMPLATE = """
         </div>
 
         <!-- AI ASSISTANT -->
-        <div id="tab-ai" class="tab-content">
-            <h3>🤖 Ask Ruhani</h3>
-            <textarea id="ai-query" placeholder="Ask your question..."></textarea>
-            <button class="primary-btn" onclick="askAi()">Ask AI Assistant ✨</button>
-            <div id="ai-result" style="margin-top: 15px;"></div>
+        <div id="tab-ai" class="tab-content" style="position: relative; overflow: hidden; min-height: 420px;">
+            <!-- Left Side: Compressed Input Section (Approx 60-65% width) -->
+            <div style="max-width: 62%; position: relative; z-index: 2;">
+                <h3 style="margin-top: 0; font-size: 1.3rem;">🤖 Ask Ruhani</h3>
+                <textarea id="ai-query" placeholder="Ask your question..." style="height: 110px; margin-bottom: 12px; font-size: 0.95rem;"></textarea>
+                <button class="primary-btn" onclick="askAi()" style="padding: 10px 20px; font-size: 1rem;">Ask AI Assistant ✨</button>
+                <div id="ai-result" style="margin-top: 12px;"></div>
+            </div>
+            
+            <!-- Right Side: Ruhani RJ Cutout Image via GitHub Blob URL with raw=true -->
+            <img src="https://github.com/arnabchaudhuriaiedits89/AccAstroForge/blob/main/ruhani-assist.png?raw=true" alt="Ruhani RJ Assistant" style="position: absolute; right: 10px; bottom: 0; height: 102%; max-height: 410px; width: auto; object-fit: contain; pointer-events: none; filter: drop-shadow(0 0 20px rgba(124,58,237,0.6)); z-index: 1;">
         </div>
 
         <!-- LEGAL -->

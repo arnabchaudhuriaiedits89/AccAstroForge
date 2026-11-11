@@ -514,8 +514,8 @@ HTML_TEMPLATE = """
 
     .logo-walking-character {
     position: absolute;
-    left: 55px;  /* Align horizontally right above the 'T' of ASTRO */
-    top: -48px;  /* Push it much higher above the text so she walks and sits above the letters */
+    left: 105px; /* Push her further to the right to align precisely above the 'T' of ASTRO */
+    top: -36px;  /* Bring her slightly down from the extreme top so she walks right on top of the letters */
     height: 75px; 
     width: auto;
     pointer-events: none;

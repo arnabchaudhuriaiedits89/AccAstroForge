@@ -514,9 +514,9 @@ HTML_TEMPLATE = """
 
     .logo-walking-character {
     position: absolute;
-    left: 175px; /* Shifted right to align right above the 'T' of ASTRO */
-    top: -5px;   /* Adjusted vertical placement perfectly above the text */
-    height: 75px; /* Perfect size aligned with the logo */
+    left: 45px;  /* Position right near the logo letters */
+    top: -18px;  /* Position right above the text */
+    height: 75px; 
     width: auto;
     pointer-events: none;
     mix-blend-mode: screen;
@@ -539,31 +539,36 @@ HTML_TEMPLATE = """
         padding: 20px;
     }
 
-        .container { max-width: 1150px; margin: 0 auto; }
-        
-        .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
+        .container { 
+    max-width: 100% !important; 
+    width: 100% !important;
+    margin: 0 auto; 
+    padding: 10px 25px !important;
+    box-sizing: border-box;
+}
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative; /* Crucial for absolute positioning of the video */
-        }
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 25px;
+    flex-wrap: nowrap; /* Prevents items from breaking into awkward lines */
+}
 
-        .logo-area img {
-            height: 75px;
-            filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9));
-            mix-blend-mode: screen;
-            background: transparent !important;
-        }
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative; 
+}
+
+.logo-area img {
+    height: 75px;
+    filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9));
+    mix-blend-mode: screen;
+    background: transparent !important;
+}
 
         .admin-dot {
             width: 16px;

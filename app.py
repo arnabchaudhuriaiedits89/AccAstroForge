@@ -510,6 +510,8 @@ HTML_TEMPLATE = """
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
+
     .logo-walking-character {
         position: absolute;
         left: 45px; /* Position near the CC letters */
@@ -520,8 +522,6 @@ HTML_TEMPLATE = """
         mix-blend-mode: screen;
         z-index: 10;
     }
-
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
 
     html, body {
         background-color: #030014 !important;
@@ -555,6 +555,7 @@ HTML_TEMPLATE = """
             display: flex;
             align-items: center;
             gap: 12px;
+            position: relative; /* Crucial for absolute positioning of the video */
         }
 
         .logo-area img {
@@ -787,25 +788,26 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="container">
-        <!-- HEADER WITH LOGO, ADMIN DOT, LIVE DIGITAL CLOCK & QUICK LOGINS -->
-        <div class="header-container">
-            <div class="logo-area" style="position: relative;">
-                LOGO_SRC_PLACEHOLDER
-                <video class="logo-walking-character" autoplay loop muted playsinline>
-                    <source src="https://github.com/arnabchaudhuriaiedits89/AccAstroForge/blob/main/RUHANI%20YOGA.mp4?raw=true" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                <span class="admin-dot" title="Click to open Admin Portal" onclick="toggleAdminPanel()"></span>
-            </div>
-            <div class="header-right-area">
-                <div id="live-digital-clock" class="live-digital-clock">00<span class="clock-colon">:</span>00<span class="clock-colon">:</span>00 IST</div>
-                <div class="quick-logins">
-                    <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
-                    <a href="GOOGLE_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
-                    <a href="FB_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
-                </div>
+    <!-- HEADER WITH LOGO, ADMIN DOT, LIVE DIGITAL CLOCK & QUICK LOGINS -->
+    <div class="header-container">
+        <div class="logo-area" style="position: relative;">
+            <img src="https://github.com/arnabchaudhuriaiedits89/AccAstroForge/blob/main/logo.png" alt="Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9)); mix-blend-mode: screen; background: transparent !important;">
+            <video class="logo-walking-character" autoplay loop muted playsinline>
+                <source src="https://github.com/arnabchaudhuriaiedits89/AccAstroForge/blob/main/RUHANI%20YOGA.mp4?raw=true" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <span class="admin-dot" title="Click to open Admin Portal" onclick="toggleAdminPanel()"></span>
+        </div>
+        <div class="header-right-area">
+            <div id="live-digital-clock" class="live-digital-clock">00<span class="clock-colon">:</span>00<span class="clock-colon">:</span>00 IST</div>
+            <div class="quick-logins">
+                <span style="font-size: 0.8rem; color: #fde047; font-weight: 600;">🔐 Quick Logins:</span>
+                <a href="GOOGLE_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #ea4335; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Google</a>
+                <a href="FB_URL_PLACEHOLDER" target="_blank" style="color: #fff !important; background: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none;">Facebook</a>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- TABS BAR -->
         <div class="tab-list">

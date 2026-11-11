@@ -513,15 +513,15 @@ HTML_TEMPLATE = """
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
 
     .logo-walking-character {
-        position: absolute;
-        left: 45px; /* Position near the CC letters */
-        top: -18px; /* Position to walk right above the logo text */
-        height: 75px; /* Perfect size aligned with the logo */
-        width: auto;
-        pointer-events: none;
-        mix-blend-mode: screen;
-        z-index: 10;
-    }
+    position: absolute;
+    left: 175px; /* Shifted right to align right above the 'T' of ASTRO */
+    top: -5px;   /* Adjusted vertical placement perfectly above the text */
+    height: 75px; /* Perfect size aligned with the logo */
+    width: auto;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    z-index: 10;
+}
 
     html, body {
         background-color: #030014 !important;

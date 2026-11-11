@@ -1670,7 +1670,7 @@ HTML_TEMPLATE = """
 <!-- Welcome Avatar Overlay with Namaste Animation -->
 <div id="welcome-avatar-overlay">
     <div class="avatar-box">
-        <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/avatar-front.png" class="avatar-front-img" alt="Welcome Avatar">
+        <img src="/avatar-front.png" class="avatar-front-img" alt="Welcome Avatar">
         <div class="welcome-text">Welcome to AccAstroForge! 🙏</div>
     </div>
 </div>
@@ -1776,6 +1776,7 @@ HTML_TEMPLATE = """
     100% {
         opacity: 0;
         transform: scale(1.05) translateY(-20px);
+        visibility: hidden;
     }
 }
 </style>

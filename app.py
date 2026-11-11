@@ -788,12 +788,13 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="container">
+    <div class="container">
     <!-- HEADER WITH LOGO, ADMIN DOT, LIVE DIGITAL CLOCK & QUICK LOGINS -->
     <div class="header-container">
         <div class="logo-area" style="position: relative;">
-            <img src="https://github.com/arnabchaudhuriaiedits89/AccAstroForge/blob/main/logo.png" alt="Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9)); mix-blend-mode: screen; background: transparent !important;">
+            <img src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/logo.png?raw=true" alt="Logo" style="height: 75px; filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.9)); mix-blend-mode: screen; background: transparent !important;">
             <video class="logo-walking-character" autoplay loop muted playsinline>
-                <source src="https://github.com/arnabchaudhuriaiedits89/AccAstroForge/main/RUHANI%20YOGA.mp4?raw=true" type="video/mp4">
+                <source src="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/blob/main/RUHANI%20YOGA.mp4?raw=true" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             <span class="admin-dot" title="Click to open Admin Portal" onclick="toggleAdminPanel()"></span>

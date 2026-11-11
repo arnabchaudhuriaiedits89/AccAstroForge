@@ -1759,7 +1759,6 @@ HTML_TEMPLATE = """
         100% {
             opacity: 0;
             transform: scale(1.05) translateY(-20px);
-            visibility: hidden;
         }
     }
 </style>

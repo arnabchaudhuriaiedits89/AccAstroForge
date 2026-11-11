@@ -102,6 +102,14 @@ async def serve_walker_video():
             return FileResponse(video_path, media_type="video/mp4")
     return JSONResponse({"error": "Video not found"}, status_code=404)
 
+@app.get("/RUHANI YOGA.mp4")
+async def serve_yoga_video():
+    for base_dir in [os.path.dirname(__file__), "."]:
+        video_path = os.path.join(base_dir, "RUHANI YOGA.mp4")
+        if os.path.exists(video_path):
+            return FileResponse(video_path, media_type="video/mp4")
+    return JSONResponse({"error": "Video not found"}, status_code=404)
+
 @app.get("/ruhani-pointing.png")
 async def serve_ruhani_pointing():
     for base_dir in [os.path.dirname(__file__), "."]:
@@ -502,23 +510,34 @@ HTML_TEMPLATE = """
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
+    .logo-walking-character {
+        position: absolute;
+        left: 45px; /* Position near the CC letters */
+        top: -18px; /* Position to walk right above the logo text */
+        height: 75px; /* Perfect size aligned with the logo */
+        width: auto;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        z-index: 10;
+    }
 
-        html, body {
-            background-color: #030014 !important;
-            background-image: 
-                linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)),
-                url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg") !important;
-            background-position: center center !important;
-            background-repeat: no-repeat !important;
-            background-size: cover !important;
-            background-attachment: fixed !important;
-            color: #ffffff !important;
-            font-family: 'Poppins', sans-serif !important;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+    html, body {
+        background-color: #030014 !important;
+        background-image: 
+            linear-gradient(rgba(5, 1, 20, 0.45), rgba(5, 1, 20, 0.6)),
+            url("https://raw.githubusercontent.com/arnabchaudhuriaiedits89/AccAstroForge/main/bg.jpg") !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        background-size: cover !important;
+        background-attachment: fixed !important;
+        color: #ffffff !important;
+        font-family: 'Poppins', sans-serif !important;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+    }
 
         .container { max-width: 1150px; margin: 0 auto; }
         
@@ -770,8 +789,12 @@ HTML_TEMPLATE = """
     <div class="container">
         <!-- HEADER WITH LOGO, ADMIN DOT, LIVE DIGITAL CLOCK & QUICK LOGINS -->
         <div class="header-container">
-            <div class="logo-area">
+            <div class="logo-area" style="position: relative;">
                 LOGO_SRC_PLACEHOLDER
+                <video class="logo-walking-character" autoplay loop muted playsinline>
+                    <source src="https://github.com/arnabchaudhuriaiedits89/AccAstroForge/blob/main/RUHANI%20YOGA.mp4?raw=true" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
                 <span class="admin-dot" title="Click to open Admin Portal" onclick="toggleAdminPanel()"></span>
             </div>
             <div class="header-right-area">
@@ -1645,13 +1668,6 @@ HTML_TEMPLATE = """
     </div>
 </div>
 
-<!-- Footer Walking Character Animation -->
-<footer class="site-footer" id="footer">
-    <video class="walking-character" id="walker" autoplay loop muted playsinline>
-        <source src="/RUHANI%20WALKING.mp4" type="video/mp4">
-    </video>
-</footer>
-
 <script>
     window.addEventListener('DOMContentLoaded', function() {
         var audio = document.getElementById('bg-music');
@@ -1672,74 +1688,7 @@ HTML_TEMPLATE = """
             });
         }
     });
-
-    // Walking Character Script
-    const walker = document.getElementById('walker');
-    const footer = document.getElementById('footer');
-    let position = -150;
-    let direction = 1;
-    let speed = 1.2;
-    let animationRunning = false;
-
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            if (walker) {
-                walker.play().catch(e => console.log("Auto-play blocked:", e));
-                animationRunning = true;
-                requestAnimationFrame(animateWalker);
-            }
-        }, 4500);
-    });
-
-    function animateWalker() {
-        if (!animationRunning || !footer || !walker) return;
-        const footerWidth = footer.clientWidth;
-        const characterWidth = walker.clientWidth || 120;
-        position += speed * direction;
-        if (position > footerWidth - characterWidth + 30) {
-            direction = -1;
-        } else if (position < -30) {
-            direction = 1;
-        }
-        if (direction === 1) {
-            walker.style.transform = `translateX(${position}px) scaleX(1)`;
-        } else {
-            walker.style.transform = `translateX(${position}px) scaleX(-1)`;
-        }
-        requestAnimationFrame(animateWalker);
-    }
-
-    document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-            animationRunning = false;
-        } else {
-            animationRunning = true;
-            requestAnimationFrame(animateWalker);
-        }
-    });
 </script>
-
-<style>
-    /* Footer & Walking Character Styling */
-    .site-footer {
-        position: relative;
-        width: 100%;
-        height: 160px;
-        background: transparent !important;
-        overflow: hidden;
-        border-top: none;
-        margin-top: 30px;
-    }
-    .walking-character {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 140px;
-        width: auto;
-        pointer-events: none;
-        mix-blend-mode: screen;
-        will-change: transform;
-    }
 
     /* Fullscreen Welcome Avatar Overlay Styling */
     #welcome-avatar-overlay {
